@@ -166,7 +166,7 @@ function scheduleSync() {
     } finally {
       syncInflight = Math.max(0, syncInflight - 1);
       if (!syncInflight) {
-        mvtLoading = false;
+        if (showMvtLoading) mvtLoading = false;
         refreshLoadingOverlay();
       }
     }
