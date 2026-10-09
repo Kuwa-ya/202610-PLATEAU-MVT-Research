@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://geo.kuwa-ya.co.jp/sitemap.xml

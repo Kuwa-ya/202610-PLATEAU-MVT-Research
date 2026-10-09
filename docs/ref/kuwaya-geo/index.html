@@ -1,0 +1,332 @@
+<!-- ちずうつし｜くわや メインページ -->
+<!doctype html>
+<html lang="ja" prefix="og: http://ogp.me/ns#">
+
+<head>
+	<!-- メタ情報・OGP・Twitterカード・Googleタグ・CSS -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ちずうつし｜くわや</title>
+  <meta name="description" content="ちずうつしは、地理院タイルとPLATEAUを活用し、地形・建物・道路・等高線をGLB、DXF、CityGMLで出力できる建築向け3D地図ウェブアプリです。">
+  <meta name="author" content="くわや">
+  <meta name="keywords" content="くわや,ちずうつし,PLATEAU,3D地図,GIS,GLB,DXF,CityGML,建築">
+  <meta name="application-version" content="v1.1.0">
+  <link rel="canonical" href="https://geo.kuwa-ya.co.jp/">
+  <link rel="start" href="https://geo.kuwa-ya.co.jp/" title="TOP">
+  <!-- OGP -->
+  <meta property="og:site_name" content="ちずうつし｜くわや">
+  <meta property="og:title" content="ちずうつし｜くわや">
+  <meta property="og:description" content="地形・建物・道路・等高線を、GLB・DXF・CityGMLで出力できる建築向け3D地図ウェブアプリです。">
+  <meta property="og:url" content="https://geo.kuwa-ya.co.jp/">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://geo.kuwa-ya.co.jp/img/cuKeyVisual1b.jpg">
+  <meta property="og:image:alt" content="3D地図ダウンロードサービス「ちずうつし」の画面">
+  <meta property="og:locale" content="ja_JP">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ちずうつし｜くわや">
+  <meta name="twitter:description" content="地形・建物・道路・等高線を、GLB・DXF・CityGMLで出力できる建築向け3D地図ウェブアプリです。">
+  <meta name="twitter:image" content="https://geo.kuwa-ya.co.jp/img/cuKeyVisual1b.jpg">
+  <meta name="twitter:image:alt" content="3D地図ダウンロードサービス「ちずうつし」の画面">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://www.kuwa-ya.co.jp/#organization",
+        "name": "株式会社くわや",
+        "url": "https://www.kuwa-ya.co.jp/",
+        "logo": "https://geo.kuwa-ya.co.jp/img/logo_180px.png"
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://geo.kuwa-ya.co.jp/#website",
+        "url": "https://geo.kuwa-ya.co.jp/",
+        "name": "ちずうつし｜くわや",
+        "inLanguage": "ja",
+        "publisher": { "@id": "https://www.kuwa-ya.co.jp/#organization" }
+      },
+      {
+        "@type": "WebApplication",
+        "@id": "https://geo.kuwa-ya.co.jp/#application",
+        "name": "ちずうつし",
+        "url": "https://geo.kuwa-ya.co.jp/",
+        "description": "地理院タイルとPLATEAUを活用し、地形・建物・道路・等高線をGLB、DXF、CityGMLで出力できる建築向け3D地図ウェブアプリです。",
+        "applicationCategory": "DesignApplication",
+        "operatingSystem": "Web browser",
+        "browserRequirements": "JavaScript対応のモダンブラウザ",
+        "softwareVersion": "1.1.0",
+        "inLanguage": "ja",
+        "isAccessibleForFree": true,
+        "image": "https://geo.kuwa-ya.co.jp/img/cuKeyVisual1b.jpg",
+        "featureList": [
+          "地形のGLB出力",
+          "等高線のDXF出力",
+          "建物のGLB・DXF出力",
+          "道路のGLB・DXF出力",
+          "地形のCityGML出力"
+        ],
+        "creator": { "@id": "https://www.kuwa-ya.co.jp/#organization" },
+        "isPartOf": { "@id": "https://geo.kuwa-ya.co.jp/#website" },
+        "subjectOf": { "@id": "https://geo.kuwa-ya.co.jp/about.html#webpage" }
+      }
+    ]
+  }
+  </script>
+
+  <!-- ファビコン（16x16, 32x32） -->
+  <link rel="icon" href="./img/logo_16px.png" sizes="16x16" type="image/png">
+  <link rel="icon" href="./img/logo_32px.png" sizes="32x32" type="image/png">
+
+  <!-- Apple Touch Icon（iOS用） -->
+  <link rel="apple-touch-icon" href="./img/logo_180px.png" sizes="180x180">
+
+  <!-- Google tag (gtag.js) start-->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9S9NWT5ETP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-9S9NWT5ETP');
+  </script>
+  <!-- Google tag (gtag.js) end-->
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="./css/style.css?v=20261002">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">KUWA-YA / v1.1.0 / <span id="access-count" class="access-count"></span></p>
+        <h1>ちずうつし</h1>
+      </div>
+      <div class="topbar-actions">
+        <p class="topbar-copy">地形・等高線・建物・道路を、GLB・DXFへ写し取る</p>
+        <a class="about-link" href="./about.html">ちずうつしについて</a>
+        <button id="menu-toggle" class="menu-toggle" type="button" aria-label="設定メニューを開閉" aria-controls="control-panel" aria-expanded="true">メニュー</button>
+      </div>
+    </header>
+
+    <section class="workspace" aria-label="ちずうつし 地理データビューワ">
+      <aside id="control-panel" class="control-panel">
+        <div id="viewer-controls">
+          <fieldset class="settings-section address-search-settings">
+            <legend>住所検索</legend>
+            <label class="address-search-field">住所（東京都のみ）
+              <input id="address-search-input" name="addressSearch" type="search" enterkeyhint="search" placeholder="例：東京都三鷹市井の頭" autocomplete="street-address">
+            </label>
+            <button id="address-search-submit" class="secondary-button" type="button">この住所へ移動</button>
+            <p id="address-search-status" class="control-note" aria-live="polite">東京都内の住所を入力して移動できます。都道府県名を含めて入力してください。</p>
+          </fieldset>
+
+          <fieldset class="settings-section tile-settings">
+            <legend>タイル設定</legend>
+            <div class="layer-tabs" role="tablist" aria-label="表示レイヤー設定">
+              <button id="ground-tab" class="layer-tab selected" type="button" role="tab" aria-selected="true" aria-controls="ground-panel" tabindex="0">地面</button>
+              <button id="contour-tab" class="layer-tab" type="button" role="tab" aria-selected="false" aria-controls="contour-panel" tabindex="-1">等高線</button>
+              <button id="building-tab" class="layer-tab" type="button" role="tab" aria-selected="false" aria-controls="building-panel" tabindex="-1">建物</button>
+              <button id="transport-tab" class="layer-tab" type="button" role="tab" aria-selected="false" aria-controls="transport-panel" tabindex="-1">道路</button>
+            </div>
+            <div id="ground-panel" class="layer-panel" role="tabpanel" aria-labelledby="ground-tab">
+              <label>地表テクスチャ
+                <select id="texture-type" name="textureType">
+                  <option value="photo" selected>航空写真</option>
+                  <option value="standard">標準地図</option>
+                </select>
+              </label>
+              <p class="control-note">表示ズーム・標高解像度・画像ズームは、カメラ距離に応じて自動調整されます。</p>
+            </div>
+            <div id="contour-panel" class="layer-panel" role="tabpanel" aria-labelledby="contour-tab" hidden>
+              <label>等高線表示
+                <select id="contour-visibility" name="contourVisibility">
+                  <option value="show" selected>表示</option>
+                  <option value="hide">非表示</option>
+                </select>
+              </label>
+              <p id="contour-status" class="control-note">読み込み済みメッシュから等高線を生成します。</p>
+            </div>
+            <div id="building-panel" class="layer-panel" role="tabpanel" aria-labelledby="building-tab" hidden>
+              <label>建物表示
+                <select id="building-visibility" name="buildingVisibility">
+                  <option value="show" selected>表示</option>
+                  <option value="hide">非表示</option>
+                </select>
+              </label>
+              <p id="building-status" class="control-note" aria-live="polite">LOD 16以上でPLATEAU建物を読み込みます。</p>
+            </div>
+            <div id="transport-panel" class="layer-panel" role="tabpanel" aria-labelledby="transport-tab" hidden>
+              <label>道路表示
+                <select id="transport-visibility" name="transportVisibility">
+                  <option value="show" selected>表示</option>
+                  <option value="hide">非表示</option>
+                </select>
+              </label>
+              <p id="transport-status" class="control-note" aria-live="polite">LOD 16以上でPLATEAU道路を読み込みます。</p>
+            </div>
+          </fieldset>
+
+          <fieldset class="settings-section coordinate-settings">
+            <legend>座標設定</legend>
+            <label>平面直角座標系
+              <select id="jprc-zone" name="jprcZone">
+                <option value="1">第I系</option>
+                <option value="2">第II系</option>
+                <option value="3">第III系</option>
+                <option value="4">第IV系</option>
+                <option value="5">第V系</option>
+                <option value="6">第VI系</option>
+                <option value="7">第VII系</option>
+                <option value="8">第VIII系</option>
+                <option value="9" selected>第IX系（東京）</option>
+                <option value="10">第X系</option>
+                <option value="11">第XI系</option>
+                <option value="12">第XII系</option>
+                <option value="13">第XIII系</option>
+                <option value="14">第XIV系</option>
+                <option value="15">第XV系</option>
+                <option value="16">第XVI系</option>
+                <option value="17">第XVII系</option>
+                <option value="18">第XVIII系</option>
+                <option value="19">第XIX系</option>
+              </select>
+            </label>
+          </fieldset>
+
+          <fieldset class="settings-section origin-settings">
+            <legend>原点設定</legend>
+            <label>原点緯度
+              <input id="export-origin-latitude" name="exportOriginLatitude" type="number" min="-90" max="90" step="0.00000001" value="35.68100000" inputmode="decimal">
+            </label>
+            <label>原点経度
+              <input id="export-origin-longitude" name="exportOriginLongitude" type="number" min="-180" max="180" step="0.00000001" value="139.76700000" inputmode="decimal">
+            </label>
+            <button id="export-origin-apply" class="secondary-button" type="button">出力原点を設定</button>
+            <p id="export-origin-status" class="control-note" aria-live="polite">固定原点：35.68100000, 139.76700000</p>
+          </fieldset>
+
+          <fieldset class="settings-section output-settings">
+            <legend>GLB・DXF出力</legend>
+            <button id="selection-toggle" class="primary-button" type="button" aria-pressed="false">2点で範囲を選択</button>
+            <p id="selection-status" class="control-note" aria-live="polite" hidden></p>
+            <button id="selection-clear" class="secondary-button" type="button" disabled>選択を解除</button>
+            <label>地形出力LOD
+              <select id="export-lod" name="exportLod">
+                <option value="current">表示（—）</option>
+                <option value="7">LOD 7</option>
+                <option value="8">LOD 8</option>
+                <option value="9">LOD 9</option>
+                <option value="10">LOD 10</option>
+                <option value="11">LOD 11</option>
+                <option value="12">LOD 12</option>
+                <option value="13">LOD 13</option>
+                <option value="14">LOD 14</option>
+                <option value="15">LOD 15</option>
+                <option value="16">LOD 16</option>
+                <option value="17">LOD 17</option>
+                <option value="18" selected>LOD 18</option>
+                <option value="19">LOD 19</option>
+                <option value="20">LOD 20</option>
+              </select>
+            </label>
+            <label>等高線出力ピッチ
+              <select id="contour-interval" name="contourInterval">
+                <option value="auto" selected>自動（—）</option>
+              </select>
+            </label>
+            <label>出力単位
+              <select id="export-unit" name="exportUnit">
+                <option value="m">m</option>
+                <option value="cm">cm</option>
+                <option value="mm" selected>mm</option>
+              </select>
+            </label>
+            <button id="download-glb" class="primary-button" type="button" disabled>地形GLB出力をプレビュー</button>
+            <button id="download-dxf" class="primary-button" type="button" disabled>等高線DXF出力をプレビュー</button>
+            <button id="download-building-glb" class="primary-button" type="button" disabled>建物GLB出力をプレビュー</button>
+            <button id="download-building-dxf" class="primary-button" type="button" disabled>建物外形DXF出力をプレビュー</button>
+            <button id="download-transport-glb" class="primary-button" type="button" disabled>道路GLB出力をプレビュー</button>
+            <button id="download-transport-dxf" class="primary-button" type="button" disabled>道路DXF出力をプレビュー</button>
+            <div class="export-action-separated">
+              <label>CityGML DEM LOD
+                <select id="citygml-dem-lod" name="citygmlDemLod">
+                  <option value="1" selected>LOD1（DEM1A 1/4・約4 m）</option>
+                  <option value="2">LOD2（DEM1A 1/2・約2 m）</option>
+                  <option value="3">LOD3（DEM1A 純粋・約1 m）</option>
+                </select>
+              </label>
+              <button id="download-citygml-dem" class="primary-button" type="button" disabled>β機能：地形CityGML出力をプレビュー</button>
+            </div>
+          </fieldset>
+        </div>
+
+        <dl class="metadata" aria-label="現在のタイル情報">
+          <div><dt>緯度</dt><dd id="current-latitude">35.68100000</dd></div>
+          <div><dt>経度</dt><dd id="current-longitude">139.76700000</dd></div>
+          <div><dt>カメラ距離</dt><dd id="camera-distance">—</dd></div>
+          <div><dt>中心タイル</dt><dd id="center-tile">—</dd></div>
+          <div><dt>表示レベル</dt><dd id="dem-tile">—</dd></div>
+          <div><dt>読込中</dt><dd id="requested-lod">—</dd></div>
+          <div><dt>画像</dt><dd id="texture-tiles">—</dd></div>
+          <div><dt>ローカル原点</dt><dd id="local-origin">—</dd></div>
+          <div><dt>頂点数</dt><dd id="vertex-count">—</dd></div>
+        </dl>
+      </aside>
+
+      <section class="viewer-panel">
+        <div id="viewer" class="viewer" aria-label="3D地形表示">
+          <canvas id="terrain-canvas"></canvas>
+          <div class="viewer-state" aria-live="polite">
+            <div><span>表示中</span><strong id="viewer-current-lod">準備中</strong></div>
+            <div id="viewer-requested-row" hidden><span>ロード</span><strong id="viewer-requested-lod">—</strong></div>
+          </div>
+          <div class="viewer-help">左ドラッグ：移動　右ドラッグ／2本指移動：X軸角度　ホイール／ピンチ：拡大縮小</div>
+          <div id="loading" class="loading" hidden><span></span><p>地形データを読み込んでいます</p></div>
+          <section id="export-preview" class="export-preview" aria-label="出力プレビュー" hidden>
+            <p class="export-preview-eyebrow">出力プレビュー</p>
+            <h2 id="export-preview-title">出力内容を確認</h2>
+            <dl id="export-preview-summary"></dl>
+            <div class="export-preview-actions">
+              <button id="export-preview-cancel" class="secondary-button" type="button">キャンセル</button>
+              <button id="export-preview-confirm" class="primary-button" type="button">ダウンロードを実行</button>
+            </div>
+          </section>
+        </div>
+        <div class="statusbar">
+          <p id="status" role="status">初期地点の地形を読み込んでいます。</p>
+          <p id="cache-status">メモリキャッシュ 0 / 64</p>
+        </div>
+      </section>
+    </section>
+
+    <footer>
+      <p>出典：<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener noreferrer">国土地理院 地理院タイル</a>／<a href="https://www.mlit.go.jp/plateau/" target="_blank" rel="noopener noreferrer">国土交通省 PLATEAU</a>／<a href="https://www.kuwa-ya.co.jp/print.html#title=製品利用規約" target="_blank" rel="noopener noreferrer">製品利用規約</a></p>
+      <p><a href="./about.html">サービス情報・使い方・FAQ</a>／標高・地図画像の利用条件は、各地理院タイルの案内をご確認ください。</p>
+    </footer>
+  </main>
+
+  <script>
+    const initialWorkspace = document.querySelector('.workspace');
+    const initialMenuToggle = document.querySelector('#menu-toggle');
+    if (window.matchMedia('(max-width: 780px)').matches) {
+      initialWorkspace?.classList.add('menu-collapsed');
+      initialMenuToggle?.setAttribute('aria-expanded', 'false');
+    }
+    window.addEventListener('error', event => {
+      const status = document.querySelector('#status');
+      if (!status) return;
+      status.textContent = event.message || 'ビューワの初期化に失敗しました。';
+      status.classList.add('error');
+    });
+    window.addEventListener('unhandledrejection', event => {
+      const status = document.querySelector('#status');
+      if (!status) return;
+      status.textContent = event.reason?.message || 'ビューワの初期化に失敗しました。';
+      status.classList.add('error');
+    });
+  </script>
+  <script type="module" src="./js/app.js?v=20261002"></script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+geojson-gzip/*
+!geojson-gzip/.htaccess

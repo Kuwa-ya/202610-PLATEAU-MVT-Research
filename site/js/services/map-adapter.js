@@ -29,6 +29,7 @@ export class MapAdapter {
     this.requestUrls = new Set();
     this.transferredBytes = 0;
     this.sourceErrors = new Set();
+    this.selectedFeatureTarget = null;
     this.callbacks = {};
   }
 
@@ -51,20 +52,22 @@ export class MapAdapter {
       style: {
         version: 8,
         sources: {
-          'plateau-base': {
+          'gsi-base': {
             type: 'raster',
-            url: 'https://tile.plateauview.mlit.go.jp/tiles/light-map/tilejson.json?format=webp',
+            tiles: ['https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png'],
             tileSize: 256,
-            attribution: '© 国土地理院 / 国土交通省 Project PLATEAU'
+            minzoom: 2,
+            maxzoom: 18,
+            attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'
           }
         },
         layers: [
-          { id: 'background', type: 'background', paint: { 'background-color': '#dbe6e2' } },
+          { id: 'background', type: 'background', paint: { 'background-color': '#e7e9e4' } },
           {
-            id: 'plateau-base',
+            id: 'gsi-base',
             type: 'raster',
-            source: 'plateau-base',
-            paint: { 'raster-opacity': 0.86, 'raster-saturation': -0.72, 'raster-contrast': 0.05 }
+            source: 'gsi-base',
+            paint: { 'raster-opacity': 1, 'raster-saturation': -0.15, 'raster-contrast': 0.04 }
           }
         ]
       }
@@ -214,14 +217,14 @@ export class MapAdapter {
         'source-layer': 'luse',
         minzoom: Model.CONFIG.mvtMinZoom,
         paint: {
-          'fill-color': [
+          'fill-color': this.selectedAwareValue('#ff4d8d', [
             'match', ['get', 'uro_orgLandUse'],
             '道路', '#f59e48',
             '公園', '#40c98a',
             '河川', '#4ca9df',
             '#47e6b1'
-          ],
-          'fill-opacity': this.duplicateAwareOpacity(0.46)
+          ]),
+          'fill-opacity': this.featureOpacity(0.46, 0.78)
         }
       });
       this.map.addLayer({
@@ -231,9 +234,9 @@ export class MapAdapter {
         'source-layer': 'luse',
         minzoom: Model.CONFIG.mvtMinZoom,
         paint: {
-          'line-color': '#116d54',
-          'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.5, 17, 1.4],
-          'line-opacity': this.duplicateAwareOpacity(0.84)
+          'line-color': this.selectedAwareValue('#ffffff', '#116d54'),
+          'line-width': this.selectedAwareValue(3.2, ['interpolate', ['linear'], ['zoom'], 14, 0.5, 17, 1.4]),
+          'line-opacity': this.featureOpacity(0.84, 1)
         }
       });
       this.map.addLayer({
@@ -243,8 +246,8 @@ export class MapAdapter {
         'source-layer': 'Road',
         minzoom: Model.CONFIG.mvtMinZoom,
         paint: {
-          'fill-color': '#ffc85a',
-          'fill-opacity': this.duplicateAwareOpacity(0.58)
+          'fill-color': this.selectedAwareValue('#ff4d8d', '#ffc85a'),
+          'fill-opacity': this.featureOpacity(0.58, 0.78)
         }
       });
       this.map.addLayer({
@@ -254,9 +257,9 @@ export class MapAdapter {
         'source-layer': 'Road',
         minzoom: Model.CONFIG.mvtMinZoom,
         paint: {
-          'line-color': '#7f5c12',
-          'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.6, 17, 1.6],
-          'line-opacity': this.duplicateAwareOpacity(0.9)
+          'line-color': this.selectedAwareValue('#ffffff', '#7f5c12'),
+          'line-width': this.selectedAwareValue(3.2, ['interpolate', ['linear'], ['zoom'], 14, 0.6, 17, 1.6]),
+          'line-opacity': this.featureOpacity(0.9, 1)
         }
       });
 
@@ -270,6 +273,7 @@ export class MapAdapter {
   }
 
   clearMvtSources() {
+    this.clearSelectedFeature();
     Object.values(this.layerIds).flat().forEach(id => {
       if (this.map.getLayer(id)) this.map.removeLayer(id);
     });
@@ -288,15 +292,28 @@ export class MapAdapter {
       this.layerIds[kind].forEach(id => {
         if (this.map.getLayer(id)) this.map.setLayoutProperty(id, 'visibility', visibility);
       });
-      const opacity = this.duplicateAwareOpacity(state.opacity[kind]);
+      const opacity = this.featureOpacity(state.opacity[kind], 0.78);
       this.fillLayerIds[kind].forEach(id => {
         if (this.map.getLayer(id)) this.map.setPaintProperty(id, 'fill-opacity', opacity);
       });
     }
   }
 
-  duplicateAwareOpacity(value) {
-    return ['case', ['boolean', ['feature-state', 'duplicate'], false], 0, value];
+  selectedAwareValue(selectedValue, defaultValue) {
+    return [
+      'case',
+      ['boolean', ['feature-state', 'selected'], false], selectedValue,
+      defaultValue
+    ];
+  }
+
+  featureOpacity(defaultValue, selectedValue) {
+    return [
+      'case',
+      ['boolean', ['feature-state', 'selected'], false], selectedValue,
+      ['boolean', ['feature-state', 'duplicate'], false], 0,
+      defaultValue
+    ];
   }
 
   syncMeshOverlay(enabled, meshState) {
@@ -445,16 +462,24 @@ export class MapAdapter {
   handleMouseMove(event) {
     const layers = this.interactiveLayerIds();
     if (!layers.length) return;
-    const features = this.map.queryRenderedFeatures(event.point, { layers });
+    const features = this.visibleRenderedFeatures(
+      this.map.queryRenderedFeatures(event.point, { layers })
+    );
     this.map.getCanvas().style.cursor = features.length ? 'pointer' : '';
   }
 
   handleClick(event) {
     const layers = this.interactiveLayerIds();
-    const feature = Model.uniqueRenderedFeatures(
-      this.map.queryRenderedFeatures(event.point, { layers })
-    )[0];
-    if (!feature) return;
+    const features = layers.length
+      ? this.visibleRenderedFeatures(this.map.queryRenderedFeatures(event.point, { layers }))
+      : [];
+    const feature = Model.uniqueRenderedFeatures(features)[0];
+    if (!feature) {
+      this.clearSelectedFeature();
+      this.callbacks.onFeatureSelected(null);
+      return;
+    }
+    this.selectFeatureOnMap(feature);
     this.callbacks.onFeatureSelected(feature);
 
     const popup = document.createElement('div');
@@ -471,11 +496,41 @@ export class MapAdapter {
       .addTo(this.map);
   }
 
+  visibleRenderedFeatures(features) {
+    return features.filter(feature => feature.state?.duplicate !== true);
+  }
+
+  selectFeatureOnMap(feature) {
+    this.clearSelectedFeature();
+    if (feature.id === undefined || feature.id === null) return;
+
+    const target = {
+      source: feature.source,
+      sourceLayer: feature.sourceLayer,
+      id: feature.id
+    };
+    if (!target.source || !target.sourceLayer || !this.map.getSource(target.source)) return;
+
+    this.map.setFeatureState(target, { selected: true });
+    this.selectedFeatureTarget = target;
+  }
+
+  clearSelectedFeature() {
+    const target = this.selectedFeatureTarget;
+    this.selectedFeatureTarget = null;
+    if (!target || !this.map?.getSource(target.source)) return;
+    this.map.removeFeatureState(target, 'selected');
+  }
+
   handleMapError(event) {
     const sourceId = event?.sourceId;
-    if (sourceId && this.sourceIds.includes(sourceId)) this.sourceErrors.add(sourceId);
     const message = event?.error?.message || 'データを読み込めませんでした';
-    if (sourceId || message.includes('plateau') || message.includes('TileJSON') || message.includes('404')) {
+    if (sourceId === 'gsi-base') {
+      this.callbacks.onStatus('背景地図を読み込めませんでした', 'error');
+    } else if (sourceId && this.sourceIds.includes(sourceId)) {
+      this.sourceErrors.add(sourceId);
+      this.callbacks.onStatus('対象データなし、または読込エラー', 'error');
+    } else if (message.includes('plateau') || message.includes('TileJSON') || message.includes('404')) {
       this.callbacks.onStatus('対象データなし、または読込エラー', 'error');
     }
     console.warn(event?.error || event);

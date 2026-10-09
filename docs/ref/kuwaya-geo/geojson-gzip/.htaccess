@@ -1,0 +1,12 @@
+# Public access for the gzipped GeoJSON files in this directory tree.
+AddType application/geo+json .geojson
+AddEncoding gzip .gz
+
+<IfModule mod_headers.c>
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Origin, Accept, Content-Type, Range"
+    Header always set Access-Control-Expose-Headers "Accept-Ranges, Content-Length, Content-Range, ETag, Last-Modified"
+    Header always set Cross-Origin-Resource-Policy "cross-origin"
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>

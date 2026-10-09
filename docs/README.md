@@ -8,11 +8,15 @@
 
 - [PLATEAU 取得可能データ整理（Cesium 非採用）](research/plateau-data-availability.md)  
   公式配信データの種類、MVT の対応状況、非 Cesium 構成での利用方針を整理した調査記録です。
+- [PLATEAU MVT の広域・連続利用における課題](research/mvt-wide-area-distribution-challenges.md)
+  自治体別配信の重複、自治体コード指定、地域メッシュと Web Mercator タイルの不一致を整理しています。
 
 ### 設計
 
 - [サイト構成](architecture.md)  
   Vanilla JSによるMVVMの責務分担、地図オーバーレイ、参照実装との関係をまとめています。
+- [MVT 静的タイル索引と Three.js 統合](design/mvt-static-tile-index.md)  
+  kuwaya-geo ベースでの z16 MVT 取得、z12 親 JSON 索引、東京都・埼玉県 PoC（154 ファイル）の設計です。
 
 ### 参照
 
