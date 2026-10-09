@@ -26,6 +26,10 @@ export function buildTileGroup(THREE, features, tileX, tileY, zoom, origin, opti
     transparent: true,
     opacity: options.opacity,
     depthWrite: false,
+    depthTest: true,
+    polygonOffset: true,
+    polygonOffsetFactor: 1,
+    polygonOffsetUnits: 1,
     side: THREE.DoubleSide
   });
 

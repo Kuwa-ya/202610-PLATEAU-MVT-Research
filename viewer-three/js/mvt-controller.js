@@ -52,6 +52,19 @@ export function createMvtController(THREE, scene, getCameraState) {
     tileGroups.clear();
   }
 
+  function evictOutside(keepKeys) {
+    for (const [key, group] of tileGroups) {
+      if (keepKeys.has(key)) continue;
+      root.remove(group);
+      disposeObject3D(group);
+      tileGroups.delete(key);
+    }
+  }
+
+  function hasTiles() {
+    return tileGroups.size > 0;
+  }
+
   async function sync() {
     const { origin, distance, target, datasetIds } = getCameraState();
     const viewCenter = viewCenterFromTarget(origin, target);
@@ -81,15 +94,11 @@ export function createMvtController(THREE, scene, getCameraState) {
     const limited = plans.slice(0, MAX_TILES);
     const styleById = Object.fromEntries(DATASETS.map(d => [d.id, d]));
     const keepKeys = new Set(limited.map(p => `${p.datasetId}:${p.z}/${p.x}/${p.y}`));
-    for (const [key, group] of tileGroups) {
-      if (!keepKeys.has(key)) {
-        root.remove(group);
-        disposeObject3D(group);
-        tileGroups.delete(key);
-      }
-    }
 
-    const queue = [...limited];
+    const queue = limited.filter(plan => {
+      const key = `${plan.datasetId}:${plan.z}/${plan.x}/${plan.y}`;
+      return !tileGroups.has(key);
+    });
     let loadErrors = 0;
 
     await new Promise(resolve => {
@@ -124,6 +133,20 @@ export function createMvtController(THREE, scene, getCameraState) {
       pump();
     });
 
+    if (gen !== generation) {
+      return {
+        mode: 'on',
+        distance,
+        count: tileGroups.size,
+        planned: limited.length,
+        error: '',
+        viewCenter,
+        stale: true
+      };
+    }
+
+    evictOutside(keepKeys);
+
     if (!tileGroups.size && limited.length && loadErrors) {
       return {
         mode: 'error',
@@ -145,5 +168,5 @@ export function createMvtController(THREE, scene, getCameraState) {
     };
   }
 
-  return { sync, clearTiles, root };
+  return { sync, clearTiles, hasTiles, root };
 }

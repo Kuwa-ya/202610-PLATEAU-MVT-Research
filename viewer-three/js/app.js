@@ -87,8 +87,7 @@ const terrainPoc = createTerrainPoc(THREE, {
     refreshLoadingOverlay();
   },
   onStatus: (message, isError) => setStatus(ui, message, isError),
-  onTerrainCommitted: () => syncGridVisibility(),
-  onViewChanged: () => scheduleSync()
+  onTerrainCommitted: () => syncGridVisibility()
 });
 
 function syncGridVisibility() {
@@ -148,8 +147,11 @@ function scheduleSync() {
   if (syncTimer) clearTimeout(syncTimer);
   syncTimer = setTimeout(async () => {
     syncInflight += 1;
-    mvtLoading = true;
-    refreshLoadingOverlay();
+    const showMvtLoading = !mvt.hasTiles();
+    if (showMvtLoading) {
+      mvtLoading = true;
+      refreshLoadingOverlay();
+    }
     try {
       applyMvtResult(await mvt.sync());
     } catch (error) {
@@ -168,7 +170,7 @@ function scheduleSync() {
         refreshLoadingOverlay();
       }
     }
-  }, 180);
+  }, 280);
 }
 
 const { terrain } = terrainPoc;
