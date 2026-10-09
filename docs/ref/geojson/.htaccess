@@ -1,0 +1,9 @@
+# GeoJSON viewer のHTML/ES moduleは更新時に必ず再検証する。
+# SFTPで同名ファイルを差し替えた際に、古い依存JSが残るのを防ぐ。
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|js|css)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+</IfModule>

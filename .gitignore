@@ -1,0 +1,17 @@
+# Dependencies and generated output
+node_modules/
+dist/
+.vite/
+
+# Local configuration and logs
+.env
+.env.*
+!.env.example
+*.log
+
+# Operating systems and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+

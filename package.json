@@ -1,0 +1,15 @@
+{
+  "name": "plateau-mvt-research",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "PLATEAU MVT を MapLibre GL JS で検証する静的サイト",
+  "scripts": {
+    "dev": "node scripts/serve.js",
+    "check": "node --check scripts/serve.js && node --check scripts/check-mesh.js && node --check site/js/model/mesh-utils.js && node --check site/js/model/model.js && node --check site/js/services/map-adapter.js && node --check site/js/viewmodel/app-view-model.js && node --check site/js/view/app-view.js && node --check site/js/app.js && node scripts/check-mesh.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
+

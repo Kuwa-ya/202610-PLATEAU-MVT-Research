@@ -1,0 +1,642 @@
+:root {
+  color-scheme: light;
+  --bg: #0b1020;
+  --panel: #0f1730;
+  --panel2: #101a38;
+  --text: #e8ecff;
+  --muted: #a9b3e6;
+  --line: rgba(255, 255, 255, 0.12);
+  --primary: #6ea8ff;
+  --danger: #ff6b6b;
+  --ok: #43d18d;
+  --shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  --radius: 12px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+    "Segoe UI Emoji";
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+  background: radial-gradient(1200px 600px at 25% -10%, rgba(110, 168, 255, 0.18), transparent 60%),
+    radial-gradient(900px 500px at 70% 0%, rgba(67, 209, 141, 0.12), transparent 55%), var(--bg);
+  color: var(--text);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(15, 23, 48, 0.7);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.topbar__title {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.topbar__status {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
+.layout {
+  height: calc(100% - 49px);
+  display: grid;
+  grid-template-columns: 420px 1fr;
+}
+
+.sidebar {
+  overflow: auto;
+  padding: 14px;
+  border-right: 1px solid var(--line);
+  background: rgba(15, 23, 48, 0.55);
+  backdrop-filter: blur(10px);
+}
+
+.mapArea {
+  position: relative;
+}
+
+.map {
+  position: absolute;
+  inset: 0;
+}
+
+.panel {
+  background: linear-gradient(180deg, rgba(16, 26, 56, 0.9), rgba(15, 23, 48, 0.85));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  box-shadow: var(--shadow);
+  margin-bottom: 12px;
+}
+
+.panel--compact {
+  padding: 10px 12px;
+}
+
+.panel__title {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.field--row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.field__label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.field__control {
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(8, 12, 24, 0.55);
+  color: var(--text);
+  outline: none;
+}
+
+.field__control:focus {
+  border-color: rgba(110, 168, 255, 0.65);
+  box-shadow: 0 0 0 3px rgba(110, 168, 255, 0.18);
+}
+
+.btnRow {
+  display: flex;
+  gap: 8px;
+}
+
+.btnRow--spaced {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.meshSelection {
+  display: grid;
+  gap: 7px;
+  margin: 10px 0 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.meshSelection__status {
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  border-radius: 8px;
+  color: #fde68a;
+  font-family: var(--mono);
+  font-size: 12px;
+  margin: 8px 0;
+  padding: 7px 9px;
+}
+
+.meshSelection .check {
+  min-width: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.btn {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(8, 12, 24, 0.35);
+  color: var(--text);
+  padding: 9px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 80ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+.btn:hover {
+  background: rgba(8, 12, 24, 0.55);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn--primary {
+  background: rgba(110, 168, 255, 0.18);
+  border-color: rgba(110, 168, 255, 0.35);
+}
+
+.btn--danger {
+  background: rgba(255, 107, 107, 0.14);
+  border-color: rgba(255, 107, 107, 0.35);
+}
+
+.hint {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
+.tab {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(8, 12, 24, 0.35);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.tab.is-active {
+  border-color: rgba(110, 168, 255, 0.55);
+  background: rgba(110, 168, 255, 0.16);
+}
+
+.tabpanes .tabpane {
+  display: none;
+}
+.tabpanes .tabpane.is-active {
+  display: block;
+}
+
+.apiBlock {
+  border-top: 1px solid var(--line);
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.apiBlock:first-child {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.apiBlock__title {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.2px;
+  margin: 0 0 10px;
+}
+
+.layerSummary {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 8px;
+  font-family: var(--mono);
+}
+
+.layerList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.layerItem {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: rgba(8, 12, 24, 0.35);
+}
+
+.layerItem__text {
+  min-width: 0;
+}
+
+.layerItem__name {
+  font-size: 13px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.layerItem__meta {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--mono);
+  margin-top: 2px;
+}
+
+.layerItem__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.labelKeyList {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 10px;
+  display: grid;
+  gap: 8px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.labelKeyItem {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: rgba(8, 12, 24, 0.35);
+}
+
+.labelKeyItem--empty {
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.labelKeyItem__text {
+  min-width: 0;
+}
+
+.labelKeyItem__name {
+  font-size: 13px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.labelKeyItem__meta {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--mono);
+  margin-top: 2px;
+}
+
+.labelKeyItem__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.filterCriteriaList {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 10px;
+  display: grid;
+  gap: 10px;
+  max-height: 280px;
+  overflow: auto;
+}
+
+.filterCriterion {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(8, 12, 24, 0.35);
+}
+
+.filterCriterion--empty {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 14px;
+}
+
+.filterCriterion__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.filterCriterion__index {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
+.filterCriterion__fields {
+  display: grid;
+  gap: 8px;
+}
+
+.filterCriterion__row {
+  display: grid;
+  gap: 4px;
+}
+
+.filterCriterion__row label {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.filterCriterion__row .field__control {
+  width: 100%;
+}
+
+.iconBtn {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(8, 12, 24, 0.2);
+  color: var(--text);
+  cursor: pointer;
+}
+.iconBtn:hover {
+  background: rgba(8, 12, 24, 0.38);
+}
+.iconBtn--danger {
+  border-color: rgba(255, 107, 107, 0.35);
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.propMeta {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: var(--mono);
+  margin-bottom: 8px;
+}
+
+.propTable {
+  display: grid;
+  gap: 6px;
+  padding-right: 4px;
+}
+
+.propRow {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: rgba(8, 12, 24, 0.28);
+}
+
+.propKey {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: var(--mono);
+  margin-bottom: 4px;
+}
+
+.propValue {
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.notifications {
+  display: grid;
+  gap: 8px;
+}
+
+.notice {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.35;
+  background: rgba(8, 12, 24, 0.28);
+  color: var(--text);
+}
+.notice--error {
+  border-color: rgba(255, 107, 107, 0.35);
+}
+.notice--success {
+  border-color: rgba(67, 209, 141, 0.35);
+}
+.notice--warn {
+  border-color: rgba(255, 209, 102, 0.35);
+}
+
+.loading {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+}
+.loading.is-hidden {
+  display: none;
+}
+.loading__card {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: rgba(15, 23, 48, 0.92);
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.loading__text {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-top-color: rgba(110, 168, 255, 0.9);
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Leaflet tweaks */
+.leaflet-container {
+  background: #081024;
+}
+
+@media (max-width: 1080px) {
+  .layout {
+    grid-template-columns: 380px 1fr;
+  }
+}
+
+@media (max-width: 920px) {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 420px 1fr;
+  }
+  .sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+/* ── フィーチャラベル（地図上のテキストボックス） ───────────────────────────── */
+
+/* Leaflet の .leaflet-tooltip に重ねてスタイルを上書き */
+.leaflet-tooltip.featureLabel {
+  background: rgba(11, 16, 32, 0.88);
+  border: 1.5px solid rgba(110, 168, 255, 0.7);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #e8ecff;
+  white-space: pre-line;
+  line-height: 1.35;
+  min-width: 100px;
+  max-width: 800px;
+  word-break: break-word;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  /* backdrop-filter は削除: ツールチップが多い場合にレンダリングコストが高いため */
+}
+
+/* Leaflet デフォルトの矢印（::before）を非表示 */
+.leaflet-tooltip.featureLabel::before {
+  display: none;
+}
+
+/* 選択中フィーチャのラベル強調表示 */
+.leaflet-tooltip.featureLabel.featureLabel--selected {
+  background: rgba(50, 35, 0, 0.93);
+  border-color: #ffcc00;
+  color: #ffee88;
+  box-shadow: 0 0 10px rgba(255, 204, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+.leaflet-tooltip.featureLabel.featureLabel--selected::before {
+  display: none;
+}
+.mesh-label,
+.web-tile-label {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  display: flex;
+  justify-content: center;
+  text-align: center;
+}
+
+.mesh-label span,
+.web-tile-label span {
+  border-radius: 4px;
+  box-sizing: border-box;
+  display: inline-block;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 20px;
+  padding: 1px 5px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.mesh-label span {
+  background: rgba(30, 64, 175, 0.82);
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.leaflet-interactive {
+  cursor: pointer;
+}
+
+.web-tile-label span {
+  background: rgba(255, 255, 255, 0.9);
+  color: #b91c1c;
+  text-shadow: none;
+}
+
+.mesh-label-4 span,
+.mesh-label-6 span {
+  font-size: 15px;
+  line-height: 22px;
+}

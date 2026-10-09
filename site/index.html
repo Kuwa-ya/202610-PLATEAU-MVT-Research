@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PLATEAU MVT LAB</title>
+  <meta name="description" content="Cesiumを使わず、MapLibreでPLATEAUの土地利用・道路MVTを検証するビューア" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1215'/%3E%3Cpath d='M13 45 25 18l9 18 7-13 10 22' fill='none' stroke='%2347e6b1' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./vendor/maplibre-gl/maplibre-gl.css" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #eaf4f1;
+      --muted: #8da29d;
+      --panel: rgba(10, 18, 21, 0.94);
+      --panel-2: #111d21;
+      --line: rgba(165, 205, 194, 0.16);
+      --accent: #47e6b1;
+      --accent-2: #ffc85a;
+      --danger: #ff816f;
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+      font-family: Inter, "Noto Sans JP", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #091114; color: var(--ink); }
+    button, input { font: inherit; }
+    button { color: inherit; }
+
+    .app { position: relative; width: 100%; height: 100%; }
+    #map { position: absolute; inset: 0; }
+
+    .sidebar {
+      position: absolute;
+      z-index: 5;
+      top: 16px;
+      left: 16px;
+      bottom: 16px;
+      width: min(354px, calc(100vw - 32px));
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+    }
+
+    .pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 5px rgba(71, 230, 177, 0.1);
+    }
+
+    h1 { margin: 0; font-size: 1.42rem; line-height: 1.2; letter-spacing: -0.03em; }
+    .sub { margin: 7px 0 0; color: var(--muted); font-size: 0.84rem; line-height: 1.55; }
+
+    .scroll {
+      min-height: 0;
+      overflow-y: auto;
+      padding: 16px 20px 24px;
+      scrollbar-width: thin;
+      scrollbar-color: #294039 transparent;
+    }
+
+    .section { padding: 3px 0 18px; }
+    .section + .section { border-top: 1px solid var(--line); padding-top: 18px; }
+
+    .section-title {
+      margin: 0 0 11px;
+      color: #b9cbc6;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .city-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+    .text-input {
+      min-width: 0;
+      height: 42px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      outline: none;
+      background: #0a1417;
+      color: var(--ink);
+      font-size: 0.92rem;
+    }
+    .text-input:focus { border-color: rgba(71, 230, 177, 0.68); box-shadow: 0 0 0 3px rgba(71, 230, 177, 0.1); }
+
+    .button {
+      height: 42px;
+      padding: 0 14px;
+      border: 1px solid rgba(71, 230, 177, 0.3);
+      border-radius: 10px;
+      background: rgba(71, 230, 177, 0.13);
+      color: #a8f8dd;
+      cursor: pointer;
+      font-weight: 800;
+    }
+    .button:hover { background: rgba(71, 230, 177, 0.2); }
+    .button:focus-visible, .chip:focus-visible, .toggle:focus-visible { outline: 3px solid rgba(71, 230, 177, 0.34); outline-offset: 2px; }
+
+    .hint { margin: 8px 0 0; color: var(--muted); font-size: 0.76rem; line-height: 1.45; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+    .chip {
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.035);
+      color: #c4d5d1;
+      cursor: pointer;
+      font-size: 0.76rem;
+    }
+    .chip:hover { border-color: rgba(71, 230, 177, 0.38); color: #fff; }
+
+    .layer-card {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.026);
+    }
+    .layer-card + .layer-card { margin-top: 9px; }
+    .layer-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .layer-name { display: flex; align-items: center; gap: 9px; font-size: 0.9rem; font-weight: 750; }
+    .swatch { width: 11px; height: 11px; border-radius: 3px; }
+    .swatch.landuse { background: var(--accent); }
+    .swatch.road { background: var(--accent-2); }
+
+    .toggle {
+      position: relative;
+      width: 42px;
+      height: 24px;
+      padding: 0;
+      border: 1px solid #355047;
+      border-radius: 999px;
+      background: #162622;
+      cursor: pointer;
+    }
+    .toggle::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #789087;
+      transition: transform 160ms ease, background 160ms ease;
+    }
+    .toggle[aria-pressed="true"] { background: rgba(71, 230, 177, 0.22); border-color: rgba(71, 230, 177, 0.65); }
+    .toggle[aria-pressed="true"]::after { transform: translateX(18px); background: var(--accent); }
+
+    .range-row { display: grid; grid-template-columns: auto 1fr 34px; align-items: center; gap: 8px; margin-top: 11px; color: var(--muted); font-size: 0.74rem; }
+    input[type="range"] { width: 100%; accent-color: var(--accent); }
+    .range-value { text-align: right; color: #cce0da; font-variant-numeric: tabular-nums; }
+
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+    .stat { padding: 10px 9px; border: 1px solid var(--line); border-radius: 11px; background: #0a1417; }
+    .stat-label { display: block; color: var(--muted); font-size: 0.69rem; margin-bottom: 4px; }
+    .stat-value { display: block; font-size: 0.94rem; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+    .zoom-note { margin-top: 10px; padding: 10px 11px; border-radius: 10px; background: rgba(255, 200, 90, 0.08); color: #e9d6a9; font-size: 0.76rem; line-height: 1.5; }
+    .zoom-note.good { background: rgba(71, 230, 177, 0.075); color: #afe8d5; }
+
+    .overlay-readout { display: grid; gap: 7px; margin-top: 10px; }
+    .overlay-readout-row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; color: var(--muted); font-size: 0.72rem; }
+    .overlay-readout-row code { overflow: hidden; color: #dce9e6; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+
+    .grid-label {
+      pointer-events: none;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font: 700 10px/1.2 ui-monospace, "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+      white-space: nowrap;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.24);
+    }
+    .grid-label--mesh { border: 1px solid rgba(37, 99, 235, 0.62); background: rgba(239, 246, 255, 0.88); color: #1e40af; }
+    .grid-label--web-tile { border: 1px solid rgba(220, 38, 38, 0.62); background: rgba(254, 242, 242, 0.9); color: #991b1b; }
+    .grid-label--mesh-4, .grid-label--mesh-6 { font-size: 11px; }
+    .grid-label--mesh-10, .grid-label--mesh-11 { font-size: 9px; }
+
+    .inspector-empty { color: var(--muted); font-size: 0.82rem; line-height: 1.6; }
+    .feature-title { margin: 0 0 8px; font-size: 0.92rem; }
+    .properties { display: grid; gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; }
+    .prop { display: grid; grid-template-columns: minmax(88px, .42fr) minmax(0, 1fr); gap: 10px; padding: 8px 9px; background: #0b1518; font-size: 0.72rem; }
+    .prop + .prop { border-top: 1px solid var(--line); }
+    .prop-key { color: var(--muted); overflow-wrap: anywhere; }
+    .prop-value { color: #dce9e6; overflow-wrap: anywhere; user-select: text; }
+
+    .status {
+      position: absolute;
+      z-index: 4;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(10, 18, 21, 0.87);
+      box-shadow: 0 10px 30px rgba(0,0,0,.2);
+      color: #c7d7d3;
+      font-size: 0.78rem;
+      backdrop-filter: blur(12px);
+    }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+    .status.loading .status-dot { animation: blink 1s infinite; }
+    .status.error .status-dot { background: var(--danger); }
+    @keyframes blink { 50% { opacity: .2; } }
+
+    .zoom-gate {
+      position: absolute;
+      z-index: 4;
+      left: 50%;
+      top: 22px;
+      transform: translateX(-50%);
+      display: none;
+      padding: 9px 13px;
+      border: 1px solid rgba(255, 200, 90, 0.28);
+      border-radius: 10px;
+      background: rgba(25, 20, 10, 0.9);
+      color: #ffe2a1;
+      font-size: 0.78rem;
+      box-shadow: var(--shadow);
+    }
+    .zoom-gate.visible { display: block; }
+
+    .maplibregl-ctrl-top-right { top: 58px; right: 6px; }
+    .maplibregl-ctrl-group { overflow: hidden; border: 1px solid var(--line) !important; border-radius: 11px !important; background: rgba(10,18,21,.9) !important; box-shadow: 0 10px 24px rgba(0,0,0,.22) !important; }
+    .maplibregl-ctrl-group button { filter: invert(1) opacity(.82); }
+    .maplibregl-ctrl-attrib { background: rgba(5,10,12,.75) !important; color: #a7b7b3; }
+    .maplibregl-ctrl-attrib a { color: #d7e8e3; }
+    .maplibregl-popup-content { border: 1px solid var(--line); border-radius: 12px; background: #0b1518; color: var(--ink); box-shadow: var(--shadow); }
+    .maplibregl-popup-close-button { color: #fff; font-size: 20px; }
+    .popup-label { color: var(--accent); font-size: 0.72rem; font-weight: 800; letter-spacing: .08em; }
+    .popup-id { max-width: 240px; margin-top: 4px; overflow-wrap: anywhere; font-size: .78rem; }
+
+    @media (max-width: 720px) {
+      .sidebar { top: auto; height: min(46vh, 430px); width: auto; right: 10px; bottom: 10px; left: 10px; border-radius: 16px; }
+      .brand { padding: 14px 16px 12px; }
+      .brand .sub { display: none; }
+      h1 { font-size: 1.1rem; }
+      .scroll { padding: 12px 16px 20px; }
+      .status { top: 10px; right: 10px; }
+      .zoom-gate { top: 56px; width: max-content; max-width: calc(100vw - 20px); }
+      .maplibregl-ctrl-top-right { top: 98px; right: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div id="map" aria-label="PLATEAU MVT地図"></div>
+
+    <aside class="sidebar" aria-label="検証パネル">
+      <header class="brand">
+        <div class="eyebrow"><span class="pulse"></span>LIVE TILE INSPECTOR</div>
+        <h1>PLATEAU MVT LAB</h1>
+        <p class="sub">複数自治体の公式MVTを重ね、表示・密度・属性を確認します。</p>
+      </header>
+
+      <div class="scroll">
+        <section class="section">
+          <h2 class="section-title">対象自治体</h2>
+          <form id="city-form" class="city-form">
+            <input id="city-code" class="text-input" value="13101, 13102" autocomplete="off" spellcheck="false" aria-label="5桁の自治体コード（複数指定可）" />
+            <button class="button" type="submit">読み込む</button>
+          </form>
+          <p class="hint">5桁のコードをカンマまたは空白で区切ります。2025年度固定、最大8自治体。初期値は千代田区と中央区です。</p>
+          <div class="chips" aria-label="表示地点">
+            <button class="chip" type="button" data-place="otemachi">大手町</button>
+            <button class="chip" type="button" data-place="kanda">神田</button>
+            <button class="chip" type="button" data-place="kasumigaseki">霞が関</button>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">レイヤー</h2>
+          <div class="layer-card">
+            <div class="layer-head">
+              <div class="layer-name"><span class="swatch landuse"></span>土地利用 <code>luse</code></div>
+              <button id="toggle-luse" class="toggle" type="button" aria-label="土地利用レイヤーを切り替える" aria-pressed="true"></button>
+            </div>
+            <label class="range-row">透明度<input id="opacity-luse" type="range" min="0" max="100" value="46" /><span id="opacity-luse-value" class="range-value">46%</span></label>
+          </div>
+
+          <div class="layer-card">
+            <div class="layer-head">
+              <div class="layer-name"><span class="swatch road"></span>道路 LOD1 <code>tran</code></div>
+              <button id="toggle-road" class="toggle" type="button" aria-label="道路レイヤーを切り替える" aria-pressed="true"></button>
+            </div>
+            <label class="range-row">透明度<input id="opacity-road" type="range" min="0" max="100" value="58" /><span id="opacity-road-value" class="range-value">58%</span></label>
+          </div>
+
+          <div class="layer-card">
+            <div class="layer-head">
+              <div class="layer-name"><span class="swatch" style="background:#2563eb"></span>地域メッシュコード</div>
+              <button id="toggle-mesh" class="toggle" type="button" aria-label="地域メッシュ表示を切り替える" aria-pressed="true"></button>
+            </div>
+            <p class="hint">縮尺に応じて4・6・8・9・10・11桁を自動表示します。</p>
+          </div>
+
+          <div class="layer-card">
+            <div class="layer-head">
+              <div class="layer-name"><span class="swatch" style="background:#dc2626"></span>Web Mercator <code>z/x/y</code></div>
+              <button id="toggle-web-tile" class="toggle" type="button" aria-label="Web Mercatorタイル表示を切り替える" aria-pressed="false"></button>
+            </div>
+            <p class="hint">現在の整数ズームに対応するXYZタイル境界と番号を表示します。</p>
+          </div>
+
+          <div class="overlay-readout" aria-label="中心位置のメッシュ番号">
+            <div class="overlay-readout-row"><span>地域メッシュ</span><code id="mesh-code">—</code></div>
+            <div class="overlay-readout-row"><span>XYZタイル</span><code id="web-tile-code">—</code></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">読み込み状況</h2>
+          <div class="stats">
+            <div class="stat"><span class="stat-label">ズーム</span><strong id="stat-zoom" class="stat-value">—</strong></div>
+            <div class="stat"><span class="stat-label">MVT要求</span><strong id="stat-requests" class="stat-value">0</strong></div>
+            <div class="stat"><span class="stat-label">転送量</span><strong id="stat-bytes" class="stat-value">—</strong></div>
+          </div>
+          <div id="zoom-note" class="zoom-note">ズーム14以上でMVTを表示します。</div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">選択地物</h2>
+          <div id="inspector" class="inspector-empty">地図上の土地利用または道路をクリックすると、MVTに含まれる属性を表示します。</div>
+        </section>
+      </div>
+    </aside>
+
+    <div id="status" class="status loading" role="status" aria-live="polite"><span class="status-dot"></span><span id="status-text">地図を準備中</span></div>
+    <div id="zoom-gate" class="zoom-gate">ズーム14まで拡大するとPLATEAU MVTを表示します</div>
+  </main>
+
+  <script src="./vendor/maplibre-gl/maplibre-gl.js"></script>
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
