@@ -37,6 +37,35 @@
       <aside id="control-panel" class="control-panel">
         <div id="viewer-controls">
           <fieldset class="settings-section tile-settings">
+            <legend>地形（地理院タイル）</legend>
+            <label>地形表示
+              <select id="terrain-visibility" name="terrainVisibility">
+                <option value="show" selected>表示</option>
+                <option value="hide">非表示</option>
+              </select>
+            </label>
+            <label>地表テクスチャ
+              <select id="texture-type" name="textureType">
+                <option value="photo" selected>航空写真</option>
+                <option value="standard">標準地図</option>
+              </select>
+            </label>
+            <p class="control-note">表示 LOD・標高解像度はカメラ距離に応じて自動調整されます（<a href="/kuwaya-geo/">ちずうつし</a> と同様）。</p>
+          </fieldset>
+
+          <fieldset class="settings-section coordinate-settings">
+            <legend>座標</legend>
+            <label>平面直角座標系
+              <select id="jprc-zone" name="jprcZone">
+                <option value="9" selected>第IX系（東京）</option>
+                <option value="8">第VIII系</option>
+                <option value="10">第X系</option>
+                <option value="7">第VII系</option>
+              </select>
+            </label>
+          </fieldset>
+
+          <fieldset class="settings-section tile-settings">
             <legend>PLATEAU MVT</legend>
             <div class="layer-tabs" role="tablist" aria-label="MVT レイヤー">
               <button id="luse-tab" class="layer-tab selected" type="button" role="tab" aria-selected="true" aria-controls="luse-panel" tabindex="0">土地利用</button>
@@ -91,6 +120,11 @@
           <div><dt>カメラ距離</dt><dd id="camera-distance">—</dd></div>
           <div><dt>MVT タイル</dt><dd id="mvt-tile-count">—</dd></div>
           <div><dt>取得予定</dt><dd id="mvt-planned">—</dd></div>
+          <div><dt>中心タイル</dt><dd id="center-tile">—</dd></div>
+          <div><dt>読込中 LOD</dt><dd id="requested-lod">—</dd></div>
+          <div><dt>地形 LOD</dt><dd id="dem-tile">—</dd></div>
+          <div><dt>画像タイル</dt><dd id="texture-tiles">—</dd></div>
+          <div><dt>頂点数</dt><dd id="vertex-count">—</dd></div>
           <div><dt>ローカル原点</dt><dd id="local-origin">—</dd></div>
         </dl>
       </aside>
@@ -99,14 +133,17 @@
         <div id="viewer" class="viewer" aria-label="3D MVT 表示">
           <canvas id="mvt-canvas"></canvas>
           <div class="viewer-state" aria-live="polite">
+            <div><span>地形</span><strong id="viewer-current-lod">準備中</strong></div>
+            <div id="viewer-requested-row" hidden><span>ロード</span><strong id="viewer-requested-lod">—</strong></div>
             <div><span>MVT</span><strong id="viewer-mvt-mode">準備中</strong></div>
             <div id="viewer-mvt-tiles-row"><span>タイル</span><strong id="viewer-mvt-tiles">—</strong></div>
           </div>
           <div class="viewer-help">左ドラッグ：移動　右ドラッグ／2本指：角度　ホイール／ピンチ：拡大縮小</div>
-          <div id="loading" class="loading" hidden><span></span><p>MVT を読み込んでいます</p></div>
+          <div id="loading" class="loading" hidden><span></span><p id="loading-message">読み込んでいます</p></div>
         </div>
         <div class="statusbar">
           <p id="status" role="status">ビューワを起動しています。</p>
+          <p id="cache-status" class="control-note">メモリキャッシュ —</p>
           <p id="mvt-hint">—</p>
         </div>
       </section>

@@ -2,7 +2,9 @@ import {
   CAMERA_DEFAULT_DISTANCE,
   CAMERA_LERP_RATE,
   CAMERA_MIN_DISTANCE,
-  INITIAL_LOCATION
+  INITIAL_LOCATION,
+  TERRAIN_STREAM_ACTIVE_DELAY,
+  TERRAIN_STREAM_DELAY
 } from '/kuwaya-geo/js/config.js';
 import {
   bindCameraInteractions,
@@ -11,6 +13,7 @@ import {
 } from '/kuwaya-geo/js/view/camera.js';
 import { MVT_MAX_CAMERA_DISTANCE } from './mvt-config.js';
 import { createMvtController } from './mvt-controller.js';
+import { createTerrainPoc } from './terrain-poc.js';
 import {
   bindViewUi,
   readEnabledDatasets,
@@ -56,6 +59,42 @@ const originRef = {
   lat: INITIAL_LOCATION.latitude,
   lon: INITIAL_LOCATION.longitude
 };
+
+let mvtLoading = false;
+let terrainLoading = false;
+
+function refreshLoadingOverlay() {
+  if (terrainLoading && mvtLoading) {
+    setLoading(ui, true, '地形・MVT を読み込んでいます');
+  } else if (terrainLoading) {
+    setLoading(ui, true, '地形データを読み込んでいます');
+  } else if (mvtLoading) {
+    setLoading(ui, true, 'MVT を読み込んでいます');
+  } else {
+    setLoading(ui, false);
+  }
+}
+
+const terrainPoc = createTerrainPoc(THREE, {
+  scene,
+  cameraController: cameraState,
+  focusedTarget,
+  focusedSpherical,
+  ui,
+  initialLocation: INITIAL_LOCATION,
+  onLoadingChange: active => {
+    terrainLoading = active;
+    refreshLoadingOverlay();
+  },
+  onStatus: (message, isError) => setStatus(ui, message, isError),
+  onTerrainCommitted: () => syncGridVisibility(),
+  onViewChanged: () => scheduleSync()
+});
+
+function syncGridVisibility() {
+  const terrainOn = ui.terrainVisibility?.value !== 'hide';
+  grid.visible = !terrainOn || !terrainPoc.terrain.getGroup();
+}
 
 const mvt = createMvtController(THREE, scene, () => ({
   origin: originRef,
@@ -109,7 +148,8 @@ function scheduleSync() {
   if (syncTimer) clearTimeout(syncTimer);
   syncTimer = setTimeout(async () => {
     syncInflight += 1;
-    setLoading(ui, true);
+    mvtLoading = true;
+    refreshLoadingOverlay();
     try {
       applyMvtResult(await mvt.sync());
     } catch (error) {
@@ -123,15 +163,30 @@ function scheduleSync() {
       });
     } finally {
       syncInflight = Math.max(0, syncInflight - 1);
-      if (!syncInflight) setLoading(ui, false);
+      if (!syncInflight) {
+        mvtLoading = false;
+        refreshLoadingOverlay();
+      }
     }
   }, 180);
 }
 
+const { terrain } = terrainPoc;
+
 bindCameraInteractions(THREE, canvas, cameraState, {
-  onZoom: scheduleSync,
-  onPan: scheduleSync,
-  onPanEnd: scheduleSync
+  onZoom: () => {
+    terrain.scheduleLodRefresh();
+    scheduleSync();
+  },
+  onPan: () => {
+    terrain.applyFocusElevation();
+    terrain.scheduleStream(TERRAIN_STREAM_ACTIVE_DELAY);
+    scheduleSync();
+  },
+  onPanEnd: () => {
+    terrain.scheduleStream(TERRAIN_STREAM_DELAY);
+    scheduleSync();
+  }
 });
 
 function resize() {
@@ -164,6 +219,7 @@ ui.originApply?.addEventListener('click', () => {
   originRef.lon = lon;
   ui.originStatus.textContent = `固定原点：${lat.toFixed(8)}, ${lon.toFixed(8)}`;
   mvt.clearTiles();
+  terrainPoc.reload(true);
   scheduleSync();
 });
 
@@ -175,12 +231,14 @@ ui.viewReset?.addEventListener('click', () => {
   focusedSpherical.theta = 0;
   cameraState.spherical.copy(focusedSpherical);
   cameraState.update();
+  terrain.applyFocusElevation();
   scheduleSync();
 });
 
 ui.viewZoomMvt?.addEventListener('click', () => {
   focusedSpherical.radius = Math.max(CAMERA_MIN_DISTANCE, MVT_MAX_CAMERA_DISTANCE * 0.75);
   cameraState.update();
+  terrain.scheduleLodRefresh();
   scheduleSync();
 });
 
@@ -191,6 +249,25 @@ for (const select of [ui.luseVisibility, ui.tranVisibility]) {
   });
 }
 
+ui.terrainVisibility?.addEventListener('change', () => {
+  const show = ui.terrainVisibility.value !== 'hide';
+  terrainPoc.setVisible(show);
+  if (show) {
+    terrainPoc.reload(false);
+  } else {
+    const group = terrain.getGroup();
+    if (group) group.visible = false;
+  }
+  syncGridVisibility();
+});
+
+ui.textureType?.addEventListener('change', () => terrainPoc.reload(false));
+ui.jprcZone?.addEventListener('change', () => terrainPoc.reload(true));
+
 ui.localOrigin.textContent = `${originRef.lat.toFixed(8)}, ${originRef.lon.toFixed(8)}`;
-setStatus(ui, '起動完了。カメラを操作するか「MVT 表示距離まで寄る」を試してください。');
+terrainPoc.setVisible(ui.terrainVisibility?.value !== 'hide');
+terrainPoc.initialRequest(true);
+syncGridVisibility();
+
+setStatus(ui, '起動完了。地形の読み込み後、カメラを操作するか「MVT 表示距離まで寄る」を試してください。');
 scheduleSync();

@@ -5,6 +5,19 @@ export function bindViewUi(document) {
     status: document.querySelector('#status'),
     hint: document.querySelector('#mvt-hint'),
     loading: document.querySelector('#loading'),
+    loadingMessage: document.querySelector('#loading-message'),
+    terrainVisibility: document.querySelector('#terrain-visibility'),
+    textureType: document.querySelector('#texture-type'),
+    jprcZone: document.querySelector('#jprc-zone'),
+    centerTile: document.querySelector('#center-tile'),
+    demTile: document.querySelector('#dem-tile'),
+    textureTiles: document.querySelector('#texture-tiles'),
+    vertexCount: document.querySelector('#vertex-count'),
+    cacheStatus: document.querySelector('#cache-status'),
+    viewerCurrentLod: document.querySelector('#viewer-current-lod'),
+    viewerRequestedLod: document.querySelector('#viewer-requested-lod'),
+    viewerRequestedRow: document.querySelector('#viewer-requested-row'),
+    requestedLod: document.querySelector('#requested-lod'),
     luseVisibility: document.querySelector('#luse-visibility'),
     tranVisibility: document.querySelector('#tran-visibility'),
     originLatitude: document.querySelector('#origin-latitude'),
@@ -61,8 +74,9 @@ export function setStatus(elements, message, isError = false) {
   elements.status.classList.toggle('error', isError);
 }
 
-export function setLoading(elements, visible) {
+export function setLoading(elements, visible, message) {
   if (elements.loading) elements.loading.hidden = !visible;
+  if (message && elements.loadingMessage) elements.loadingMessage.textContent = message;
 }
 
 export function formatCoord(value) {
