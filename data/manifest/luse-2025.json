@@ -1,0 +1,1150 @@
+{
+  "schemaVersion": 1,
+  "dataset": "luse-2025",
+  "featureType": "luse",
+  "year": 2025,
+  "maxzoom": 16,
+  "minzoomCatalog": 10,
+  "cities": [
+    {
+      "cityCode": "11202",
+      "prefCode": "11",
+      "name": "熊谷市",
+      "spec": "11202-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11202-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/8d/31eb5d-28ed-4b11-be17-9663ec78496b/11202_kumagaya-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 36.25437359,
+        "south": 36.06963223,
+        "west": 139.28961122,
+        "east": 139.44661988000001
+      }
+    },
+    {
+      "cityCode": "11207",
+      "prefCode": "11",
+      "name": "秩父市",
+      "spec": "11207-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11207-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/e5/66dcc2-a65e-48ad-9e21-e05a6e5ecc1b/11207_chichibu-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 36.1259048,
+        "south": 35.83977651,
+        "west": 138.71136047000002,
+        "east": 139.17620073000003
+      }
+    },
+    {
+      "cityCode": "11211",
+      "prefCode": "11",
+      "name": "本庄市",
+      "spec": "11211-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11211-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/68/894707-c371-48d8-ba3f-d9215521fbc9/11211_honjo-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 36.27475284,
+        "south": 36.11871261,
+        "west": 139.05684372000002,
+        "east": 139.24760481
+      }
+    },
+    {
+      "cityCode": "11215",
+      "prefCode": "11",
+      "name": "狭山市",
+      "spec": "11215-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11215-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/be/514064-0e97-470f-a0b8-4eb622fe871e/11215_sayama-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.9009492,
+        "south": 35.81770684,
+        "west": 139.36088881,
+        "east": 139.47830883
+      }
+    },
+    {
+      "cityCode": "11216",
+      "prefCode": "11",
+      "name": "羽生市",
+      "spec": "11216-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11216-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/9e/c739f0-4b58-4526-95b6-c8892a835093/11216_hanyu-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 36.21037428,
+        "south": 36.13669589,
+        "west": 139.48803358,
+        "east": 139.61311630000003
+      }
+    },
+    {
+      "cityCode": "11218",
+      "prefCode": "11",
+      "name": "深谷市",
+      "spec": "11218-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11218-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/21/3d8071-57e4-4bda-8896-a4fc1d90f4f5/11218_fukaya-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 36.2505578,
+        "south": 36.10441761,
+        "west": 139.18067934,
+        "east": 139.33645051000002
+      }
+    },
+    {
+      "cityCode": "11219",
+      "prefCode": "11",
+      "name": "上尾市",
+      "spec": "11219-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11219-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/87/abace6-6304-4034-a0f6-8ebf07584a62/11219_ageo-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 36.00983603,
+        "south": 35.92569495,
+        "west": 139.5340385,
+        "east": 139.64985581000002
+      }
+    },
+    {
+      "cityCode": "11221",
+      "prefCode": "11",
+      "name": "草加市",
+      "spec": "11221-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11221-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/81/c2d40c-ddbf-47b2-8d95-ef3d175dc581/11221_soka-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.87157103,
+        "south": 35.80519841,
+        "west": 139.76360577,
+        "east": 139.84085791
+      }
+    },
+    {
+      "cityCode": "11225",
+      "prefCode": "11",
+      "name": "入間市",
+      "spec": "11225-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11225-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/af/240e48-a617-44da-b4e0-e3442373ee13/11225_iruma-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.8619612,
+        "south": 35.77400053,
+        "west": 139.31499209000003,
+        "east": 139.41946336
+      }
+    },
+    {
+      "cityCode": "11227",
+      "prefCode": "11",
+      "name": "朝霞市",
+      "spec": "11227-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11227-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/58/82a6b0-78ee-4d29-9880-f220560011ee/11227_asaka-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.83524589,
+        "south": 35.778366,
+        "west": 139.57277859,
+        "east": 139.62337053000002
+      }
+    },
+    {
+      "cityCode": "11229",
+      "prefCode": "11",
+      "name": "和光市",
+      "spec": "11229-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11229-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/57/4c1219-2f1b-41c2-a859-4c71c7ffa540/11229_wako-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.81320536,
+        "south": 35.76664797,
+        "west": 139.59690936,
+        "east": 139.6463017
+      }
+    },
+    {
+      "cityCode": "11231",
+      "prefCode": "11",
+      "name": "桶川市",
+      "spec": "11231-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11231-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/01/b8f48f-27bc-4a81-9483-d4e154e192db/11231_okegawa-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 36.04053131,
+        "south": 35.96071417,
+        "west": 139.50615075000002,
+        "east": 139.59607042000002
+      }
+    },
+    {
+      "cityCode": "11233",
+      "prefCode": "11",
+      "name": "北本市",
+      "spec": "11233-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11233-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/29/c881b1-b0bb-402c-9cd6-9a08c98a5368/11233_kitamoto-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 36.05760653,
+        "south": 35.99586956,
+        "west": 139.49429645,
+        "east": 139.56505397
+      }
+    },
+    {
+      "cityCode": "11239",
+      "prefCode": "11",
+      "name": "坂戸市",
+      "spec": "11239-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11239-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/b4/349f09-9c19-4df8-9321-e39dc057ba93/11239_sakado-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.99809533,
+        "south": 35.91969086,
+        "west": 139.32365399000003,
+        "east": 139.46829139000002
+      }
+    },
+    {
+      "cityCode": "11245",
+      "prefCode": "11",
+      "name": "ふじみ野市",
+      "spec": "11245-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11245-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/54/859ec3-a1a4-4da6-9de5-b4e8621cb3a7/11245_fujimino-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.89228467,
+        "south": 35.84203369,
+        "west": 139.46833506000002,
+        "east": 139.551077
+      }
+    },
+    {
+      "cityCode": "11341",
+      "prefCode": "11",
+      "name": "滑川町",
+      "spec": "11341-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11341-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/25/479df1-6484-445c-8cb1-bcdd22bd2b46/11341_namegawa-machi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 36.10402539,
+        "south": 36.03659372,
+        "west": 139.32091261000002,
+        "east": 139.38715005000003
+      }
+    },
+    {
+      "cityCode": "11342",
+      "prefCode": "11",
+      "name": "嵐山町",
+      "spec": "11342-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11342-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/6a/820078-5358-490b-89ae-caec7833c94a/11342_ranzan-machi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 36.11049623,
+        "south": 36.00658047,
+        "west": 139.28817375,
+        "east": 139.34587949000002
+      }
+    },
+    {
+      "cityCode": "11343",
+      "prefCode": "11",
+      "name": "小川町",
+      "spec": "11343-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11343-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/4e/955a7d-233a-458f-856d-0d9fd9b49547/11343_ogawa-machi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 36.09911456,
+        "south": 36.00490072,
+        "west": 139.18574056,
+        "east": 139.30848528
+      }
+    },
+    {
+      "cityCode": "11346",
+      "prefCode": "11",
+      "name": "川島町",
+      "spec": "11346-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11346-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/8e/32f384-dd73-4dff-8903-f652132b7d52/11346_kawajima-machi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 36.01975625,
+        "south": 35.9479728,
+        "west": 139.42154255000003,
+        "east": 139.54545986
+      }
+    },
+    {
+      "cityCode": "11347",
+      "prefCode": "11",
+      "name": "吉見町",
+      "spec": "11347-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11347-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/b9/a53df0-10a4-4a98-9382-47bc8c2d78ab/11347_yoshimi-machi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 36.08405053,
+        "south": 36.01140244,
+        "west": 139.41379856,
+        "east": 139.50501589
+      }
+    },
+    {
+      "cityCode": "11348",
+      "prefCode": "11",
+      "name": "鳩山町",
+      "spec": "11348-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11348-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/f2/c5a983-e976-4226-a654-3c0d34e6e2a3/11348_hatoyama-machi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 36.01005523,
+        "south": 35.96181859,
+        "west": 139.28743828,
+        "east": 139.37936486
+      }
+    },
+    {
+      "cityCode": "11408",
+      "prefCode": "11",
+      "name": "寄居町",
+      "spec": "11408-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/11408-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/d1/d3a2a0-6126-4b88-a49f-e452e8478c0c/11408_yorii-machi_city_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 36.17666836,
+        "south": 36.06846784,
+        "west": 139.13715355000002,
+        "east": 139.28909348
+      }
+    },
+    {
+      "cityCode": "13101",
+      "prefCode": "13",
+      "name": "千代田区",
+      "spec": "13101-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13101-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/e1/2f49fd-e609-498f-85eb-a7062c54afe2/13101_chiyoda-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.70535159,
+        "south": 35.66960859,
+        "west": 139.73000136000002,
+        "east": 139.7826608
+      }
+    },
+    {
+      "cityCode": "13102",
+      "prefCode": "13",
+      "name": "中央区",
+      "spec": "13102-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13102-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/58/a7ac4a-adb3-46b1-b955-f823ec041178/13102_chuo-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.69657131,
+        "south": 35.6460388,
+        "west": 139.75431689,
+        "east": 139.79275161
+      }
+    },
+    {
+      "cityCode": "13103",
+      "prefCode": "13",
+      "name": "港区",
+      "spec": "13103-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13103-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/2a/1a1412-f71b-4f12-971d-33e2be341f6f/13103_minato-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.68283222,
+        "south": 35.62308395,
+        "west": 139.70856389000002,
+        "east": 139.78237634
+      }
+    },
+    {
+      "cityCode": "13104",
+      "prefCode": "13",
+      "name": "新宿区",
+      "spec": "13104-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13104-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/14/afce7a-5c68-483d-9933-83466afe9af2/13104_shinjuku-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.72951995,
+        "south": 35.67343308,
+        "west": 139.67343778000003,
+        "east": 139.74587044
+      }
+    },
+    {
+      "cityCode": "13105",
+      "prefCode": "13",
+      "name": "文京区",
+      "spec": "13105-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13105-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/10/f3c4d5-063d-48ea-84e0-ca53f42ef660/13105_bunkyo-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.73585544,
+        "south": 35.69963992,
+        "west": 139.71747294000002,
+        "east": 139.77240170000002
+      }
+    },
+    {
+      "cityCode": "13106",
+      "prefCode": "13",
+      "name": "台東区",
+      "spec": "13106-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13106-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/40/e215c9-99d3-4b38-a7f8-46d37e395214/13106_taito-ku_city_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.73121822,
+        "south": 35.69470377,
+        "west": 139.76278878000002,
+        "east": 139.80971861
+      }
+    },
+    {
+      "cityCode": "13107",
+      "prefCode": "13",
+      "name": "墨田区",
+      "spec": "13107-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13107-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/cb/8b6db5-a266-491e-bc01-fc9fc851aa79/13107_sumida-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.74342872,
+        "south": 35.68677572,
+        "west": 139.78864635000002,
+        "east": 139.84215477
+      }
+    },
+    {
+      "cityCode": "13108",
+      "prefCode": "13",
+      "name": "江東区",
+      "spec": "13108-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13108-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/d7/7fbb26-c799-491b-b711-479b1159ac9e/13108_koto-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.70800764,
+        "south": 35.60184045,
+        "west": 139.77132484,
+        "east": 139.84822678
+      }
+    },
+    {
+      "cityCode": "13109",
+      "prefCode": "13",
+      "name": "品川区",
+      "spec": "13109-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13109-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/5f/036a65-4746-42d4-87f8-151d7b95926f/13109_shinagawa-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.64184756,
+        "south": 35.58492978,
+        "west": 139.69539272,
+        "east": 139.77359552000001
+      }
+    },
+    {
+      "cityCode": "13110",
+      "prefCode": "13",
+      "name": "目黒区",
+      "spec": "13110-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13110-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/fd/3c044c-505a-4efe-89ab-ebc797a382b3/13110_meguro-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.66394875,
+        "south": 35.60064714,
+        "west": 139.66148297,
+        "east": 139.71765433000002
+      }
+    },
+    {
+      "cityCode": "13111",
+      "prefCode": "13",
+      "name": "大田区",
+      "spec": "13111-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13111-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/af/2c463c-93c5-4aba-b993-39b9a6f35363/13111_ota-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.61321017,
+        "south": 35.52819808,
+        "west": 139.65297477000001,
+        "east": 139.82602778000003
+      }
+    },
+    {
+      "cityCode": "13112",
+      "prefCode": "13",
+      "name": "世田谷区",
+      "spec": "13112-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13112-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/d3/ef2649-aa1e-4062-aec9-0cd5fb1dcdce/13112_setagaya-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.68281567,
+        "south": 35.59014636,
+        "west": 139.58248864,
+        "east": 139.68639616000002
+      }
+    },
+    {
+      "cityCode": "13113",
+      "prefCode": "13",
+      "name": "渋谷区",
+      "spec": "13113-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13113-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/e2/2632af-298d-4159-b58d-205ed1df1d8d/13113_shibuya-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.6920245,
+        "south": 35.64145814,
+        "west": 139.66159125000001,
+        "east": 139.72356022000002
+      }
+    },
+    {
+      "cityCode": "13114",
+      "prefCode": "13",
+      "name": "中野区",
+      "spec": "13114-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13114-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/c4/756b22-d2cb-443c-917d-d429b7908bfb/13114_nakano-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.73538167,
+        "south": 35.67634792,
+        "west": 139.62432764000002,
+        "east": 139.69433114
+      }
+    },
+    {
+      "cityCode": "13115",
+      "prefCode": "13",
+      "name": "杉並区",
+      "spec": "13115-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13115-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/9c/d137e8-d91d-4dd5-8714-1a7b2f696dd7/13115_suginami-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.73044889,
+        "south": 35.66580551,
+        "west": 139.58491917,
+        "east": 139.66776947000002
+      }
+    },
+    {
+      "cityCode": "13116",
+      "prefCode": "13",
+      "name": "豊島区",
+      "spec": "13116-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13116-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/74/acfe4a-5a5b-4ed3-937e-b4ff3f4a3780/13116_toshima-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.74579267,
+        "south": 35.71226577,
+        "west": 139.67734431000002,
+        "east": 139.75276044
+      }
+    },
+    {
+      "cityCode": "13117",
+      "prefCode": "13",
+      "name": "北区",
+      "spec": "13117-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13117-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/18/e5fb1f-bcbb-4467-acf9-bc9f44860afa/13117_kita-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.798904,
+        "south": 35.73157795,
+        "west": 139.68939769,
+        "east": 139.77112467
+      }
+    },
+    {
+      "cityCode": "13118",
+      "prefCode": "13",
+      "name": "荒川区",
+      "spec": "13118-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13118-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/c8/2f11b1-58da-4673-912a-1e0f293d5c1a/13118_arakawa-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.75485517,
+        "south": 35.724611,
+        "west": 139.7496375,
+        "east": 139.81466119
+      }
+    },
+    {
+      "cityCode": "13119",
+      "prefCode": "13",
+      "name": "板橋区",
+      "spec": "13119-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13119-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/43/76c5f5-1109-48be-b25c-c769c34a0bb1/13119_itabashi-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.80087869,
+        "south": 35.73586992,
+        "west": 139.62448891000003,
+        "east": 139.72272776000003
+      }
+    },
+    {
+      "cityCode": "13120",
+      "prefCode": "13",
+      "name": "練馬区",
+      "spec": "13120-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13120-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/2d/a490a6-b26d-495e-85ad-4196ffbfb6f2/13120_nerima-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.77982569,
+        "south": 35.71191225,
+        "west": 139.56278584000003,
+        "east": 139.68130664000003
+      }
+    },
+    {
+      "cityCode": "13121",
+      "prefCode": "13",
+      "name": "足立区",
+      "spec": "13121-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13121-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/67/913b6f-3d48-477e-8499-8f5d384ce6a6/13121_adachi-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.81770595,
+        "south": 35.73856847,
+        "west": 139.73570486,
+        "east": 139.85880036
+      }
+    },
+    {
+      "cityCode": "13122",
+      "prefCode": "13",
+      "name": "葛飾区",
+      "spec": "13122-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13122-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/0e/abaa52-b75b-481e-afbe-fbbddef982c7/13122_katsushika-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.79734639,
+        "south": 35.71085314,
+        "west": 139.81321047,
+        "east": 139.8945683
+      }
+    },
+    {
+      "cityCode": "13123",
+      "prefCode": "13",
+      "name": "江戸川区",
+      "spec": "13123-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13123-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/f3/fbb242-0865-4d51-a083-7da075f682a3/13123_edogawa-ku_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.75076503,
+        "south": 35.63267887,
+        "west": 139.83311805,
+        "east": 139.91890837
+      }
+    },
+    {
+      "cityCode": "13201",
+      "prefCode": "13",
+      "name": "八王子市",
+      "spec": "13201-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13201-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/f6/a08393-091c-4333-bb7c-5bd587bfc4a8/13201_hachioji-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.71911972,
+        "south": 35.59794136,
+        "west": 139.16160367,
+        "east": 139.43004866
+      }
+    },
+    {
+      "cityCode": "13202",
+      "prefCode": "13",
+      "name": "立川市",
+      "spec": "13202-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13202-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/6b/3f844e-867a-4bd4-9388-8c428c08cef0/13202_tachikawa-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.74513472,
+        "south": 35.68276067,
+        "west": 139.35232905,
+        "east": 139.44612197
+      }
+    },
+    {
+      "cityCode": "13203",
+      "prefCode": "13",
+      "name": "武蔵野市",
+      "spec": "13203-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13203-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/04/fd0d4c-df55-469d-b2b0-8d20738bc4b5/13203_musashino-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.72199695,
+        "south": 35.69396287,
+        "west": 139.52521745,
+        "east": 139.59547326
+      }
+    },
+    {
+      "cityCode": "13204",
+      "prefCode": "13",
+      "name": "三鷹市",
+      "spec": "13204-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13204-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/55/b86eda-5df9-4b9a-99f3-92ea14a763f6/13204_mitaka-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.70678084,
+        "south": 35.6600315,
+        "west": 139.52446875,
+        "east": 139.59417864000002
+      }
+    },
+    {
+      "cityCode": "13205",
+      "prefCode": "13",
+      "name": "青梅市",
+      "spec": "13205-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13205-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/8a/42eb49-bae5-4799-a773-1b13c308d053/13205_ome-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.85086817,
+        "south": 35.75454525,
+        "west": 139.13716047000003,
+        "east": 139.33036584
+      }
+    },
+    {
+      "cityCode": "13206",
+      "prefCode": "13",
+      "name": "府中市",
+      "spec": "13206-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13206-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/59/3c5c18-9229-4794-8cd1-bcb72230d449/13206_fuchu-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.69990178,
+        "south": 35.64619484,
+        "west": 139.42982778,
+        "east": 139.5264573
+      }
+    },
+    {
+      "cityCode": "13207",
+      "prefCode": "13",
+      "name": "昭島市",
+      "spec": "13207-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13207-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/46/40c29c-b6ec-43f0-82fd-e731eea52afc/13207_akishima-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.72629225,
+        "south": 35.69128256,
+        "west": 139.33132170000002,
+        "east": 139.39853122
+      }
+    },
+    {
+      "cityCode": "13208",
+      "prefCode": "13",
+      "name": "調布市",
+      "spec": "13208-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13208-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/fd/32e66e-bd6c-40df-8f06-a3880a652e5b/13208_chofu-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.68816139,
+        "south": 35.63259069,
+        "west": 139.51703603,
+        "east": 139.59309209000003
+      }
+    },
+    {
+      "cityCode": "13209",
+      "prefCode": "13",
+      "name": "町田市",
+      "spec": "13209-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13209-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/42/d5542b-c41e-43f0-b21e-9b5b2da7cddd/13209_machida-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.62350444,
+        "south": 35.50125223,
+        "west": 139.26879949,
+        "east": 139.50759136000002
+      }
+    },
+    {
+      "cityCode": "13210",
+      "prefCode": "13",
+      "name": "小金井市",
+      "spec": "13210-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13210-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/0f/a3917f-40bb-4336-b78d-e754298026e9/13210_koganei-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.71906556,
+        "south": 35.68401564,
+        "west": 139.48445781,
+        "east": 139.5341985
+      }
+    },
+    {
+      "cityCode": "13211",
+      "prefCode": "13",
+      "name": "小平市",
+      "spec": "13211-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13211-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/12/2feb5c-75d3-4e73-b99e-385aa54a311c/13211_kodaira-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.74585833,
+        "south": 35.70803925,
+        "west": 139.42284805,
+        "east": 139.52467109
+      }
+    },
+    {
+      "cityCode": "13212",
+      "prefCode": "13",
+      "name": "日野市",
+      "spec": "13212-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13212-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/8e/7a46a3-dcfc-4052-b932-ae66951a93b4/13212_hino-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.69163141,
+        "south": 35.63931611,
+        "west": 139.3573237,
+        "east": 139.44201525000003
+      }
+    },
+    {
+      "cityCode": "13213",
+      "prefCode": "13",
+      "name": "東村山市",
+      "spec": "13213-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13213-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/e3/acd72a-58c6-47f3-bcdc-f09df1d867a2/13213_higashimurayama-shi_city_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.78170547,
+        "south": 35.73450613,
+        "west": 139.44000386000002,
+        "east": 139.50479042
+      }
+    },
+    {
+      "cityCode": "13214",
+      "prefCode": "13",
+      "name": "国分寺市",
+      "spec": "13214-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13214-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/f6/c0cd29-c5e3-40f4-952c-b80234f8fb2a/13214_kokubunji-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.72287533,
+        "south": 35.68832844,
+        "west": 139.42826467,
+        "east": 139.49144117000003
+      }
+    },
+    {
+      "cityCode": "13215",
+      "prefCode": "13",
+      "name": "国立市",
+      "spec": "13215-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13215-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/f1/1ee84a-13d4-44df-bdf9-9236d5d410a5/13215_kunitachi-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.70441508,
+        "south": 35.67063767,
+        "west": 139.41756837,
+        "east": 139.459611
+      }
+    },
+    {
+      "cityCode": "13218",
+      "prefCode": "13",
+      "name": "福生市",
+      "spec": "13218-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13218-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/cd/dd4090-4acd-4af7-9d86-7b73b9a54374/13218_fussa-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.75484525,
+        "south": 35.7126118,
+        "west": 139.31386830000002,
+        "east": 139.35987630000002
+      }
+    },
+    {
+      "cityCode": "13219",
+      "prefCode": "13",
+      "name": "狛江市",
+      "spec": "13219-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13219-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/80/bea909-5a69-44a7-8816-e2560757d225/13219_komae-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.65074459,
+        "south": 35.61843078,
+        "west": 139.56197064,
+        "east": 139.59411642000003
+      }
+    },
+    {
+      "cityCode": "13220",
+      "prefCode": "13",
+      "name": "東大和市",
+      "spec": "13220-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13220-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/60/9328fa-2e96-4225-8555-436c255eed73/13220_higashiyamato-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.76958859,
+        "south": 35.73001256,
+        "west": 139.39162703,
+        "east": 139.45162458000001
+      }
+    },
+    {
+      "cityCode": "13221",
+      "prefCode": "13",
+      "name": "清瀬市",
+      "spec": "13221-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13221-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/db/4632b6-0781-4f83-8d50-ef757dc1e542/13221_kiyose-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.8073068,
+        "south": 35.7611022,
+        "west": 139.49650852000002,
+        "east": 139.54719936
+      }
+    },
+    {
+      "cityCode": "13222",
+      "prefCode": "13",
+      "name": "東久留米市",
+      "spec": "13222-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13222-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/be/6b2fdb-34ed-434f-bb2f-0b8e1f89a710/13222_higashikurume-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.77422825,
+        "south": 35.73205584,
+        "west": 139.48452776000002,
+        "east": 139.54783752
+      }
+    },
+    {
+      "cityCode": "13223",
+      "prefCode": "13",
+      "name": "武蔵村山市",
+      "spec": "13223-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13223-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/7b/b64902-7228-479a-9180-1398b297a2ac/13223_musashimurayama-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.7744072,
+        "south": 35.73259433,
+        "west": 139.3546655,
+        "east": 139.41441611000002
+      }
+    },
+    {
+      "cityCode": "13224",
+      "prefCode": "13",
+      "name": "多摩市",
+      "spec": "13224-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13224-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/ad/26c491-46d9-4a19-926e-580762a8db8c/13224_tama-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.65796103,
+        "south": 35.60469822,
+        "west": 139.3936662,
+        "east": 139.47390722
+      }
+    },
+    {
+      "cityCode": "13225",
+      "prefCode": "13",
+      "name": "稲城市",
+      "spec": "13225-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13225-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/b0/ee2b7d-dc32-4cc3-849f-66b082d948a8/13225_inagi-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.65268156,
+        "south": 35.60431217,
+        "west": 139.4641582,
+        "east": 139.52538875000002
+      }
+    },
+    {
+      "cityCode": "13227",
+      "prefCode": "13",
+      "name": "羽村市",
+      "spec": "13227-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13227-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/16/4bbb3a-1bce-4fdf-a9c7-b867bd9db605/13227_hamura-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.78128495,
+        "south": 35.74712417,
+        "west": 139.29213263000003,
+        "east": 139.34307914000001
+      }
+    },
+    {
+      "cityCode": "13228",
+      "prefCode": "13",
+      "name": "あきる野市",
+      "spec": "13228-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13228-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/df/a920c2-a080-4246-a568-3090e7696669/13228_akiruno-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.77893787,
+        "south": 35.68759411,
+        "west": 139.13609545,
+        "east": 139.33123008
+      }
+    },
+    {
+      "cityCode": "13229",
+      "prefCode": "13",
+      "name": "西東京市",
+      "spec": "13229-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13229-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/db/18b820-5c3e-49bf-a167-b134a736a2b9/13229_nishitokyo-shi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.76159522,
+        "south": 35.711315,
+        "west": 139.51670611,
+        "east": 139.56942372
+      }
+    },
+    {
+      "cityCode": "13303",
+      "prefCode": "13",
+      "name": "瑞穂町",
+      "spec": "13303-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13303-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/28/6e4046-11f8-47c1-b6eb-f9646ce36c4c/13303_mizuho-machi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.79641325,
+        "south": 35.74124028,
+        "west": 139.31797189,
+        "east": 139.38154433000003
+      }
+    },
+    {
+      "cityCode": "13305",
+      "prefCode": "13",
+      "name": "日の出町",
+      "spec": "13305-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13305-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/16/5ca748-1b4e-4439-9777-a07d53154db0/13305_hinode-machi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.78919041,
+        "south": 35.73135639,
+        "west": 139.16304416,
+        "east": 139.28468856
+      }
+    },
+    {
+      "cityCode": "13307",
+      "prefCode": "13",
+      "name": "檜原村",
+      "spec": "13307-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13307-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/b1/392872-b973-4631-afab-988005e0be96/13307_hinohara-mura_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.77912275,
+        "south": 35.66602156,
+        "west": 139.01229092000003,
+        "east": 139.17261603
+      }
+    },
+    {
+      "cityCode": "13308",
+      "prefCode": "13",
+      "name": "奥多摩町",
+      "spec": "13308-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13308-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/b6/dbee0f-45d5-4388-b629-b9c305774084/13308_okutama-machi_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 35.898424,
+        "south": 35.73857517,
+        "west": 138.94286759000002,
+        "east": 139.17843086
+      }
+    },
+    {
+      "cityCode": "13421",
+      "prefCode": "13",
+      "name": "小笠原村",
+      "spec": "13421-luse-2025",
+      "tilejsonUrl": "https://api.plateauview.mlit.go.jp/datacatalog/mvt/13421-luse-2025/tilejson.json",
+      "mvtUrlTemplate": "https://assets.cms.plateau.reearth.io/assets/df/18eebd-d15f-4e74-b0f8-10bb286c7951/13421_ogasawara-mura_pref_2025_citygml_1_op_luse_mvt/{z}/{x}/{y}.mvt",
+      "sourceLayer": "luse",
+      "bbox": {
+        "north": 27.7448997,
+        "south": 20.42274641,
+        "west": 136.06952017000003,
+        "east": 153.98667512
+      }
+    }
+  ]
+}

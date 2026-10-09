@@ -9,6 +9,14 @@ const siteRoot = resolve(repositoryRoot, process.env.SITE_ROOT ?? "site");
 const host = process.env.HOST ?? "127.0.0.1";
 const port = Number.parseInt(process.env.PORT ?? "4173", 10);
 
+const mounts = [
+  { prefix: "/vendor", root: resolve(repositoryRoot, "node_modules") },
+  { prefix: "/data", root: resolve(repositoryRoot, "data") },
+  { prefix: "/kuwaya-geo", root: resolve(repositoryRoot, "docs/ref/kuwaya-geo") },
+  { prefix: "/viewer-three", root: resolve(repositoryRoot, "viewer-three") },
+  { prefix: "", root: siteRoot }
+];
+
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
   throw new Error("PORTには1から65535までの整数を指定してください。");
 }
@@ -25,13 +33,14 @@ const contentTypes = {
   ".jpg": "image/jpeg",
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
+  ".mvt": "application/vnd.mapbox-vector-tile",
   ".png": "image/png",
   ".svg": "image/svg+xml",
   ".txt": "text/plain; charset=utf-8",
   ".webp": "image/webp",
 };
 
-function resolveRequestPath(pathname) {
+function resolveMountedFile(pathname) {
   let decodedPath;
   try {
     decodedPath = decodeURIComponent(pathname);
@@ -39,22 +48,24 @@ function resolveRequestPath(pathname) {
     return null;
   }
 
-  const requestPath = decodedPath === "/" ? "index.html" : decodedPath.replace(/^[/\\]+/, "");
-  const candidate = normalize(resolve(siteRoot, requestPath));
-  const relativePath = relative(siteRoot, candidate);
-
-  if (relativePath.startsWith("..") || isAbsolute(relativePath)) {
-    return null;
+  const sorted = [...mounts].sort((a, b) => b.prefix.length - a.prefix.length);
+  for (const mount of sorted) {
+    if (mount.prefix && !decodedPath.startsWith(mount.prefix)) continue;
+    const rest = mount.prefix ? decodedPath.slice(mount.prefix.length) : decodedPath;
+    const requestPath = rest === "" || rest === "/" ? "index.html" : rest.replace(/^[/\\]+/, "");
+    const candidate = normalize(resolve(mount.root, requestPath));
+    const relativePath = relative(mount.root, candidate);
+    if (relativePath.startsWith("..") || isAbsolute(relativePath)) continue;
+    if (existsSync(candidate) && statSync(candidate).isFile()) return candidate;
   }
-
-  return candidate;
+  return null;
 }
 
 const server = createServer((request, response) => {
   const url = new URL(request.url ?? "/", `http://${host}:${port}`);
-  const candidate = resolveRequestPath(url.pathname);
+  const candidate = resolveMountedFile(url.pathname);
 
-  if (!candidate || !existsSync(candidate) || !statSync(candidate).isFile()) {
+  if (!candidate) {
     response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
     response.end("Not Found");
     return;
@@ -68,12 +79,22 @@ const server = createServer((request, response) => {
 });
 
 server.on("error", (error) => {
-  console.error(`ローカルサーバーを起動できません: ${error.message}`);
+  if (error.code === "EADDRINUSE") {
+    console.error(
+      `ポート ${port} は使用中です。npm run dev は自動で解放を試みます。それでもダメなら PowerShell: $env:PORT=8080; npm run dev`
+    );
+    console.error(`詳細: ${error.message}`);
+  } else {
+    console.error(`ローカルサーバーを起動できません: ${error.message}`);
+  }
   process.exitCode = 1;
 });
 
 server.listen(port, host, () => {
-  console.log(`PLATEAU MVT LAB: http://${host}:${port}/`);
+  console.log(`PLATEAU MVT LAB:     http://${host}:${port}/`);
+  console.log(`Three MVT PoC:       http://${host}:${port}/viewer-three/`);
+  console.log(`kuwaya-geo 参照:     http://${host}:${port}/kuwaya-geo/`);
+  console.log(`静的索引 data/:      http://${host}:${port}/data/manifest/`);
 });
 
 export default server;

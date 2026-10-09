@@ -4,7 +4,7 @@ PLATEAU が配信する MVT を、ローカル同梱の MapLibre GL JS で確認
 
 ## 起動
 
-依存パッケージのインストールは不要です。Node.js 20 以降で起動します。
+Node.js 20 以降。Three PoC 用に一度 `npm install` してください（MVT デコーダを `/vendor` 配信）。
 
 ```console
 npm run dev
@@ -16,7 +16,15 @@ Windows PowerShell の実行ポリシーで `npm` を実行できない場合は
 npm.cmd run dev
 ```
 
-ブラウザで <http://127.0.0.1:4173/> を開きます。終了は `Ctrl+C` です。ポートは環境変数 `PORT`、待受アドレスは `HOST` で変更できます。
+ブラウザで <http://127.0.0.1:4173/> を開きます。Three.js MVT PoC は <http://127.0.0.1:4173/viewer-three/> です。終了は `Ctrl+C` です。ポートは環境変数 `PORT`、待受アドレスは `HOST` で変更できます。
+
+静的索引（東京都＋埼玉県）を生成する場合:
+
+```console
+npm run build:mvt-index
+```
+
+詳細は [`tools/build-mvt-index/README.md`](tools/build-mvt-index/README.md) と [`docs/design/mvt-static-tile-index.md`](docs/design/mvt-static-tile-index.md) を参照してください。
 
 ```powershell
 $env:PORT = 8080

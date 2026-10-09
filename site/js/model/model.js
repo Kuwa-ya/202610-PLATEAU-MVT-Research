@@ -1,6 +1,6 @@
 const CONFIG = Object.freeze({
   dataYear: '2025',
-  initialCities: Object.freeze(['13101', '13102']),
+  initialCities: Object.freeze(['13101']),
   maxCities: 8,
   mvtMinZoom: 14
 });

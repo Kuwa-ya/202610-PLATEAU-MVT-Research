@@ -212,7 +212,7 @@ fetchCode = min(codes by numeric cityCode)
    - manifest の全市区で少なくとも 1 つの z16 タイルに出現するか（出現しない市区は警告）。  
    - 県境タイルで候補が 2 件以上の件数をレポート。
 
-ビルドスクリプトの置き場所は実装フェーズで決める（例: `tools/build-mvt-index/`）。
+ビルドスクリプト: [`tools/build-mvt-index/`](../../tools/build-mvt-index/README.md)（`npm run build:mvt-index`）。Three PoC: [`viewer-three/`](../../viewer-three/index.html)。
 
 ## 10. ランタイム手順（kuwaya-geo 統合）
 
