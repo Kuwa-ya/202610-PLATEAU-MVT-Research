@@ -173,8 +173,6 @@
 3. **重複・結合の深さ**: 重ね描画＋暫定抑制で十分か、[mvt-decode-merge-dedup.md](design/mvt-decode-merge-dedup.md) §9 の **完了条件** まで必達か
 4. **主 Viewer**: 2D 検証中心、3D（地形＋MVT）中心、または **両方の一致** をゴールに含めるか（設計 §11 の要検証項目）
 5. **運用・配布**: 静的ホストのみか、索引 CI、オフライン索引ビルド（`build:mvt-index:offline`）の位置づけ
-6. **キボミル等の業務ゴール**: [plateau-data-availability](research/plateau-data-availability.md) は「表示は MVT、算定は CityGML 比較」を強調 — 本リポジトリのゴールに **算定・選択** を含めるかは別決定
-
 ---
 
 ## 11. 次のステップ（本概要の使い方）

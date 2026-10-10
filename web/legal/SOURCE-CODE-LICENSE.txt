@@ -1,0 +1,22 @@
+Copyright © 2026 Kuwa-ya, Ltd. All Rights Reserved.
+
+This source code and all associated materials (the "Software") are proprietary to Kuwa-ya, Ltd.
+
+The Software is made publicly viewable solely for transparency and informational purposes. No license or right to use the Software is granted except as expressly authorized in writing by Kuwa-ya, Ltd.
+
+Without prior written permission from Kuwa-ya, Ltd. you may not:
+- use the Software or any portion of it in any software, product, service, or project;
+- copy, reproduce, modify, adapt, translate, or create derivative works based on the Software;
+- distribute, redistribute, publish, sublicense, sell, rent, lease, or otherwise make the Software or any portion of it available to any third party;
+- use the Software or any portion of it for commercial purposes;
+- use the Software or any portion of it to develop or provide a product or service, whether commercial or non-commercial.
+
+Viewing or accessing the source code does not grant any license or other rights to the Software.
+
+The publicly accessible web application associated with this Software may be used in accordance with its applicable Terms of Service. Permission to use the web application does not grant any right to use, copy, modify, or distribute its source code.
+
+Any use of the Software not expressly permitted by this license requires prior written permission from Kuwa-ya, Ltd.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW.
+
+This notice applies only to source files that identify this license. Third-party software, including files under /vendor/, remains subject to its respective copyright notices and license terms.
