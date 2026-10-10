@@ -9,7 +9,10 @@ export const MVT_VIEWER_LAYERS = Object.freeze([
     label: '土地利用',
     code: 'luse',
     defaultVisible: true,
-    defaultOpacity: 0.46
+    defaultOpacity: 0.34,
+    /** 道路用地ポリゴンだけ上書き（Three MVT） */
+    roadFillOpacity: 0.68,
+    dedupeOnDecode: true
   }),
   Object.freeze({
     kind: 'road',
@@ -17,7 +20,9 @@ export const MVT_VIEWER_LAYERS = Object.freeze([
     label: '道路 LOD1',
     code: 'tran',
     defaultVisible: false,
-    defaultOpacity: 0.58
+    defaultOpacity: 0.72,
+    /** tran はタイル内 gml_id マージを省略（頂点走査＋Line 本数削減はバッチ描画で対応） */
+    dedupeOnDecode: false
   }),
   Object.freeze({
     kind: 'useDistrict',
@@ -25,7 +30,8 @@ export const MVT_VIEWER_LAYERS = Object.freeze([
     label: '用途地域',
     code: 'USE_DISTRICT',
     defaultVisible: false,
-    defaultOpacity: 0.38
+    defaultOpacity: 0.38,
+    dedupeOnDecode: true
   })
 ]);
 

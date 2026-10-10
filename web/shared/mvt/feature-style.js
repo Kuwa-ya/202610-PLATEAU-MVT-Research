@@ -19,14 +19,26 @@
 
 export const MVT_COLORS = Object.freeze({
   luseDefault: 0x47e6b1,
-  luseRoad: 0xf59e48,
+  luseRoad: 0xea9a42,
   lusePark: 0x40c98a,
   luseWater: 0x4ca9df,
-  transport: 0xffc85a,
+  transport: 0xea9a42,
   useDistrict: 0xc084fc
 });
 
-const LUSE_ROAD_FILL_HEX = '#f59e48';
+/** 濃さの優先: 現在地マーカー > 道路（luse 道路用地・tran）> 建物 */
+export const VIEWER_VISUAL = Object.freeze({
+  buildingColor: 0xc8cdc9,
+  buildingOpacity: 0.28,
+  roadColor: 0xea9a42,
+  roadOpacityG2: 0.68,
+  roadOpacityMvtLine: 0.72,
+  luseFillOpacity: 0.34,
+  userMarkerRingColor: 0x66d4ff,
+  userMarkerRingOpacity: 0.95
+});
+
+const LUSE_ROAD_FILL_HEX = '#ea9a42';
 
 /**
  * 土地利用 MVT を「道路」として扱うか（2D MapLibre / 3D Three / Even G2 で共通の定義）。

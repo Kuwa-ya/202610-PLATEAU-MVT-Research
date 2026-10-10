@@ -82,4 +82,14 @@ export class AppViewModel extends EventTarget {
     this.state.addressSearchStatus = text;
     this.notify();
   }
+
+  setSelectedFeature(feature) {
+    const prev = this.state.selectedFeature;
+    const next = feature
+      ? { kind: feature.kind, properties: { ...feature.properties } }
+      : null;
+    if (prev?.kind === next?.kind && prev?.properties?.gml_id === next?.properties?.gml_id) return;
+    this.state.selectedFeature = next;
+    this.notify();
+  }
 }

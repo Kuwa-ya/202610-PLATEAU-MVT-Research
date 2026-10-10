@@ -17,7 +17,7 @@
  * WITHOUT WARRANTY OF ANY KIND. SEE /legal/SOURCE-CODE-LICENSE.txt.
  */
 
-export type FrameTrigger = 'init' | 'tap' | 'gps' | 'tick' | 'heading';
+export type FrameTrigger = 'init' | 'tap' | 'gps' | 'tick' | 'heading' | 'road';
 
 export type FrameSample = {
   at: string;

@@ -34,6 +34,9 @@ import { MVT_VIEWER_LAYERS } from '../../../../shared/mvt/viewer-mvt-layers.js';
 import { applyGeocodeResult, originRefFromTerrain } from './address-navigation.js';
 import { MVT_MAX_CAMERA_DISTANCE } from './mvt-config.js';
 import { createMvtController } from './mvt-controller.js';
+import { mvtPickHoverAt, pickMvtAt } from './mvt-pick.js';
+import { layerKindFromDatasetId } from '../../../../shared/mvt/feature-inspect.js';
+import { sampleDisplayedTerrainLocalY } from '/kuwaya-geo/js/domain/terrain.js';
 import { createTerrainPoc } from './terrain-poc.js';
 import { isTerrainVisible } from '../view/view-ui.js';
 
@@ -88,6 +91,9 @@ export async function createSceneAdapter(viewModel, { canvas, ui, readEnabledDat
     }
   }
 
+  /** @type {ReturnType<typeof createMvtController> | null} */
+  let mvt = null;
+
   const terrainPoc = createTerrainPoc(THREE, {
     scene,
     cameraController: cameraState,
@@ -102,21 +108,36 @@ export async function createSceneAdapter(viewModel, { canvas, ui, readEnabledDat
     onStatus: (message, isError) => viewModel.setStatus(message, isError),
     onTerrainCommitted: () => {
       syncOriginFromTerrain();
+      viewModel.setSelectedFeature(null);
+      mvt?.clearTiles();
       scheduleSync();
     }
   });
 
   const { terrain } = terrainPoc;
 
-  const mvt = createMvtController(THREE, scene, () => {
-    const o = originRefFromTerrain(terrain) ?? originRef;
-    return {
-      origin: o,
-      distance: focusedSpherical.radius,
-      target: focusedTarget,
-      datasetIds: readEnabledDatasets()
-    };
-  });
+  mvt = createMvtController(
+    THREE,
+    scene,
+    () => {
+      const o = originRefFromTerrain(terrain) ?? originRef;
+      return {
+        origin: o,
+        distance: focusedSpherical.radius,
+        target: focusedTarget,
+        datasetIds: readEnabledDatasets()
+      };
+    },
+    {
+      getDrape: () => {
+        if (!isTerrainVisible(ui) || !terrain.getData()?.length) return null;
+        const terrainTiles = terrain.getData();
+        return {
+          sampleLocalY: (lat, lon) => sampleDisplayedTerrainLocalY(lat, lon, terrainTiles)
+        };
+      }
+    }
+  );
 
   let syncTimer = null;
   let syncRequestId = 0;
@@ -210,7 +231,34 @@ export async function createSceneAdapter(viewModel, { canvas, ui, readEnabledDat
     }, 280);
   }
 
+  canvas.addEventListener('pointermove', event => {
+    if (!mvt?.getRoot()) return;
+    const origin = originRefFromTerrain(terrain) ?? originRef;
+    const over = mvtPickHoverAt(
+      THREE, mvt.getRoot(), camera, canvas, event.clientX, event.clientY, origin
+    );
+    canvas.style.cursor = over ? 'pointer' : '';
+  });
+
   bindCameraInteractions(THREE, canvas, cameraState, {
+    isSelectionClick: pointer =>
+      Boolean(pointer && pointer.button === 0 && !pointer.dragging && !pointer.rotatingX),
+    onSelectionClick: event => {
+      const origin = originRefFromTerrain(terrain) ?? originRef;
+      const hit = pickMvtAt(
+        THREE, mvt.getRoot(), camera, canvas, event.clientX, event.clientY, origin
+      );
+      if (hit) {
+        mvt.setSelectedPick(hit.pick);
+        viewModel.setSelectedFeature({
+          kind: layerKindFromDatasetId(hit.pick.datasetId),
+          properties: hit.pick.properties ?? {}
+        });
+      } else {
+        mvt.setSelectedPick(null);
+        viewModel.setSelectedFeature(null);
+      }
+    },
     onZoom: () => {
       terrainPoc.scheduleLodRefresh();
       scheduleSync();
@@ -263,6 +311,7 @@ export async function createSceneAdapter(viewModel, { canvas, ui, readEnabledDat
     },
 
     applyOrigin(lat, lon) {
+      viewModel.setSelectedFeature(null);
       mvt.clearTiles();
       terrainPoc.requestAt(lat, lon, true);
       terrainPoc.scheduleStream(80);
@@ -328,6 +377,9 @@ export async function createSceneAdapter(viewModel, { canvas, ui, readEnabledDat
         const group = terrain.getGroup();
         if (group) group.visible = false;
       }
+      viewModel.setSelectedFeature(null);
+      mvt.clearTiles();
+      scheduleSync();
     },
 
     reloadTerrain(rebuildOrigin) {

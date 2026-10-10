@@ -25,6 +25,10 @@ import { buildingsFromCollection } from './geojson-buildings.js';
 import type { BuildingVolume } from './geojson-buildings.js';
 import type { RegionalMeshBounds } from './mesh-code.js';
 import type { UseDistrictHighlight } from './use-district-highlight.js';
+import {
+  buildRoadMeshesAtUser,
+  type LuseRoadSnapshot
+} from './luse-road-cache.js';
 import { renderBuildingsObliqueWebGL } from './render-oblique-webgl.js';
 import { canvasToPngBytes, renderBuildingsOblique } from './render-oblique.js';
 
@@ -55,6 +59,9 @@ export type RenderCachedBldgRequest = {
   useDistrictHighlight: UseDistrictHighlight | null;
   width: number;
   height: number;
+  luseRoadSnapshot?: LuseRoadSnapshot | null;
+  /** 描画フレームのユーザー標高（DEM）。道路の Y 相対化に使う */
+  userElevationM?: number | null;
 };
 
 export async function renderCachedBldgFrame(request: RenderCachedBldgRequest): Promise<BuildingFrameResult> {
@@ -67,7 +74,9 @@ export async function renderCachedBldgFrame(request: RenderCachedBldgRequest): P
     movementBearingDeg,
     useDistrictHighlight,
     width,
-    height
+    height,
+    luseRoadSnapshot,
+    userElevationM
   } = request;
 
   let buildings = buildingsFromCollection(collection);
@@ -75,6 +84,20 @@ export async function renderCachedBldgFrame(request: RenderCachedBldgRequest): P
     buildings = clipBuildingsToUseDistrict(buildings, useDistrictHighlight.ring);
   }
   const renderStart = performance.now();
+  const pivotAltM =
+    userElevationM != null && Number.isFinite(userElevationM)
+      ? userElevationM
+      : luseRoadSnapshot?.pivotAltM ?? 0;
+  const luseRoadMeshes =
+    luseRoadSnapshot?.parts.length
+      ? buildRoadMeshesAtUser(
+        luseRoadSnapshot.parts,
+        luseRoadSnapshot.demElevations,
+        pivotAltM,
+        latitude,
+        longitude
+      )
+      : undefined;
   const renderOpts = {
     width,
     height,
@@ -82,7 +105,8 @@ export async function renderCachedBldgFrame(request: RenderCachedBldgRequest): P
     userLat: latitude,
     userLon: longitude,
     movementBearingDeg,
-    useDistrictRing: useDistrictHighlight?.ring
+    useDistrictRing: useDistrictHighlight?.ring,
+    luseRoadMeshes
   };
   const canvas =
     VIEW_RENDER_BACKEND === 'webgl'

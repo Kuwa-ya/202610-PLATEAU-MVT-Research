@@ -197,3 +197,8 @@ Even G2 を主成果物とし、2D MapLibre を検証基盤、3D Three を条件
 | 2026-10-10 | 初版（2D/3D 調整 + B 大型項目） |
 | 2026-10-11 | F 完了反映。A 一式完了（`viewer-mvt-layers.js`、Three 住所検索、テーマ CSS） |
 | 2026-10-11 | Even B.1 地面・航空写真 **放弃**。2D/3D UI: **住所最上**・**レイヤー**統合。Even ground TS 削除 |
+| 2026-10-11 | **B.2 第一版** Three: luse 道路用地を `sampleDisplayedTerrainLocalY` でドレープ — [three-mvt-polygon-rings.md](./three-mvt-polygon-rings.md) §B.2 |
+| 2026-10-11 | Even G2: luse 道路のみ DEM ドレープ（+0.12 m）。Three: MVT クリック照会＋インスペクタ（2D 同型属性） |
+| 2026-10-11 | Three **tran**: タイル内 `gml_id` dedupe 省略、`LineSegments` バッチ。表示濃さ **現在地＞道路＞建物**（`VIEWER_VISUAL`） |
+| 2026-10-11 | **Even G2 道路**: luse 3×3 **並列 fetch**、DEM **一括**（900 点 cap）、メッシュ **1 本化**。G2 は tran 非使用 — [g2-display-and-address.md](./g2-display-and-address.md) §1.0 |
+| 2026-10-11 | Three MVT クリック: 2D 同型（`luse_class` 等）— 地面投影 PIP + `gml_id` dedupe、タイル跨ぎ **#ff4d8d** ハイライト |

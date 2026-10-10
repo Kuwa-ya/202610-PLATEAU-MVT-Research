@@ -17,7 +17,10 @@ function displayValue(raw) {
  */
 export function inspectFieldsForLayerKind(kind, properties = {}) {
   if (kind === 'luse') {
-    return [{ key: 'luse_class', label: 'luse_class', value: displayValue(properties.luse_class) }];
+    return [
+      { key: 'luse_class', label: 'luse_class', value: displayValue(properties.luse_class) },
+      { key: 'uro_orgLandUse', label: 'uro_orgLandUse', value: displayValue(properties.uro_orgLandUse) }
+    ];
   }
   if (kind === 'road') {
     return [{ key: 'tran_function', label: 'tran_function', value: displayValue(properties.tran_function) }];
@@ -49,4 +52,18 @@ export function layerKindFromMapLayerId(layerId) {
   if (layerId.startsWith('luse-')) return 'luse';
   if (layerId.startsWith('useDistrict-')) return 'useDistrict';
   return 'road';
+}
+
+/** Three.js MVT タイル（datasetId）→ インスペクタ種別 */
+/** G2 右テキスト等の1行要約（2D ポップアップと同系） */
+export function formatLuseSummary(properties = {}) {
+  const cls = displayValue(properties.luse_class);
+  return `土地利用 ${cls}`;
+}
+
+export function layerKindFromDatasetId(datasetId) {
+  if (datasetId === 'luse-2025') return 'luse';
+  if (datasetId === 'use-district-2025') return 'useDistrict';
+  if (String(datasetId ?? '').includes('tran')) return 'road';
+  return 'luse';
 }

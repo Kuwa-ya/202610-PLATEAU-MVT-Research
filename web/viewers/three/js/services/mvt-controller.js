@@ -18,17 +18,19 @@
  */
 
 import { DATASETS, MVT_MAX_CAMERA_DISTANCE } from './mvt-config.js';
-import { MVT_VIEWER_LAYERS } from '../../../../shared/mvt/viewer-mvt-layers.js';
+import { MVT_VIEWER_LAYERS, mvtLayerByDatasetId } from '../../../../shared/mvt/viewer-mvt-layers.js';
 import { decodeMvt } from './mvt-decode.js';
 import { viewCenterFromTarget } from './local-frame.js';
 import { planFetches } from './mvt-index.js';
 import { dedupeMvtFeatures } from '../../../../shared/mvt/mvt-feature-dedup.js';
 import { buildTileGroup, disposeObject3D } from './mvt-mesh.js';
+import { applyMvtSelectionHighlight } from './mvt-pick.js';
 
 const MAX_CONCURRENT = 4;
 const MAX_TILES = 32;
 
-export function createMvtController(THREE, scene, getCameraState) {
+export function createMvtController(THREE, scene, getCameraState, options = {}) {
+  const getDrape = options.getDrape;
   const root = new THREE.Group();
   root.name = 'plateau-mvt-root';
   scene.add(root);
@@ -42,6 +44,8 @@ export function createMvtController(THREE, scene, getCameraState) {
   let generation = 0;
   let activeAbortController = null;
   let lastError = '';
+  /** @type {{ datasetId: string, properties: object } | null} */
+  let selectedPick = null;
 
   function viewBounds(distance, center) {
     const spanDeg = Math.max(0.0015, (distance / 111_320) * 0.85);
@@ -55,8 +59,13 @@ export function createMvtController(THREE, scene, getCameraState) {
 
   function styleForDataset(datasetId) {
     const base = DATASETS.find(d => d.id === datasetId);
+    const layer = mvtLayerByDatasetId(datasetId);
     if (!base) return { id: datasetId, opacity: 0.5, color: 0xffffff };
-    return { ...base, opacity: datasetOpacity.get(datasetId) ?? base.opacity };
+    return {
+      ...base,
+      opacity: datasetOpacity.get(datasetId) ?? base.opacity,
+      roadFillOpacity: layer?.roadFillOpacity
+    };
   }
 
   function applyOpacityToDataset(datasetId) {
@@ -79,10 +88,14 @@ export function createMvtController(THREE, scene, getCameraState) {
     const buffer = await response.arrayBuffer();
     let { features, extent } = await decodeMvt(buffer, plan.sourceLayer);
     if (!features.length) throw new Error('地物 0 件');
-    features = dedupeMvtFeatures(features);
-    if (!features.length) throw new Error('地物 0 件（重複排除後）');
+    const layer = mvtLayerByDatasetId(plan.datasetId);
+    if (layer?.dedupeOnDecode !== false) {
+      features = dedupeMvtFeatures(features);
+      if (!features.length) throw new Error('地物 0 件（重複排除後）');
+    }
+    const drape = getDrape?.() ?? null;
     const group = buildTileGroup(
-      THREE, features, plan.x, plan.y, plan.z, origin, datasetStyle, extent
+      THREE, features, plan.x, plan.y, plan.z, origin, datasetStyle, extent, drape
     );
     group.userData.featureCount = features.length;
     group.userData.datasetId = plan.datasetId;
@@ -90,7 +103,7 @@ export function createMvtController(THREE, scene, getCameraState) {
     group.visible = datasetVisibility.get(plan.datasetId) !== false;
     let drawable = 0;
     group.traverse(node => {
-      if (node.isMesh || node.isLine) drawable += 1;
+      if (node.isMesh || node.isLine || node.isLineSegments) drawable += 1;
     });
     if (!drawable) throw new Error('描画可能な地物 0 件（ジオメトリ変換を確認）');
     return group;
@@ -100,6 +113,7 @@ export function createMvtController(THREE, scene, getCameraState) {
     generation += 1;
     activeAbortController?.abort();
     activeAbortController = null;
+    selectedPick = null;
     for (const group of tileGroups.values()) {
       root.remove(group);
       disposeObject3D(group);
@@ -262,6 +276,17 @@ export function createMvtController(THREE, scene, getCameraState) {
     return [...tileGroups.keys()].sort();
   }
 
+  function setSelectedPick(pick) {
+    selectedPick = pick
+      ? { datasetId: pick.datasetId, properties: { ...pick.properties } }
+      : null;
+    applyMvtSelectionHighlight(root, selectedPick);
+  }
+
+  function getRoot() {
+    return root;
+  }
+
   return {
     sync,
     clearTiles,
@@ -271,6 +296,8 @@ export function createMvtController(THREE, scene, getCameraState) {
     setDatasetVisible,
     setDatasetOpacity,
     listLoadedTileKeys,
+    setSelectedPick,
+    getRoot,
     root
   };
 }

@@ -186,6 +186,7 @@ async function bootstrap() {
 
   let phonePanel = { refresh: () => {} };
   let lastPhoneDebug = '';
+  let lastG2StatusMeta = '読み込み中…';
 
   let lastPresentDetail: PresentDetail = {
     bytes: new Uint8Array(),
@@ -208,6 +209,11 @@ async function bootstrap() {
   };
 
   addressSession.setOnChange(() => {
+    lastG2StatusMeta = formatG2StatusMeta(
+      resolveFix(),
+      addressSession.getState(),
+      lastPresentDetail
+    );
     phonePanel.refresh();
     void refreshG2MetaIfEven();
   });
@@ -234,6 +240,11 @@ async function bootstrap() {
           dataFetched: detail.dataFetched
         });
         lastPresentDetail = detail;
+        lastG2StatusMeta = formatG2StatusMeta(
+          resolveFix(),
+          addressSession.getState(),
+          detail
+        );
         lastPhoneDebug = formatPhoneDebugBlock(complete, detail, sdkResult);
         phonePanel.refresh();
         if (runtime.mode === 'even' && pageReady) {
@@ -244,7 +255,8 @@ async function bootstrap() {
           );
         }
       }
-    }
+    },
+    () => addressSession.getState().elevationM
   );
 
   phonePanel = mountPhonePanel(
@@ -260,7 +272,8 @@ async function bootstrap() {
     },
     () => {
       viewPresenter.onUserRingTap().catch(console.error);
-    }
+    },
+    () => lastG2StatusMeta
   );
 
   window.__g2Metrics = metrics;

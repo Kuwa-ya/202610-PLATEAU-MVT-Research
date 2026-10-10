@@ -42,6 +42,18 @@ MVT の Polygon（type 3）は `loadGeometry()` で **複数リング**の配列
 2. 土地利用 ON — **57481/25960** 付近の橙色（`luse_class` に「道路用地」等）が途切れないこと
 3. 2D と並べて色・範囲が大きく乖離しないこと（完全一致はタイルクリップ・透明度の差で許容）
 
+## B.2 道路用地の地形ドレープ（2026-10-11）
+
+| 項目 | 内容 |
+| --- | --- |
+| 対象 | **`luse-2025` の全ポリゴン**（重さ確認用に道路だけに限定しない第一版） |
+| 標高 | ちずうつし `sampleDisplayedTerrainLocalY`（読込済み DEM グリッドのバイリニア補間） |
+| メッシュ | 従来どおり `ShapeGeometry` で三角分割 → 各頂点の Y をサンプル標高 **+ 2 m** |
+| 再描画 | 地形タイル確定時に MVT を `clearTiles` して再取得（ドレープ用 DEM が揃ってから） |
+| モジュール | `mvt-drape.js` / `mvt-mesh.js` / `scene-adapter.js` |
+
+地形 OFF または DEM 未読込の頂点はフラット高さ（1.2 m）のまま。
+
 ## 関連
 
 - デコード・union の全体像: [mvt-decode-merge-dedup.md](./mvt-decode-merge-dedup.md)

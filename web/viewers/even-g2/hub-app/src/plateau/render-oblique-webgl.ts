@@ -21,6 +21,9 @@ import * as THREE from 'three';
 import type { BuildingVolume } from './geojson-buildings.js';
 import type { RegionalMeshBounds } from './mesh-code.js';
 import type { ObliqueRenderOptions } from './render-oblique.js';
+import type { RoadMeshBuffers } from './luse-road-cache.js';
+import { addLuseRoadMeshesToWorld } from './luse-road-webgl.js';
+import { G2_VISUAL } from '../config/g2-visual.js';
 import { enToGroundVector3, lonLatToEnMeters } from './en-footprint.js';
 import { getViewCameraSpherical } from '../view/view-camera-state.js';
 
@@ -58,11 +61,13 @@ function buildingMesh(building: BuildingVolume, pivotLat: number, userLon: numbe
   geom.rotateX(Math.PI / 2);
 
   const material = new THREE.MeshLambertMaterial({
-    color: 0xa8b0ac,
+    color: G2_VISUAL.buildingColor,
+    emissive: new THREE.Color(G2_VISUAL.buildingEmissive),
+    emissiveIntensity: G2_VISUAL.buildingEmissiveIntensity,
     flatShading: true,
     transparent: true,
-    opacity: 0.38,
-    depthWrite: false,
+    opacity: G2_VISUAL.buildingOpacity,
+    depthWrite: true,
     side: THREE.DoubleSide
   });
   return new THREE.Mesh(geom, material);
@@ -126,7 +131,11 @@ function addUseDistrictOutline(
   world.add(
     new THREE.LineLoop(
       geom,
-      new THREE.LineBasicMaterial({ color: 0xc084fc, transparent: true, opacity: 0.95 })
+      new THREE.LineBasicMaterial({
+        color: G2_VISUAL.useDistrictLineColor,
+        transparent: true,
+        opacity: G2_VISUAL.useDistrictLineOpacity
+      })
     )
   );
 }
@@ -135,7 +144,12 @@ function addUserMarker(world: THREE.Group, movementBearingDeg: number | null) {
   const ringGeom = new THREE.RingGeometry(2.8, 4.6, 28);
   const ring = new THREE.Mesh(
     ringGeom,
-    new THREE.MeshBasicMaterial({ color: 0x88ddff, side: THREE.DoubleSide, transparent: true, opacity: 0.9 })
+    new THREE.MeshBasicMaterial({
+      color: G2_VISUAL.userMarkerRingColor,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: G2_VISUAL.userMarkerRingOpacity
+    })
   );
   ring.rotation.x = -Math.PI / 2;
   ring.position.y = 0.2;
@@ -145,11 +159,16 @@ function addUserMarker(world: THREE.Group, movementBearingDeg: number | null) {
     new THREE.Vector3(0, 0.2, 0),
     new THREE.Vector3(0, 8, 0)
   ]);
-  world.add(new THREE.Line(poleGeom, new THREE.LineBasicMaterial({ color: 0xb8ecff })));
+  world.add(
+    new THREE.Line(
+      poleGeom,
+      new THREE.LineBasicMaterial({ color: G2_VISUAL.userMarkerPoleColor })
+    )
+  );
 
   const dot = new THREE.Mesh(
     new THREE.SphereGeometry(2.4, 14, 14),
-    new THREE.MeshBasicMaterial({ color: 0xe8f8ff })
+    new THREE.MeshBasicMaterial({ color: G2_VISUAL.userMarkerDotColor })
   );
   dot.position.y = 1;
   world.add(dot);
@@ -163,7 +182,12 @@ function addUserMarker(world: THREE.Group, movementBearingDeg: number | null) {
       new THREE.Vector3(0, 0.6, 0),
       new THREE.Vector3(tipEast, 0.6, tipNorth)
     ]);
-    world.add(new THREE.Line(arrowGeom, new THREE.LineBasicMaterial({ color: 0xfff078 })));
+    world.add(
+      new THREE.Line(
+        arrowGeom,
+        new THREE.LineBasicMaterial({ color: G2_VISUAL.userMarkerArrowColor })
+      )
+    );
   }
 }
 
@@ -177,10 +201,13 @@ export function renderBuildingsObliqueWebGL(
   const { width, height, userLat, userLon, movementBearingDeg, useDistrictRing } = options;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x1a1f24);
+  scene.background = new THREE.Color(G2_VISUAL.sceneBackground);
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.62);
-  const sun = new THREE.DirectionalLight(0xffffff, 0.78);
+  const ambient = new THREE.AmbientLight(
+    G2_VISUAL.lightAmbientColor,
+    G2_VISUAL.lightAmbientIntensity
+  );
+  const sun = new THREE.DirectionalLight(G2_VISUAL.lightSunColor, G2_VISUAL.lightSunIntensity);
   sun.position.set(-40, 120, -60);
   scene.add(ambient, sun);
 
@@ -189,6 +216,11 @@ export function renderBuildingsObliqueWebGL(
   scene.add(world);
 
   const pivotLat = userLat;
+
+  const roadMeshes = options.luseRoadMeshes;
+  if (roadMeshes?.length) {
+    addLuseRoadMeshesToWorld(world, roadMeshes);
+  }
 
   for (const building of buildings) {
     world.add(buildingMesh(building, pivotLat, userLon, userLat));

@@ -46,7 +46,8 @@ export function bindViewUi(document) {
     mvtPlanned: document.querySelector('#mvt-planned'),
     localOrigin: document.querySelector('#local-origin'),
     viewerMvtMode: document.querySelector('#viewer-mvt-mode'),
-    viewerMvtTiles: document.querySelector('#viewer-mvt-tiles')
+    viewerMvtTiles: document.querySelector('#viewer-mvt-tiles'),
+    inspector: document.querySelector('#inspector')
   };
 
   elements.menuToggle?.addEventListener('click', () => {

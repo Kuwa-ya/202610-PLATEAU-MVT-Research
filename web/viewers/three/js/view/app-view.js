@@ -6,6 +6,10 @@
  */
 
 import { geocodeAddress } from '../../../../shared/geo/address-geocode.js';
+import {
+  inspectFieldsForLayerKind
+} from '../../../../shared/mvt/feature-inspect.js';
+import { formatUseDistrictSummary } from '../../../../shared/mvt/use-district.js';
 import { MVT_VIEWER_LAYERS } from '../../../../shared/mvt/viewer-mvt-layers.js';
 import { createAddressSearchController } from '/kuwaya-geo/js/view/ui.js';
 import {
@@ -28,6 +32,7 @@ export class AppView {
     this.elements = elements ?? bindViewUi(documentRef);
     this.bindEvents();
     this.unsubscribe = viewModel.subscribe(state => this.render(state));
+    this.lastSelectedFeature = null;
   }
 
   bindEvents() {
@@ -118,5 +123,56 @@ export class AppView {
       isError: state.metadata.isError
     });
 
+    if (state.selectedFeature !== this.lastSelectedFeature) {
+      this.renderInspector(state.selectedFeature);
+      this.lastSelectedFeature = state.selectedFeature;
+    }
+  }
+
+  renderInspector(feature) {
+    const container = this.elements.inspector;
+    if (!container) return;
+    container.replaceChildren();
+    if (!feature) {
+      container.className = 'inspector-empty';
+      container.textContent =
+        '土地利用・用途地域・道路をクリックすると属性を表示します（2D 同様・左ドラッグせずにクリック）。';
+      return;
+    }
+
+    container.className = 'viewer-inspector';
+    const { kind, properties } = feature;
+    const title = this.document.createElement('h3');
+    title.className = 'viewer-inspector-title';
+    title.textContent =
+      kind === 'luse' ? '土地利用' : kind === 'useDistrict' ? '用途地域' : '道路';
+    container.append(title);
+
+    if (kind === 'useDistrict') {
+      const summary = this.document.createElement('p');
+      summary.className = 'viewer-inspector-summary';
+      summary.textContent = formatUseDistrictSummary(properties);
+      container.append(summary);
+    }
+
+    const metrics = this.document.createElement('dl');
+    metrics.className = 'viewer-inspector-metrics';
+    for (const field of inspectFieldsForLayerKind(kind, properties)) {
+      const dt = this.document.createElement('dt');
+      dt.textContent = field.label;
+      const dd = this.document.createElement('dd');
+      dd.textContent = field.value;
+      metrics.append(dt, dd);
+    }
+    container.append(metrics);
+
+    const featureId = properties.gml_id ?? properties.mvt_id;
+    if (featureId != null && featureId !== '') {
+      const idNote = this.document.createElement('p');
+      idNote.className = 'control-note';
+      idNote.style.marginTop = '8px';
+      idNote.textContent = `gml_id: ${String(featureId)}`;
+      container.append(idNote);
+    }
   }
 }

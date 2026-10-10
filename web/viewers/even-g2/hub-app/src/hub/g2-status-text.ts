@@ -6,27 +6,30 @@
  */
 
 import type { GeoFix } from '../geo/geo-fix.js';
-import { formatCoord } from '../geo/geo-fix.js';
+import { formatG2LonLat } from '../geo/geo-fix.js';
 import type { AddressSessionState } from '../geo/address-session.js';
 import { bearing16LabelFromDeg } from '../geo/bearing-16.js';
 import type { FrameSample } from '../metrics/frame-metrics.js';
 import type { PresentDetail } from '../view/view-presenter.js';
 import { getViewCameraStatusLine } from '../view/view-camera-state.js';
 
-let lastBearing16 = '—';
-
 export function formatG2StatusMeta(
   fix: GeoFix,
   address: AddressSessionState,
   detail: PresentDetail
 ): string {
-  if (detail.movementBearingDeg != null) {
-    lastBearing16 = bearing16LabelFromDeg(detail.movementBearingDeg);
+  let elev = '標高 —';
+  if (address.elevationPending) {
+    elev = '標高 …';
+  } else if (address.elevationM != null) {
+    elev = `標高 ${address.elevationM.toFixed(1)} m`;
   }
-  const elev =
-    address.elevationM != null ? `標高 ${address.elevationM.toFixed(1)}m` : '標高 —';
-  const coord = `${formatCoord(fix.latitude, 5)}, ${formatCoord(fix.longitude, 5)}`;
-  const bearing = `方角 ${lastBearing16}`;
+  const coord = formatG2LonLat(fix, 4);
+  const course =
+    detail.movementBearingDeg != null
+      ? bearing16LabelFromDeg(detail.movementBearingDeg)
+      : '—';
+  const bearing = `進路方角 ${course}`;
   let addr = '住所 取得中…';
   if (!address.addressPending) {
     addr = address.addressLabel ? `住所 ${address.addressLabel}` : '住所 —';

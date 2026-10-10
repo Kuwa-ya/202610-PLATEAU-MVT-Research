@@ -33,3 +33,8 @@ export function formatCoord(value: number, digits = 5): string {
 export function formatFixShort(fix: GeoFix): string {
   return `${formatCoord(fix.latitude, 4)},${formatCoord(fix.longitude, 4)}`;
 }
+
+/** G2 右テキスト用（Lon 先・Lat 後） */
+export function formatG2LonLat(fix: GeoFix, digits = 4): string {
+  return `Lon.${formatCoord(fix.longitude, digits)} Lat.${formatCoord(fix.latitude, digits)}`;
+}

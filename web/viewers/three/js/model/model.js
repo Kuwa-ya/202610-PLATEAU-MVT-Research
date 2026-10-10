@@ -39,7 +39,8 @@ function createInitialState() {
       isError: false
     },
     addressSearchStatus: '',
-    origin: { lat: null, lon: null }
+    origin: { lat: null, lon: null },
+    selectedFeature: null
   };
 }
 

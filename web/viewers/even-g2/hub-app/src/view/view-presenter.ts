@@ -23,6 +23,7 @@ import { initialBearingDeg } from '../geo/bearing.js';
 import { haversineMeters } from '../geo/haversine.js';
 import type { FrameSample, FrameTrigger } from '../metrics/frame-metrics.js';
 import { BldgMeshCache } from '../plateau/bldg-mesh-cache.js';
+import { LuseRoadCache } from '../plateau/luse-road-cache.js';
 import { renderCachedBldgFrame } from '../plateau/building-frame.js';
 import { regionalBldgMeshKey } from '../plateau/mesh-data-key.js';
 import {
@@ -59,8 +60,10 @@ type LastPresent = {
 
 export class ViewPresenter {
   private readonly cache = new BldgMeshCache();
+  private readonly roadCache = new LuseRoadCache();
   private readonly hooks: PresentHooks;
   private readonly getFix: () => GeoFix | null;
+  private readonly getUserElevationM: () => number | null;
   private readonly width: number;
   private readonly height: number;
   private last: LastPresent | null = null;
@@ -75,16 +78,21 @@ export class ViewPresenter {
   constructor(
     getFix: () => GeoFix | null,
     size: { width: number; height: number },
-    hooks: PresentHooks
+    hooks: PresentHooks,
+    getUserElevationM: () => number | null = () => null
   ) {
     this.getFix = getFix;
+    this.getUserElevationM = getUserElevationM;
     this.width = size.width;
     this.height = size.height;
     this.hooks = hooks;
   }
 
   noteFix(fix: GeoFix) {
-    if (this.cache.needsFetch(fix.latitude, fix.longitude)) {
+    if (
+      this.cache.needsFetch(fix.latitude, fix.longitude)
+      || this.roadCache.needsFetch(fix.latitude, fix.longitude)
+    ) {
       this.present('gps', true).catch(console.error);
     }
   }
@@ -169,10 +177,17 @@ export class ViewPresenter {
     const totalStart = performance.now();
     try {
       const bldgResult = await this.cache.ensure(latitude, longitude);
+      const roadPromise = this.roadCache.ensure(latitude, longitude);
       const { fetched, geoFetchMs } = bldgResult;
       const fetchMs = fetched ? geoFetchMs : 0;
       const snap = this.cache.snapshot();
       if (!snap) return null;
+      const roadSnap = this.roadCache.snapshot();
+      if (!roadSnap) {
+        void roadPromise
+          .then(() => this.present('road', true))
+          .catch(error => console.warn('[luse-road] refresh', error));
+      }
 
       const built = await renderCachedBldgFrame({
         meshCode: snap.meshCode,
@@ -183,7 +198,9 @@ export class ViewPresenter {
         movementBearingDeg,
         useDistrictHighlight: this.useDistrictVisible ? this.useDistrictHighlight : null,
         width: this.width,
-        height: this.height
+        height: this.height,
+        luseRoadSnapshot: roadSnap,
+        userElevationM: this.getUserElevationM()
       });
 
       const sample: FrameSample = {

@@ -17,6 +17,7 @@
  * WITHOUT WARRANTY OF ANY KIND. SEE /legal/SOURCE-CODE-LICENSE.txt.
  */
 
+import { G2_CANVAS2D } from '../config/g2-visual.js';
 import type { BuildingVolume } from './geojson-buildings.js';
 import type { RegionalMeshBounds } from './mesh-code.js';
 import { canvasToPngBytes } from './render-topdown.js';
@@ -193,6 +194,8 @@ export type ObliqueRenderOptions = {
   /** 用途地域の外環（中心タップ時） */
   useDistrictRing?: Array<[number, number]>;
   paddingPx?: number;
+  /** WebGL: luse 道路用地（DEM ドレープ済みバッファ） */
+  luseRoadMeshes?: import('./luse-road-cache.js').RoadMeshBuffers[];
 };
 
 export function renderBuildingsOblique(
@@ -220,7 +223,7 @@ export function renderBuildingsOblique(
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('2D コンテキストを取得できません');
 
-  ctx.fillStyle = '#1a1f24';
+  ctx.fillStyle = '#030806';
   ctx.fillRect(0, 0, width, height);
 
   const sorted = [...buildings].sort(
@@ -230,7 +233,7 @@ export function renderBuildingsOblique(
   const districtRing = options.useDistrictRing;
   if (districtRing && districtRing.length >= 3) {
     const ground = districtRing.map(([lon, lat]) => toScreen(projectLonLat(lon, lat, 0, frame)));
-    ctx.strokeStyle = 'rgba(192, 132, 252, 0.95)';
+    ctx.strokeStyle = 'rgba(102, 216, 144, 0.94)';
     ctx.lineWidth = 2;
     ctx.setLineDash([4, 3]);
     ctx.beginPath();
@@ -254,7 +257,8 @@ export function renderBuildingsOblique(
     for (let i = 0; i < n; i += 1) {
       const j = (i + 1) % n;
       const shade = wallShadeFactor(enRing, i, ccw);
-      ctx.fillStyle = `rgba(${Math.round(120 * shade)}, ${Math.round(128 * shade)}, ${Math.round(124 * shade)}, 0.4)`;
+      const [r, g, b] = G2_CANVAS2D.wallRgbBase;
+      ctx.fillStyle = `rgba(${Math.round(r * shade)}, ${Math.round(g * shade)}, ${Math.round(b * shade)}, 0.48)`;
       ctx.beginPath();
       ctx.moveTo(ground[i].x, ground[i].y);
       ctx.lineTo(ground[j].x, ground[j].y);
@@ -264,9 +268,7 @@ export function renderBuildingsOblique(
       ctx.fill();
     }
 
-    ctx.fillStyle = 'rgba(210, 216, 212, 0.42)';
-    ctx.strokeStyle = 'rgba(70, 78, 84, 0.55)';
-    ctx.lineWidth = 0.75;
+    ctx.fillStyle = G2_CANVAS2D.roofFill;
     ctx.beginPath();
     for (let i = 0; i < n; i += 1) {
       const p = roof[i];
@@ -275,7 +277,6 @@ export function renderBuildingsOblique(
     }
     ctx.closePath();
     ctx.fill();
-    ctx.stroke();
   }
 
   if (

@@ -6,6 +6,8 @@
  */
 
 import { VIEW_REFRESH_MS } from './config/defaults.js';
+import { G2_PHONE_THEME } from './config/g2-phone-theme.js';
+import { G2_CANVAS_H, G2_CANVAS_W, G2_IMAGE, G2_IMG_H, G2_IMG_W } from './hub/g2-page-layout.js';
 import type { GpsSession } from './geo/gps-session.js';
 import { getManualGeoControls } from './geo/manual-geo-dev.js';
 import type { FrameMetrics } from './metrics/frame-metrics.js';
@@ -22,7 +24,8 @@ export function mountPhonePanel(
   getDebugBlock: () => string,
   onViewRefresh: () => void,
   hub: PhonePanelHubInfo = { hubMode: 'simulation' },
-  onPreviewTap?: () => void
+  onPreviewTap?: () => void,
+  getG2StatusMeta: () => string = () => '読み込み中…'
 ) {
   const root = document.querySelector('#app');
   if (!root) return { refresh: () => {} };
@@ -32,8 +35,16 @@ export function mountPhonePanel(
   root.innerHTML = `
     <div class="g2-phone-root">
       <figure class="g2-phone-preview-wrap">
-        <img id="g2-phone-preview" class="g2-phone-preview" alt="G2 プレビュー" width="576" height="288" />
-        <figcaption class="g2-phone-preview-cap">G2 プレビュー（タップで用途地域 ON/OFF）</figcaption>
+        <div
+          id="g2-glasses-mock"
+          class="g2-glasses-mock"
+          role="img"
+          aria-label="Even G2 画面プレビュー（576×288）"
+        >
+          <img id="g2-phone-preview" class="g2-glasses-map" alt="" width="${G2_IMG_W}" height="${G2_IMG_H}" />
+          <pre id="g2-glasses-meta" class="g2-glasses-meta"></pre>
+        </div>
+        <figcaption class="g2-phone-preview-cap">眼鏡と同レイアウト（左 ${G2_IMG_W}×${G2_IMG_H} 地図・右メタ情報）。タップで用途地域 ON/OFF</figcaption>
       </figure>
       <p id="hub-mode-banner" class="g2-phone-banner"></p>
       ${
@@ -50,33 +61,70 @@ export function mountPhonePanel(
       <pre id="g2-metrics" class="g2-phone-metrics"></pre>
     </div>
     <style>
+      html, body {
+        margin: 0;
+        background: ${G2_PHONE_THEME.bgRoot};
+      }
       .g2-phone-root {
-        font-family: system-ui, sans-serif;
+        font-family: ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', monospace;
         line-height: 1.5;
         max-width: 40rem;
         margin: 0 auto;
         padding: 12px 16px 24px;
         box-sizing: border-box;
+        background: ${G2_PHONE_THEME.bgRoot};
+        color: ${G2_PHONE_THEME.textPrimary};
+        min-height: 100vh;
       }
       .g2-phone-preview-wrap {
         margin: 0 0 12px;
-        background: #0a0c0e;
+        background: ${G2_PHONE_THEME.bgPanel};
         border-radius: 10px;
         padding: 10px;
-        border: 1px solid #1e3a2f;
+        border: 1px solid ${G2_PHONE_THEME.border};
       }
-      .g2-phone-preview {
-        display: block;
+      .g2-glasses-mock {
+        position: relative;
         width: 100%;
-        max-width: 576px;
-        height: auto;
-        image-rendering: pixelated;
+        max-width: ${G2_CANVAS_W}px;
+        aspect-ratio: ${G2_CANVAS_W} / ${G2_CANVAS_H};
+        background: ${G2_PHONE_THEME.bgMock};
         border-radius: 4px;
-        background: #000;
+        overflow: hidden;
+        margin: 0 auto;
+        box-shadow: inset 0 0 0 1px ${G2_PHONE_THEME.border};
+      }
+      .g2-glasses-map {
+        position: absolute;
+        left: 0;
+        top: ${(G2_IMAGE.y / G2_CANVAS_H) * 100}%;
+        width: ${(G2_IMG_W / G2_CANVAS_W) * 100}%;
+        height: ${(G2_IMG_H / G2_CANVAS_H) * 100}%;
+        image-rendering: pixelated;
+        background: ${G2_PHONE_THEME.bgMock};
+        filter: ${G2_PHONE_THEME.mapFilter};
+      }
+      .g2-glasses-meta {
+        position: absolute;
+        left: ${((G2_IMG_W + 6) / G2_CANVAS_W) * 100}%;
+        top: 0;
+        right: 0;
+        bottom: ${(4 / G2_CANVAS_H) * 100}%;
+        margin: 0;
+        padding: 6px 8px;
+        box-sizing: border-box;
+        font-family: inherit;
+        font-size: clamp(10px, 2.6vw, 14px);
+        line-height: 1.35;
+        color: ${G2_PHONE_THEME.textPrimary};
+        white-space: pre-wrap;
+        overflow: hidden;
+        background: transparent;
+        border: none;
       }
       .g2-phone-preview-cap {
         font-size: 11px;
-        color: #6b9b7a;
+        color: ${G2_PHONE_THEME.textSecondary};
         margin: 8px 0 0;
         text-align: center;
       }
@@ -93,9 +141,25 @@ export function mountPhonePanel(
         gap: 8px;
         margin-bottom: 12px;
       }
+      .g2-phone-manual button {
+        font-family: inherit;
+        font-size: 12px;
+        color: ${G2_PHONE_THEME.textPrimary};
+        background: ${G2_PHONE_THEME.bgPanel};
+        border: 1px solid ${G2_PHONE_THEME.border};
+        border-radius: 6px;
+        padding: 6px 10px;
+        cursor: pointer;
+      }
+      .g2-phone-manual button:hover {
+        border-color: ${G2_PHONE_THEME.textSecondary};
+      }
       .g2-phone-metrics {
         font-size: 12px;
-        background: #f4f4f4;
+        font-family: inherit;
+        color: ${G2_PHONE_THEME.textSecondary};
+        background: ${G2_PHONE_THEME.bgPanel};
+        border: 1px solid ${G2_PHONE_THEME.border};
         padding: 12px;
         border-radius: 8px;
         overflow: auto;
@@ -142,6 +206,8 @@ export function mountPhonePanel(
 
   const pre = root.querySelector('#g2-metrics');
   const previewImg = root.querySelector<HTMLImageElement>('#g2-phone-preview');
+  const metaEl = root.querySelector<HTMLElement>('#g2-glasses-meta');
+  const glassesMock = root.querySelector<HTMLElement>('#g2-glasses-mock');
 
   const syncPreviewImage = () => {
     const url = getPhonePreviewUrl();
@@ -149,16 +215,28 @@ export function mountPhonePanel(
     previewImg.src = url;
   };
 
-  subscribePhonePreview(syncPreviewImage);
+  const syncGlassesMeta = () => {
+    if (metaEl) metaEl.textContent = getG2StatusMeta();
+  };
 
-  if (onPreviewTap && previewImg) {
-    previewImg.style.cursor = 'pointer';
-    previewImg.title = 'タップで用途地域を表示／非表示';
-    previewImg.addEventListener('click', () => onPreviewTap());
+  subscribePhonePreview(() => {
+    syncPreviewImage();
+    syncGlassesMeta();
+  });
+
+  if (onPreviewTap && glassesMock) {
+    glassesMock.style.cursor = 'pointer';
+    glassesMock.title = 'タップで用途地域を表示／非表示';
+    glassesMock.addEventListener('click', event => {
+      if (!(event.target instanceof HTMLElement)) return;
+      if (event.target.closest('#g2-glasses-meta')) return;
+      onPreviewTap();
+    });
   }
 
   const refresh = () => {
     syncPreviewImage();
+    syncGlassesMeta();
     if (!pre) return;
     const debug = getDebugBlock();
     pre.textContent =
