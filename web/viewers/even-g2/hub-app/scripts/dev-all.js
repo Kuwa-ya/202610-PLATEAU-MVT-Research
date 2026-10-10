@@ -37,14 +37,16 @@ function pickLanIPv4() {
 }
 
 function npmRun(script, options = {}) {
+  const { env: extraEnv, ...spawnOptions } = options;
   const child = spawn('npm', ['run', script], {
     cwd: hubAppRoot,
     env: {
       ...process.env,
-      HUB_DEV_HTTPS: useHttps ? '1' : '0'
+      HUB_DEV_HTTPS: useHttps ? '1' : '0',
+      ...extraEnv
     },
     shell: process.platform === 'win32',
-    ...options
+    ...spawnOptions
   });
   children.push(child);
   return child;
@@ -104,7 +106,10 @@ process.on('SIGTERM', () => shutdown(0));
 
 await freePort(PORT);
 
-const vite = npmRun('dev:vite', { stdio: 'inherit' });
+const vite = npmRun('dev:vite', {
+  stdio: 'inherit',
+  env: { VITE_HUB_MODE: process.env.VITE_HUB_MODE ?? 'auto' }
+});
 vite.on('exit', code => shutdown(code ?? 0));
 
 waitForPort(PORT)
@@ -117,7 +122,8 @@ waitForPort(PORT)
     console.log(`\n--- Even G2 hub-app (${scheme.toUpperCase()}) ---`);
     console.log(`実機 (Even Hub で QR 読取): ${phoneUrl}`);
     console.log(`シミュレータ: ${localUrl}`);
-    console.log('建物: GPS（または京都駅フォールバック）→ kuwa-ya bldg GeoJSON → 288×144 PNG → G2');
+    console.log('モード: auto（シミュレータ内は G2 送信、QR 実機はブリッジなしならプレビューのみ）');
+    console.log('建物: GPS / 手動 → GeoJSON（メッシュ単位 DL）→ 288×144 → プレビュー（sim）または G2（even）');
     if (useHttps) {
       console.log(
         'HTTPS: 自己署名のため WebView が「ロード中」で止まる場合は Ctrl+C 後 npm run dev（HTTP）に戻してください'

@@ -1,7 +1,6 @@
-import { bldgGeoJsonUrl } from './bldg-url.js';
-import { fetchBldgFeatureCollection } from './fetch-geojson.js';
+import type { GeoJsonFeatureCollection } from './geojson-types.js';
 import { buildingsFromCollection } from './geojson-buildings.js';
-import { meshBounds11, regionalMesh11 } from './mesh-code.js';
+import type { RegionalMeshBounds } from './mesh-code.js';
 import { canvasToPngBytes, renderBuildingsOblique } from './render-oblique.js';
 
 export type BuildingFrameResult = {
@@ -13,23 +12,28 @@ export type BuildingFrameResult = {
   renderMs: number;
 };
 
-export type BuildingFrameRequest = {
+export type RenderCachedBldgRequest = {
+  meshCode: string;
+  collection: GeoJsonFeatureCollection;
+  bounds: RegionalMeshBounds;
   latitude: number;
   longitude: number;
+  headingDeg: number;
   width: number;
   height: number;
-  signal?: AbortSignal;
 };
 
-export async function buildBuildingFrame(request: BuildingFrameRequest): Promise<BuildingFrameResult> {
-  const { latitude, longitude, width, height, signal } = request;
-  const meshCode = regionalMesh11(latitude, longitude);
-  const bounds = meshBounds11(meshCode);
-  const url = bldgGeoJsonUrl(meshCode);
-
-  const geoStart = performance.now();
-  const collection = await fetchBldgFeatureCollection(url, signal);
-  const geoFetchMs = performance.now() - geoStart;
+export async function renderCachedBldgFrame(request: RenderCachedBldgRequest): Promise<BuildingFrameResult> {
+  const {
+    meshCode,
+    collection,
+    bounds,
+    latitude,
+    longitude,
+    headingDeg,
+    width,
+    height
+  } = request;
 
   const buildings = buildingsFromCollection(collection);
   const renderStart = performance.now();
@@ -38,7 +42,8 @@ export async function buildBuildingFrame(request: BuildingFrameRequest): Promise
     height,
     bounds,
     userLat: latitude,
-    userLon: longitude
+    userLon: longitude,
+    headingDeg
   });
   const bytes = await canvasToPngBytes(canvas);
   const renderMs = performance.now() - renderStart;
@@ -48,7 +53,7 @@ export async function buildBuildingFrame(request: BuildingFrameRequest): Promise
     meshCode,
     featureCount: collection.features?.length ?? 0,
     ringCount: buildings.length,
-    geoFetchMs,
+    geoFetchMs: 0,
     renderMs
   };
 }

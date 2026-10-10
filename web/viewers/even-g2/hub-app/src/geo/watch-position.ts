@@ -25,10 +25,14 @@ export function watchPosition(options: WatchPositionOptions): () => void {
 
   const watchId = geo.watchPosition(
     position => {
+      const heading = position.coords.heading;
+      const headingDeg =
+        heading != null && Number.isFinite(heading) && heading >= 0 ? heading : null;
       options.onFix({
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
         accuracyM: Number.isFinite(position.coords.accuracy) ? position.coords.accuracy : null,
+        headingDeg,
         at: new Date(position.timestamp).toISOString()
       });
       options.onStatus?.('GPS 受信中（端末）');

@@ -2,6 +2,8 @@ export type GeoFix = {
   latitude: number;
   longitude: number;
   accuracyM: number | null;
+  /** 進行方向（度・北=0、時計回り）。端末 GPS のみ */
+  headingDeg?: number | null;
   at: string;
 };
 
