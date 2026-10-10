@@ -3,19 +3,9 @@
  *
  * Copyright © 2026 Kuwa-ya, Ltd. All Rights Reserved.
  * Full license text: /legal/SOURCE-CODE-LICENSE.txt
- *
- * ALL RIGHTS RESERVED. NO LICENSE IS GRANTED BY ACCESSING, VIEWING, OR COPYING THIS FILE.
- * THIS SOFTWARE AND ALL ASSOCIATED MATERIALS ARE PROPRIETARY TO KUWA-YA, LTD.
- * SOURCE CODE IS MADE PUBLICLY VIEWABLE ONLY FOR TRANSPARENCY AND INFORMATIONAL
- * PURPOSES. WITHOUT PRIOR WRITTEN PERMISSION FROM KUWA-YA, LTD., YOU MAY NOT USE,
- * COPY, REPRODUCE, MODIFY, ADAPT, TRANSLATE, CREATE DERIVATIVE WORKS FROM,
- * DISTRIBUTE, REDISTRIBUTE, PUBLISH, SUBLICENSE, SELL, RENT, LEASE, OR OTHERWISE
- * MAKE AVAILABLE ANY PART OF THIS SOFTWARE, OR USE IT FOR COMMERCIAL PURPOSES OR
- * TO DEVELOP OR PROVIDE ANY PRODUCT OR SERVICE. VIEWING DOES NOT GRANT ANY RIGHTS.
- * USE OF THE PUBLIC WEB APPLICATION IS GOVERNED BY ITS TERMS OF SERVICE ONLY AND
- * DOES NOT GRANT ANY RIGHT TO THIS SOURCE CODE. THE SOFTWARE IS PROVIDED "AS IS"
- * WITHOUT WARRANTY OF ANY KIND. SEE /legal/SOURCE-CODE-LICENSE.txt.
  */
+
+import { MVT_VIEWER_LAYERS } from '../../../../shared/mvt/viewer-mvt-layers.js';
 
 export function bindViewUi(document) {
   const elements = {
@@ -39,15 +29,16 @@ export function bindViewUi(document) {
     viewerRequestedLod: document.querySelector('#viewer-requested-lod'),
     viewerRequestedRow: document.querySelector('#viewer-requested-row'),
     requestedLod: document.querySelector('#requested-lod'),
-    luseVisibility: document.querySelector('#luse-visibility'),
-    tranVisibility: document.querySelector('#tran-visibility'),
-    useDistrictVisibility: document.querySelector('#usedistrict-visibility'),
+    toggleMvtLuse: document.querySelector('#toggle-mvt-luse'),
+    toggleMvtRoad: document.querySelector('#toggle-mvt-road'),
+    toggleMvtUseDistrict: document.querySelector('#toggle-mvt-usedistrict'),
+    addressSearchInput: document.querySelector('#address-search-input'),
+    addressSearchSubmit: document.querySelector('#address-search-submit'),
+    addressSearchStatus: document.querySelector('#address-search-status'),
     originLatitude: document.querySelector('#origin-latitude'),
     originLongitude: document.querySelector('#origin-longitude'),
     originApply: document.querySelector('#origin-apply'),
     originStatus: document.querySelector('#origin-status'),
-    viewReset: document.querySelector('#view-reset'),
-    viewZoomMvt: document.querySelector('#view-zoom-mvt'),
     currentLatitude: document.querySelector('#current-latitude'),
     currentLongitude: document.querySelector('#current-longitude'),
     cameraDistance: document.querySelector('#camera-distance'),
@@ -55,7 +46,7 @@ export function bindViewUi(document) {
     mvtPlanned: document.querySelector('#mvt-planned'),
     localOrigin: document.querySelector('#local-origin'),
     viewerMvtMode: document.querySelector('#viewer-mvt-mode'),
-    viewerMvtTiles: document.querySelector('#viewer-mvt-tiles'),
+    viewerMvtTiles: document.querySelector('#viewer-mvt-tiles')
   };
 
   elements.menuToggle?.addEventListener('click', () => {
@@ -63,31 +54,34 @@ export function bindViewUi(document) {
     elements.menuToggle.setAttribute('aria-expanded', String(!collapsed));
   });
 
-  const layerTabs = [...document.querySelectorAll('.layer-tabs [role="tab"]')];
-  function activateLayerTab(tab) {
-    for (const candidate of layerTabs) {
-      const selected = candidate === tab;
-      candidate.classList.toggle('selected', selected);
-      candidate.setAttribute('aria-selected', String(selected));
-      candidate.tabIndex = selected ? 0 : -1;
-      const panel = document.getElementById(candidate.getAttribute('aria-controls'));
-      if (panel) panel.hidden = !selected;
-    }
-  }
-  for (const [index, tab] of layerTabs.entries()) {
-    tab.addEventListener('click', () => activateLayerTab(tab));
-    tab.addEventListener('keydown', event => {
-      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-      event.preventDefault();
-      const nextIndex = event.key === 'Home' ? 0
-        : event.key === 'End' ? layerTabs.length - 1
-          : (index + (event.key === 'ArrowRight' ? 1 : -1) + layerTabs.length) % layerTabs.length;
-      activateLayerTab(layerTabs[nextIndex]);
-      layerTabs[nextIndex].focus();
-    });
-  }
-
   return elements;
+}
+
+const TOGGLE_BY_KIND = {
+  luse: 'toggleMvtLuse',
+  road: 'toggleMvtRoad',
+  useDistrict: 'toggleMvtUseDistrict'
+};
+
+export function isMvtLayerVisible(elements, kind) {
+  const key = TOGGLE_BY_KIND[kind];
+  const button = key ? elements[key] : null;
+  if (!button) return kind === 'luse';
+  return button.getAttribute('aria-pressed') === 'true';
+}
+
+export function setMvtLayerToggle(elements, kind, visible) {
+  const key = TOGGLE_BY_KIND[kind];
+  const button = key ? elements[key] : null;
+  if (button) button.setAttribute('aria-pressed', String(Boolean(visible)));
+}
+
+export function readEnabledDatasets(elements) {
+  const ids = [];
+  for (const layer of MVT_VIEWER_LAYERS) {
+    if (isMvtLayerVisible(elements, layer.kind)) ids.push(layer.datasetId);
+  }
+  return ids;
 }
 
 export function setStatus(elements, message, isError = false) {
@@ -121,12 +115,4 @@ export function updateMetadata(elements, payload) {
   if (elements.viewerMvtTiles) elements.viewerMvtTiles.textContent = mvtTilesLabel;
   if (statusLine) setStatus(elements, statusLine, payload.isError);
   if (elements.hint && hintLine) elements.hint.textContent = hintLine;
-}
-
-export function readEnabledDatasets(elements) {
-  const ids = [];
-  if (elements.luseVisibility?.value !== 'hide') ids.push('luse-2025');
-  if (elements.tranVisibility?.value !== 'hide') ids.push('tran-lod1-2025');
-  if (elements.useDistrictVisibility?.value === 'show') ids.push('use-district-2025');
-  return ids;
 }

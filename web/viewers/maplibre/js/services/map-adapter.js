@@ -17,6 +17,8 @@
  * WITHOUT WARRANTY OF ANY KIND. SEE /legal/SOURCE-CODE-LICENSE.txt.
  */
 
+import { geocodeAddress } from '../../../../shared/geo/address-geocode.js';
+import { mapZoomForAddressMatch } from '../../../../shared/geo/address-map-view.js';
 import { DEFAULT_VIEWER_LOCATION } from '../../../../shared/geo/viewer-defaults.js';
 import { BOUNDARY_LAYERS } from '../../../../shared/mvt/data-region.js';
 import { maplibreLuseFillColorExpression } from '../../../../shared/mvt/feature-style.js';
@@ -213,8 +215,6 @@ export class MapAdapter {
       this.webTileOverlayKey = webTileKey;
       this.syncWebTileOverlay(state.visibility.webTile, state.viewport.webTile);
     }
-
-    this.dedupeFeaturesById = state.dedupeFeaturesById !== false;
   }
 
   setBasemap(basemap) {
@@ -617,11 +617,11 @@ export class MapAdapter {
     });
     if (!feature) {
       this.clearSelectedFeature();
-      this.callbacks.onFeatureSelected(null, null);
+      this.callbacks.onFeatureSelected(null);
       return;
     }
     this.selectFeatureOnMap(feature);
-    this.callbacks.onFeatureSelected(feature, debug);
+    this.callbacks.onFeatureSelected(feature);
 
     const popup = document.createElement('div');
     const layerId = feature.layer.id;
@@ -629,15 +629,8 @@ export class MapAdapter {
     const title = document.createElement('div');
     title.className = 'popup-label';
     title.textContent =
-      kind === 'luse' ? 'LAND USE' : kind === 'useDistrict' ? 'USE DISTRICT' : 'ROAD';
+      kind === 'luse' ? '土地利用' : kind === 'useDistrict' ? '用途地域' : '道路';
     popup.append(title);
-    const dedupeTag = document.createElement('div');
-    dedupeTag.className = 'popup-id';
-    dedupeTag.style.opacity = '0.85';
-    dedupeTag.textContent = debug.dedupeEnabled
-      ? `重複排除 ON — 命中 ${debug.rawCount} → 候補 ${debug.poolCount}`
-      : `重複排除 OFF — 命中 ${debug.rawCount}（最前面を採用）`;
-    popup.append(dedupeTag);
     for (const field of inspectFieldsForLayerKind(kind, feature.properties)) {
       const row = document.createElement('div');
       row.className = 'popup-id';
@@ -703,6 +696,22 @@ export class MapAdapter {
       this.callbacks.onStats({ requests: this.requestUrls.size, bytes: this.transferredBytes });
     });
     observer.observe({ type: 'resource', buffered: true });
+  }
+
+  async searchAddress(query) {
+    const result = await geocodeAddress(query);
+    if (!this.map) return result;
+
+    const zoom = mapZoomForAddressMatch(result.matchDepth, Model.CONFIG.mvtMinZoom);
+    this.map.flyTo({
+      center: [result.longitude, result.latitude],
+      zoom,
+      bearing: 0,
+      pitch: 0,
+      duration: 1600,
+      essential: true
+    });
+    return result;
   }
 }
 

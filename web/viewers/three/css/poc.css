@@ -1,23 +1,109 @@
-/* PoC 固有（ベースは /kuwaya-geo/css/style.css） */
+/* PoC: 白背景 LAB（/kuwaya-geo/css/style.css の上書き） */
+.viewer-light .viewer {
+  background: var(--viewer-bg);
+}
+.viewer-light .viewer::after {
+  box-shadow: inset 0 0 80px rgba(28, 38, 34, 0.06);
+}
+
+.app-shell.viewer-light {
+  color-scheme: light;
+  --bg: var(--viewer-bg);
+  --panel: var(--viewer-panel);
+  --panel-soft: var(--viewer-panel-2);
+  --line: var(--viewer-line);
+  --text: var(--viewer-ink);
+  --muted: var(--viewer-muted);
+  --caption: var(--viewer-muted);
+  --accent: var(--viewer-accent);
+  --accent-hover: var(--viewer-accent-hover);
+  --accent-soft: var(--viewer-accent-soft);
+  --danger: var(--viewer-danger);
+  background: var(--viewer-bg);
+  color: var(--viewer-ink);
+}
+
+.viewer-light .topbar {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid var(--viewer-line);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+.viewer-light .topbar h1,
+.viewer-light legend { color: var(--viewer-ink); }
+.viewer-light .topbar-copy,
+.viewer-light .control-note,
+.viewer-light .metadata dt { color: var(--viewer-muted); }
+.viewer-light .control-panel {
+  background: var(--viewer-panel);
+  box-shadow: var(--viewer-shadow);
+  border-color: var(--viewer-line);
+}
+.viewer-light label { color: var(--viewer-muted); }
+.viewer-light select,
+.viewer-light input:not([type="search"]) {
+  background: var(--viewer-panel-2);
+  border-color: var(--viewer-line);
+  color: var(--viewer-ink);
+}
+.viewer-light select {
+  border-color: rgba(240, 69, 32, 0.45);
+  color: var(--viewer-accent);
+}
+.viewer-light select:focus,
+.viewer-light select:hover {
+  background: #fff;
+  box-shadow: 0 0 0 2px var(--viewer-accent-soft);
+}
+.viewer-light .address-search-field { color: var(--viewer-muted); }
+.viewer-light .metadata dd { color: var(--viewer-ink); }
+.viewer-light footer { color: var(--viewer-muted); }
+.viewer-light .statusbar { background: rgba(255, 255, 255, 0.9); border-color: var(--viewer-line); }
+
+.poc-eyebrow { color: var(--accent); }
 .poc-eyebrow .lab-link {
   margin-left: 8px;
   padding: 2px 7px;
   border: 1px solid var(--line);
   border-radius: 4px;
-  color: var(--caption);
+  color: var(--muted);
   font-size: 9px;
   letter-spacing: .06em;
   text-decoration: none;
 }
 .poc-eyebrow .lab-link:hover { border-color: var(--accent); color: var(--accent); }
 
-.mvt-legend { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; }
-.mvt-legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--caption); }
-.mvt-swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid rgba(255,255,255,.15); }
-.mvt-swatch.luse { background: rgba(71, 230, 177, .75); }
-.mvt-swatch.luse-road { background: rgba(245, 158, 72, .88); }
-.mvt-swatch.tran { background: rgba(255, 200, 90, .85); }
+.mvt-swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  display: inline-block;
+}
+.mvt-swatch.luse { background: var(--viewer-data-luse); }
+.mvt-swatch.luse-road { background: var(--viewer-data-luse-road); }
+.mvt-swatch.tran { background: var(--viewer-data-tran); }
+.mvt-swatch.usedistrict { background: var(--viewer-data-urf); }
 
 #mvt-canvas { width: 100%; height: 100%; display: block; touch-action: none; }
 
-.tile-settings .layer-tabs { grid-template-columns: repeat(2, 1fr); }
+.mvt-layer-settings .mvt-layer-card {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--viewer-line);
+  border-radius: 8px;
+  background: var(--viewer-panel-2);
+}
+.mvt-layer-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.mvt-layer-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--viewer-ink);
+}
+.mvt-layer-name code { font-size: 10px; color: var(--viewer-muted); font-weight: 500; }
+
+.address-search-settings { order: -1; }
+.address-search-field { display: grid; gap: 8px; font-size: 12px; }
+.address-search-field input { width: 100%; }

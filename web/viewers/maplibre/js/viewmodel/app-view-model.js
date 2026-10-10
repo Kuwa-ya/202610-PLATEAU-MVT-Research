@@ -94,13 +94,10 @@ export class AppViewModel extends EventTarget {
     this.notify();
   }
 
-  setDedupeFeaturesById(enabled) {
-    this.state.dedupeFeaturesById = Boolean(enabled);
-    this.notify();
-  }
-
-  setFeaturePickDebug(debug) {
-    this.state.featurePickDebug = debug ?? null;
+  setAddressSearchStatus(text) {
+    const next = String(text ?? '');
+    if (this.state.addressSearchStatus === next) return;
+    this.state.addressSearchStatus = next;
     this.notify();
   }
 }

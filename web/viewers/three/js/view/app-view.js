@@ -3,24 +3,16 @@
  *
  * Copyright © 2026 Kuwa-ya, Ltd. All Rights Reserved.
  * Full license text: /legal/SOURCE-CODE-LICENSE.txt
- *
- * ALL RIGHTS RESERVED. NO LICENSE IS GRANTED BY ACCESSING, VIEWING, OR COPYING THIS FILE.
- * THIS SOFTWARE AND ALL ASSOCIATED MATERIALS ARE PROPRIETARY TO KUWA-YA, LTD.
- * SOURCE CODE IS MADE PUBLICLY VIEWABLE ONLY FOR TRANSPARENCY AND INFORMATIONAL
- * PURPOSES. WITHOUT PRIOR WRITTEN PERMISSION FROM KUWA-YA, LTD., YOU MAY NOT USE,
- * COPY, REPRODUCE, MODIFY, ADAPT, TRANSLATE, CREATE DERIVATIVE WORKS FROM,
- * DISTRIBUTE, REDISTRIBUTE, PUBLISH, SUBLICENSE, SELL, RENT, LEASE, OR OTHERWISE
- * MAKE AVAILABLE ANY PART OF THIS SOFTWARE, OR USE IT FOR COMMERCIAL PURPOSES OR
- * TO DEVELOP OR PROVIDE ANY PRODUCT OR SERVICE. VIEWING DOES NOT GRANT ANY RIGHTS.
- * USE OF THE PUBLIC WEB APPLICATION IS GOVERNED BY ITS TERMS OF SERVICE ONLY AND
- * DOES NOT GRANT ANY RIGHT TO THIS SOURCE CODE. THE SOFTWARE IS PROVIDED "AS IS"
- * WITHOUT WARRANTY OF ANY KIND. SEE /legal/SOURCE-CODE-LICENSE.txt.
  */
 
+import { geocodeAddress } from '../../../../shared/geo/address-geocode.js';
+import { MVT_VIEWER_LAYERS } from '../../../../shared/mvt/viewer-mvt-layers.js';
+import { createAddressSearchController } from '/kuwaya-geo/js/view/ui.js';
 import {
   bindViewUi,
   formatCoord,
-  readEnabledDatasets,
+  isMvtLayerVisible,
+  setMvtLayerToggle,
   setLoading,
   setStatus,
   updateMetadata
@@ -51,19 +43,31 @@ export class AppView {
       this.scene.applyOrigin(lat, lon);
     });
 
-    elements.viewReset?.addEventListener('click', () => this.scene.resetView());
-    elements.viewZoomMvt?.addEventListener('click', () => this.scene.zoomToMvtDistance());
+    for (const layer of MVT_VIEWER_LAYERS) {
+      const toggleKey = {
+        luse: 'toggleMvtLuse',
+        road: 'toggleMvtRoad',
+        useDistrict: 'toggleMvtUseDistrict'
+      }[layer.kind];
 
-    for (const [select, datasetId] of [
-      [elements.luseVisibility, 'luse-2025'],
-      [elements.tranVisibility, 'tran-lod1-2025'],
-      [elements.useDistrictVisibility, 'use-district-2025']
-    ]) {
-      select?.addEventListener('change', () => {
-        const visible = select.value !== 'hide';
-        this.scene.setDatasetVisible(datasetId, visible);
+      elements[toggleKey]?.addEventListener('click', () => {
+        const next = !isMvtLayerVisible(elements, layer.kind);
+        setMvtLayerToggle(elements, layer.kind, next);
+        this.scene.setDatasetVisible(layer.datasetId, next);
       });
     }
+
+    const searchAddress = createAddressSearchController(elements, {
+      geocode: geocodeAddress,
+      onStatus: (message, isError) => this.viewModel.setStatus(message, isError),
+      onResult: result => this.scene.goToGeocodeResult(result)
+    });
+    elements.addressSearchSubmit?.addEventListener('click', searchAddress);
+    elements.addressSearchInput?.addEventListener('keydown', event => {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      searchAddress();
+    });
 
     elements.terrainVisibility?.addEventListener('change', () => {
       const show = elements.terrainVisibility.value !== 'hide';
@@ -79,6 +83,10 @@ export class AppView {
 
     if (elements.localOrigin) {
       elements.localOrigin.textContent = `${formatCoord(originRef.lat)}, ${formatCoord(originRef.lon)}`;
+    }
+
+    for (const layer of MVT_VIEWER_LAYERS) {
+      setMvtLayerToggle(elements, layer.kind, layer.defaultVisible);
     }
   }
 
@@ -104,5 +112,6 @@ export class AppView {
       hintLine: state.metadata.hintLine,
       isError: state.metadata.isError
     });
+
   }
 }

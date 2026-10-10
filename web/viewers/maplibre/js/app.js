@@ -37,9 +37,8 @@ function bootstrap() {
 
   mapAdapter.initialize({
     onViewportChanged: viewport => viewModel.setViewport(viewport),
-    onFeatureSelected: (feature, pickDebug) => {
+    onFeatureSelected: feature => {
       viewModel.selectFeature(feature);
-      viewModel.setFeaturePickDebug(pickDebug);
     },
     onStatus: (message, mode) => viewModel.setStatus(message, mode),
     onStats: stats => viewModel.setStats(stats)

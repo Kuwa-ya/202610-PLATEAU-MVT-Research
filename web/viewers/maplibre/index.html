@@ -5,25 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PLATEAU MVT LAB</title>
   <meta name="description" content="MapLibreでPLATEAUの土地利用・道路・用途地域MVTを検証するビューア" />
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1215'/%3E%3Cpath d='M13 45 25 18l9 18 7-13 10 22' fill='none' stroke='%2347e6b1' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23f3f6f4'/%3E%3Cpath d='M13 45 25 18l9 18 7-13 10 22' fill='none' stroke='%23f04520' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="/vendor/maplibre-gl/maplibre-gl.css" />
+  <link rel="stylesheet" href="/shared/geo/viewer-theme.css" />
   <style>
     :root {
-      color-scheme: dark;
-      --ink: #eaf4f1;
-      --muted: #8da29d;
-      --panel: rgba(10, 18, 21, 0.94);
-      --panel-2: #111d21;
-      --line: rgba(165, 205, 194, 0.16);
-      --accent: #47e6b1;
-      --accent-2: #ffc85a;
-      --danger: #ff816f;
-      --shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+      --ink: var(--viewer-ink);
+      --muted: var(--viewer-muted);
+      --panel: var(--viewer-panel);
+      --panel-2: var(--viewer-panel-2);
+      --line: var(--viewer-line);
+      --accent: var(--viewer-accent);
+      --accent-2: var(--viewer-data-tran);
+      --danger: var(--viewer-danger);
+      --shadow: var(--viewer-shadow);
       font-family: Inter, "Noto Sans JP", "Hiragino Sans", "Yu Gothic UI", sans-serif;
     }
 
     * { box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #091114; color: var(--ink); }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--viewer-bg); color: var(--ink); }
     button, input { font: inherit; }
     button { color: inherit; }
 
@@ -44,7 +44,6 @@
       border-radius: 18px;
       background: var(--panel);
       box-shadow: var(--shadow);
-      backdrop-filter: blur(18px);
     }
 
     .brand {
@@ -68,7 +67,7 @@
       height: 8px;
       border-radius: 50%;
       background: var(--accent);
-      box-shadow: 0 0 0 5px rgba(71, 230, 177, 0.1);
+      box-shadow: 0 0 0 5px var(--viewer-accent-soft);
     }
 
     h1 { margin: 0; font-size: 1.42rem; line-height: 1.2; letter-spacing: -0.03em; }
@@ -79,7 +78,7 @@
       overflow-y: auto;
       padding: 16px 20px 24px;
       scrollbar-width: thin;
-      scrollbar-color: #294039 transparent;
+      scrollbar-color: #b8c4be transparent;
     }
 
     .section { padding: 3px 0 18px; }
@@ -87,43 +86,63 @@
 
     .section-title {
       margin: 0 0 11px;
-      color: #b9cbc6;
+      color: var(--muted);
       font-size: 0.78rem;
       font-weight: 800;
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
 
-    .chip:focus-visible, .toggle:focus-visible { outline: 3px solid rgba(71, 230, 177, 0.34); outline-offset: 2px; }
+    .chip:focus-visible, .layer-switch:focus-visible { outline: 3px solid var(--viewer-accent-soft); outline-offset: 2px; }
 
     .hint { margin: 8px 0 0; color: var(--muted); font-size: 0.76rem; line-height: 1.45; }
+
+    .address-search-form { display: grid; gap: 8px; margin-top: 4px; }
+    .address-search-form input {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--ink);
+    }
+    .address-go-button {
+      padding: 9px 12px;
+      border-radius: 9px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .address-go-button:hover { border-color: var(--accent); color: var(--accent); }
+    .address-go-button:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
     .chip {
       padding: 7px 10px;
       border: 1px solid var(--line);
       border-radius: 999px;
-      background: rgba(255,255,255,0.035);
-      color: #c4d5d1;
+      background: var(--panel-2);
+      color: var(--ink);
       cursor: pointer;
       font-size: 0.76rem;
     }
-    .chip:hover { border-color: rgba(71, 230, 177, 0.38); color: #fff; }
+    .chip:hover { border-color: var(--viewer-accent); color: var(--accent); }
 
     .layer-card {
       padding: 12px;
       border: 1px solid var(--line);
       border-radius: 12px;
-      background: rgba(255,255,255,0.026);
+      background: var(--panel-2);
     }
     .layer-card + .layer-card { margin-top: 9px; }
     .layer-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
     .layer-name { display: flex; align-items: center; gap: 9px; font-size: 0.9rem; font-weight: 750; }
     .swatch { width: 11px; height: 11px; border-radius: 3px; }
-    .swatch.landuse { background: var(--accent); }
-    .swatch.road { background: var(--accent-2); }
+    .swatch.landuse { background: var(--viewer-data-luse); }
+    .swatch.road { background: var(--viewer-data-tran); }
     .swatch.usedistrict { background: #c084fc; }
-    .feature-summary { margin: 0 0 10px; color: #e9d5ff; font-size: 0.86rem; line-height: 1.45; }
+    .feature-summary { margin: 0 0 10px; color: #6b21a8; font-size: 0.86rem; line-height: 1.45; }
     .feature-metrics {
       display: grid;
       grid-template-columns: auto 1fr;
@@ -132,51 +151,23 @@
       padding: 10px 12px;
       border: 1px solid var(--line);
       border-radius: 10px;
-      background: rgba(192, 132, 252, 0.08);
+      background: rgba(192, 132, 252, 0.1);
       font-size: 0.8rem;
     }
     .feature-metrics dt { color: var(--muted); }
     .feature-metrics dd { margin: 0; color: var(--ink); }
 
-    .toggle {
-      position: relative;
-      width: 42px;
-      height: 24px;
-      padding: 0;
-      border: 1px solid #355047;
-      border-radius: 999px;
-      background: #162622;
-      cursor: pointer;
-    }
-    .toggle::after {
-      content: "";
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: #789087;
-      transition: transform 160ms ease, background 160ms ease;
-    }
-    .toggle[aria-pressed="true"] { background: rgba(71, 230, 177, 0.22); border-color: rgba(71, 230, 177, 0.65); }
-    .toggle[aria-pressed="true"]::after { transform: translateX(18px); background: var(--accent); }
-
-    .range-row { display: grid; grid-template-columns: auto 1fr 34px; align-items: center; gap: 8px; margin-top: 11px; color: var(--muted); font-size: 0.74rem; }
-    input[type="range"] { width: 100%; accent-color: var(--accent); }
-    .range-value { text-align: right; color: #cce0da; font-variant-numeric: tabular-nums; }
-
     .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
-    .stat { padding: 10px 9px; border: 1px solid var(--line); border-radius: 11px; background: #0a1417; }
+    .stat { padding: 10px 9px; border: 1px solid var(--line); border-radius: 11px; background: var(--panel-2); }
     .stat-label { display: block; color: var(--muted); font-size: 0.69rem; margin-bottom: 4px; }
     .stat-value { display: block; font-size: 0.94rem; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-    .zoom-note { margin-top: 10px; padding: 10px 11px; border-radius: 10px; background: rgba(255, 200, 90, 0.08); color: #e9d6a9; font-size: 0.76rem; line-height: 1.5; }
-    .zoom-note.good { background: rgba(71, 230, 177, 0.075); color: #afe8d5; }
+    .zoom-note { margin-top: 10px; padding: 10px 11px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); font-size: 0.76rem; line-height: 1.5; }
+    .zoom-note.good { background: var(--viewer-accent-soft); color: #9a3412; }
 
     .overlay-readout { display: grid; gap: 7px; margin-top: 10px; }
     .overlay-readout-row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; color: var(--muted); font-size: 0.72rem; }
-    .overlay-readout-row code { overflow: hidden; color: #dce9e6; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+    .overlay-readout-row code { overflow: hidden; color: var(--ink); text-align: right; text-overflow: ellipsis; white-space: nowrap; }
 
     .grid-label {
       pointer-events: none;
@@ -192,16 +183,12 @@
     .grid-label--mesh-10, .grid-label--mesh-11 { font-size: 9px; }
 
     .inspector-empty { color: var(--muted); font-size: 0.82rem; line-height: 1.6; }
-    .pick-debug { margin: 0 0 12px; font-size: 0.75rem; line-height: 1.45; color: var(--muted); }
-    .pick-debug table { width: 100%; border-collapse: collapse; margin-top: 6px; }
-    .pick-debug th, .pick-debug td { border-bottom: 1px solid var(--line); padding: 4px 3px; text-align: left; vertical-align: top; }
-    .pick-debug tr.pick-chosen td { color: var(--accent); font-weight: 600; }
     .feature-title { margin: 0 0 8px; font-size: 0.92rem; }
     .properties { display: grid; gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; }
-    .prop { display: grid; grid-template-columns: minmax(88px, .42fr) minmax(0, 1fr); gap: 10px; padding: 8px 9px; background: #0b1518; font-size: 0.72rem; }
+    .prop { display: grid; grid-template-columns: minmax(88px, .42fr) minmax(0, 1fr); gap: 10px; padding: 8px 9px; background: var(--panel-2); font-size: 0.72rem; }
     .prop + .prop { border-top: 1px solid var(--line); }
     .prop-key { color: var(--muted); overflow-wrap: anywhere; }
-    .prop-value { color: #dce9e6; overflow-wrap: anywhere; user-select: text; }
+    .prop-value { color: var(--ink); overflow-wrap: anywhere; user-select: text; }
 
     .status {
       position: absolute;
@@ -215,11 +202,10 @@
       padding: 0 13px;
       border: 1px solid var(--line);
       border-radius: 999px;
-      background: rgba(10, 18, 21, 0.87);
-      box-shadow: 0 10px 30px rgba(0,0,0,.2);
-      color: #c7d7d3;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: var(--shadow);
+      color: var(--muted);
       font-size: 0.78rem;
-      backdrop-filter: blur(12px);
     }
     .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
     .status.loading .status-dot { animation: blink 1s infinite; }
@@ -234,22 +220,21 @@
       transform: translateX(-50%);
       display: none;
       padding: 9px 13px;
-      border: 1px solid rgba(255, 200, 90, 0.28);
+      border: 1px solid var(--viewer-line);
       border-radius: 10px;
-      background: rgba(25, 20, 10, 0.9);
-      color: #ffe2a1;
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--viewer-muted);
       font-size: 0.78rem;
       box-shadow: var(--shadow);
     }
     .zoom-gate.visible { display: block; }
 
     .maplibregl-ctrl-top-right { top: 16px; right: 6px; }
-    .maplibregl-ctrl-group { overflow: hidden; border: 1px solid var(--line) !important; border-radius: 11px !important; background: rgba(10,18,21,.9) !important; box-shadow: 0 10px 24px rgba(0,0,0,.22) !important; }
-    .maplibregl-ctrl-group button { filter: invert(1) opacity(.82); }
-    .maplibregl-ctrl-attrib { background: rgba(5,10,12,.75) !important; color: #a7b7b3; }
-    .maplibregl-ctrl-attrib a { color: #d7e8e3; }
-    .maplibregl-popup-content { border: 1px solid var(--line); border-radius: 12px; background: #0b1518; color: var(--ink); box-shadow: var(--shadow); }
-    .maplibregl-popup-close-button { color: #fff; font-size: 20px; }
+    .maplibregl-ctrl-group { overflow: hidden; border: 1px solid var(--line) !important; border-radius: 11px !important; background: #fff !important; box-shadow: var(--shadow) !important; }
+    .maplibregl-ctrl-attrib { background: rgba(255,255,255,.85) !important; color: var(--muted); }
+    .maplibregl-ctrl-attrib a { color: var(--accent); }
+    .maplibregl-popup-content { border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); box-shadow: var(--shadow); }
+    .maplibregl-popup-close-button { color: var(--muted); font-size: 20px; }
     .popup-label { color: var(--accent); font-size: 0.72rem; font-weight: 800; letter-spacing: .08em; }
     .popup-id { max-width: 240px; margin-top: 4px; overflow-wrap: anywhere; font-size: .78rem; }
 
@@ -282,7 +267,7 @@
           <p class="hint">初期表示は京都駅。PLATEAU Ortho は配信範囲が限られるため、全域では地理院タイルを選べます。</p>
           <label class="range-row" style="display:block;margin-top:8px">
             <span style="display:block;margin-bottom:6px;font-size:0.82rem;color:var(--muted)">ラスタ底図</span>
-            <select id="basemap-select" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#0b1518;color:var(--ink)">
+            <select id="basemap-select" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink)">
               <option value="gsi-standard">地理院 標準地図</option>
               <option value="gsi-seamlessphoto">地理院 航空写真</option>
               <option value="plateau-ortho-2023" selected>PLATEAU Ortho 2023</option>
@@ -291,30 +276,37 @@
         </section>
 
         <section class="section">
+          <h2 class="section-title">住所検索</h2>
+          <div class="address-search-form">
+            <label class="hint" style="margin:0">都道府県名から入力</label>
+            <input id="address-search-input" type="search" enterkeyhint="search" placeholder="例：京都府京都市下京区駅前町" autocomplete="street-address" />
+            <button id="address-search-submit" class="address-go-button" type="button">この住所へ移動</button>
+            <p id="address-search-status" class="hint" aria-live="polite">MapLibre の flyTo で地図中心を移動します。</p>
+          </div>
+        </section>
+
+        <section class="section">
           <h2 class="section-title">レイヤー</h2>
-          <p class="hint">MVT 索引は東京都・埼玉県・京都府。z16 タイルごとに取得先自治体を自動決定します。</p>
+            <p class="hint">MVT 索引は東京都・埼玉県・京都府。土地利用の道路用地は橙色（<code>luse_class</code> 等）。z16 で索引から自治体を自動選択。</p>
           <div class="layer-card">
             <div class="layer-head">
               <div class="layer-name"><span class="swatch landuse"></span>土地利用 <code>luse</code></div>
-              <button id="toggle-luse" class="toggle" type="button" aria-label="土地利用レイヤーを切り替える" aria-pressed="true"></button>
+              <button id="toggle-luse" class="layer-switch" type="button" aria-label="土地利用レイヤーを切り替える" aria-pressed="true"></button>
             </div>
-            <label class="range-row">透明度<input id="opacity-luse" type="range" min="0" max="100" value="46" /><span id="opacity-luse-value" class="range-value">46%</span></label>
           </div>
 
           <div class="layer-card">
             <div class="layer-head">
               <div class="layer-name"><span class="swatch road"></span>道路 LOD1 <code>tran</code></div>
-              <button id="toggle-road" class="toggle" type="button" aria-label="道路レイヤーを切り替える" aria-pressed="false"></button>
+              <button id="toggle-road" class="layer-switch" type="button" aria-label="道路レイヤーを切り替える" aria-pressed="false"></button>
             </div>
-            <label class="range-row">透明度<input id="opacity-road" type="range" min="0" max="100" value="58" /><span id="opacity-road-value" class="range-value">58%</span></label>
           </div>
 
           <div class="layer-card">
             <div class="layer-head">
               <div class="layer-name"><span class="swatch usedistrict"></span>用途地域 <code>USE_DISTRICT</code></div>
-              <button id="toggle-use-district" class="toggle" type="button" aria-label="用途地域レイヤーを切り替える" aria-pressed="false"></button>
+              <button id="toggle-use-district" class="layer-switch" type="button" aria-label="用途地域レイヤーを切り替える" aria-pressed="false"></button>
             </div>
-            <label class="range-row">透明度<input id="opacity-use-district" type="range" min="0" max="100" value="38" /><span id="opacity-use-district-value" class="range-value">38%</span></label>
             <p class="hint">索引 <code>use-district-2025</code>。クリックで <code>urf_function</code>・建ぺい率・容積率を表示。</p>
           </div>
 
@@ -322,7 +314,7 @@
             <div class="layer-head">
               <div class="layer-name"><span class="swatch" style="background:#f43f5e"></span>市区町村境界（東京都）</div>
               <div class="layer-name"><span class="swatch" style="background:#7c3aed"></span>市区町村境界（京都府）</div>
-              <button id="toggle-city-boundary" class="toggle" type="button" aria-label="市区町村境界表示を切り替える" aria-pressed="true"></button>
+              <button id="toggle-city-boundary" class="layer-switch" type="button" aria-label="市区町村境界表示を切り替える" aria-pressed="true"></button>
             </div>
             <p class="hint"><code>web/data/boundaries/*.geojson</code> の行政界を表示します。</p>
           </div>
@@ -330,7 +322,7 @@
           <div class="layer-card">
             <div class="layer-head">
               <div class="layer-name"><span class="swatch" style="background:#2563eb"></span>地域メッシュコード</div>
-              <button id="toggle-mesh" class="toggle" type="button" aria-label="地域メッシュ表示を切り替える" aria-pressed="true"></button>
+              <button id="toggle-mesh" class="layer-switch" type="button" aria-label="地域メッシュ表示を切り替える" aria-pressed="true"></button>
             </div>
             <p class="hint">縮尺に応じて4・6・8・9・10・11桁を自動表示します。</p>
           </div>
@@ -338,7 +330,7 @@
           <div class="layer-card">
             <div class="layer-head">
               <div class="layer-name"><span class="swatch" style="background:#dc2626"></span>Web Mercator <code>z/x/y</code></div>
-              <button id="toggle-web-tile" class="toggle" type="button" aria-label="Web Mercatorタイル表示を切り替える" aria-pressed="false"></button>
+              <button id="toggle-web-tile" class="layer-switch" type="button" aria-label="Web Mercatorタイル表示を切り替える" aria-pressed="false"></button>
             </div>
             <p class="hint">現在の整数ズームの XYZ と、タイルに紐づく自治体コード（L/R 索引の和集合）を表示します。</p>
           </div>
@@ -360,16 +352,8 @@
         </section>
 
         <section class="section">
-          <h2 class="section-title">クリック照会（検証）</h2>
-          <label class="hint" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin-bottom:10px">
-            <input id="toggle-dedupe-features" type="checkbox" checked style="margin-top:3px" />
-            <span><strong>同一 gml_id の重複排除</strong>（ON: 頂点数が最大の 1 件を採用 / OFF: MapLibre 最前面のみ）</span>
-          </label>
-        </section>
-
-        <section class="section">
           <h2 class="section-title">選択地物</h2>
-          <div id="inspector" class="inspector-empty">地図上の土地利用または道路をクリックすると、MVTに含まれる属性を表示します。</div>
+          <div id="inspector" class="inspector-empty">地図上の土地利用・用途地域・道路をクリックすると属性を表示します。</div>
         </section>
       </div>
     </aside>

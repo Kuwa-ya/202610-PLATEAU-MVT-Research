@@ -177,6 +177,18 @@ export function createTerrainPoc(THREE, options) {
     terrain.reload(resetFocus);
   }
 
+  /** 固定原点変更・住所検索 — reload() は getFocusLatLon() 依存のため使わない */
+  function requestAt(latitude, longitude, resetFocus = true) {
+    if (!visible) return;
+    terrain.request({
+      latitude,
+      longitude,
+      setting: settingForDistance(focusedSpherical.radius),
+      automatic: false,
+      resetFocus
+    });
+  }
+
   function applyFocusElevation() {
     if (visible) terrain.applyFocusElevation();
   }
@@ -208,6 +220,7 @@ export function createTerrainPoc(THREE, options) {
     setVisible,
     initialRequest,
     reload,
+    requestAt,
     refreshBuildingVisibility,
     isVisible: () => visible
   };

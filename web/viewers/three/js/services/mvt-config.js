@@ -20,6 +20,7 @@
 /** kuwaya-geo BUILDING_MIN_LOD / TRANSPORT_MIN_LOD（16）に合わせる */
 import { DATA_BASE } from '../../../../shared/mvt/data-region.js';
 import { MVT_COLORS } from '../../../../shared/mvt/feature-style.js';
+import { MVT_VIEWER_LAYERS } from '../../../../shared/mvt/viewer-mvt-layers.js';
 
 export { DATA_BASE };
 
@@ -27,14 +28,23 @@ export const MVT_MIN_DETAIL_LEVEL = 16;
 export const MVT_FETCH_ZOOM = 16;
 export const MVT_INDEX_ZOOM = 12;
 
+function opacityFor(datasetId) {
+  return MVT_VIEWER_LAYERS.find(layer => layer.datasetId === datasetId)?.defaultOpacity ?? 0.5;
+}
+
 export const DATASETS = Object.freeze([
-  { id: 'luse-2025', label: '土地利用', color: MVT_COLORS.luseDefault, opacity: 0.55 },
-  { id: 'tran-lod1-2025', label: '道路 LOD1', color: MVT_COLORS.transport, opacity: 0.65 },
+  { id: 'luse-2025', label: '土地利用', color: MVT_COLORS.luseDefault, opacity: opacityFor('luse-2025') },
+  {
+    id: 'tran-lod1-2025',
+    label: '道路 LOD1',
+    color: MVT_COLORS.transport,
+    opacity: opacityFor('tran-lod1-2025')
+  },
   {
     id: 'use-district-2025',
     label: '用途地域',
     color: MVT_COLORS.useDistrict,
-    opacity: 0.42
+    opacity: opacityFor('use-district-2025')
   }
 ]);
 

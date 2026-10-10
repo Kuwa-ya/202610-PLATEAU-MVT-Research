@@ -15,10 +15,25 @@ Even G2 を主成果物とし、2D MapLibre を検証基盤、3D Three を条件
 | codelist 変換 | スコープ外（MVT 直読み） |
 | **F** G2 右画面・16 方位・住所 r2ka26・phone UI・address pack | [g2-display-and-address.md](./g2-display-and-address.md) |
 | 2D 背景 3 切替・A.3/A.5/A.7（一部） | 2026-10-11 着手（本節 A に残りあり） |
+| **A** 2D/3D UI 調整一式 | 2026-10-11 — 下記「A 完了メモ」 |
+| Three MVT ポリゴンリング | [three-mvt-polygon-rings.md](./three-mvt-polygon-rings.md) |
+
+### A 完了メモ（2026-10-11）
+
+| 項 | 実装 |
+| --- | --- |
+| A.1 | `web/shared/geo/viewer-theme.css` — **白背景** + ちずうつし系 **赤アクcent**（UI）。地物スウォッチ色は MVT 表示色 |
+| A.2 | 2D `#basemap-select` + `plateau-basemap.js`；3D `#texture-type` 3 種（既存） |
+| A.3 | 自動タイル選択 UI 削除済み |
+| A.4 | `rendered-feature-dedup.js` + MapLibre 検証トグル |
+| A.5 | `feature-inspect.js` — インスペクタ／ポップアップ共通 |
+| A.6 | `viewer-mvt-layers.js` + 2D/3D 共通 **トoggle のみ**（`button.layer-switch`、透明度 UI なし・既定 opacity はコード内） |
+| A.7 | 建物表記 LOD1 相当（Three `index.html`） |
+| A.8 | Three 住所検索（`address-geocode.js` → ちずうつし API）、旧ビューリセットボタン削除 |
 
 ---
 
-## A. 2D / 3D 調整（雑多だが横断）
+## A. 2D / 3D 調整（雑多だが横断）— 完了
 
 ### A.1 UI の色味
 
@@ -71,7 +86,7 @@ Even G2 を主成果物とし、2D MapLibre を検証基盤、3D Three を条件
 | --- | --- |
 | ゴール | **2D と 3D で同じ考え方**のレイヤ UI |
 | 見た目 | 3D のように **簡素**（項目数を絞る） |
-| 操作 | 2D のように **トグル＋透明度**（ON/OFF が一目で分かる） |
+| 操作 | **トoggle のみ**（ON/OFF が一目で分かる。透明度は固定値） |
 | レイヤセット | 土地利用 / 道路（定義は `uro_orgLandUse === "道路"` 側の luse 道路）/ 用途地域（＋将来 Even 用の地面・道路メッシュ） |
 
 ### A.7 3D 表記修正
@@ -154,12 +169,11 @@ Even G2 を主成果物とし、2D MapLibre を検証基盤、3D Three を条件
 | --- | --- | --- |
 | 0 | **F**（G2 右テキスト再構成・16 方位・phone レイアウト） | 主成果物の情報設計 |
 | 0b | **F + 住所分割** | city 索引 + chome lazy load（pack / `/data/address/`） |
-| 1 | **A**（UI・ポップアップ・パネル削除・表記） | 触る範囲が局所で、検証しやすい |
-| 2 | **A.2** 地表 3 切替 | Ortho 部分配信問題の UX 解消 |
-| 3 | **B.1** G2 地面 9 タイル | 道路・建物バランスの前提 |
-| 4 | **B.2** 道路ドレープ | B.1 に依存 |
-| 5 | **B.3** 用途地域 3D | B.1/B.2 のパターン流用 |
-| 6 | **B.4** luse → urf 連動 | 2D/3D 共有ジオメトリ＋索引 |
+| 1 | ~~**A**~~ | 完了（上記メモ） |
+| 2 | **B.1** G2 地面 9 タイル | 道路・建物バランスの前提 |
+| 3 | **B.2** 道路ドレープ | B.1 に依存 |
+| 4 | **B.3** 用途地域 3D | B.1/B.2 のパターン流用 |
+| 5 | **B.4** luse → urf 連動 | 2D/3D 共有ジオメトリ＋索引 |
 
 ---
 
@@ -184,4 +198,4 @@ Even G2 を主成果物とし、2D MapLibre を検証基盤、3D Three を条件
 | 日付 | 変更 |
 | --- | --- |
 | 2026-10-10 | 初版（2D/3D 調整 + B 大型項目） |
-| 2026-10-11 | F 完了反映。A.3/A.5/A.7、2D 地表 3 切替（`plateau-basemap.js`）着手 |
+| 2026-10-11 | F 完了反映。A 一式完了（`viewer-mvt-layers.js`、Three 住所検索、テーマ CSS） |

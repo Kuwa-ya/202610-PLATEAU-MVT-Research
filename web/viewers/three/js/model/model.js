@@ -38,6 +38,7 @@ function createInitialState() {
       hintLine: '',
       isError: false
     },
+    addressSearchStatus: '',
     origin: { lat: null, lon: null }
   };
 }

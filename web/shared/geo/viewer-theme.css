@@ -1,0 +1,117 @@
+/**
+ * MapLibre LAB / Three PoC — 白背景 + ちずうつし系アクセント（rgb(240, 69, 32)）
+ */
+:root {
+  color-scheme: light;
+  --viewer-bg: #f3f6f4;
+  --viewer-ink: #1c2622;
+  --viewer-muted: #5f6e68;
+  --viewer-panel: #ffffff;
+  --viewer-panel-2: #f8faf9;
+  --viewer-line: #d5ddd9;
+  --viewer-accent: rgb(240, 69, 32);
+  --viewer-accent-hover: rgb(200, 50, 20);
+  --viewer-accent-soft: rgba(240, 69, 32, 0.14);
+  --viewer-danger: #b45309;
+  --viewer-shadow: 0 16px 40px rgba(28, 38, 34, 0.1);
+  --viewer-data-luse: #47e6b1;
+  --viewer-data-luse-road: #f59e48;
+  --viewer-data-tran: #ffc85a;
+  --viewer-data-urf: #c084fc;
+}
+
+button.layer-switch {
+  appearance: none;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  width: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
+  height: 24px !important;
+  min-height: 24px !important;
+  padding: 0 !important;
+  position: relative;
+  border: 1px solid #c5cec9;
+  border-radius: 999px;
+  background: #e8eeeb;
+  cursor: pointer;
+}
+button.layer-switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #9aa8a2;
+  transition: transform 160ms ease, background 160ms ease;
+}
+button.layer-switch[aria-pressed="true"] {
+  background: var(--viewer-accent-soft);
+  border-color: rgba(240, 69, 32, 0.55);
+}
+button.layer-switch[aria-pressed="true"]::after {
+  transform: translateX(18px);
+  background: var(--viewer-accent);
+}
+
+/* Three: kuwaya-geo ダーク残りの上書き */
+.viewer-light .secondary-button,
+.viewer-light .menu-toggle,
+.viewer-light .about-link {
+  background: var(--viewer-panel) !important;
+  border-color: var(--viewer-line) !important;
+  color: var(--viewer-ink) !important;
+  min-height: 36px;
+}
+.viewer-light .secondary-button:hover:not(:disabled),
+.viewer-light .menu-toggle:hover,
+.viewer-light .about-link:hover {
+  border-color: var(--viewer-accent) !important;
+  color: var(--viewer-accent) !important;
+}
+.viewer-light .menu-toggle[aria-expanded="true"] {
+  background: var(--viewer-accent) !important;
+  border-color: var(--viewer-accent) !important;
+  color: #fff !important;
+}
+.viewer-light .primary-button {
+  background: var(--viewer-accent) !important;
+  color: #fff !important;
+}
+.viewer-light .primary-button:hover:not(:disabled) {
+  background: var(--viewer-accent-hover) !important;
+}
+
+.viewer-light .viewer-state div {
+  border-color: var(--viewer-line);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--viewer-shadow);
+}
+.viewer-light .viewer-state span { color: var(--viewer-muted); }
+.viewer-light .viewer-state strong { color: var(--viewer-accent); }
+
+.viewer-light .viewer-help {
+  border-color: var(--viewer-line);
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--viewer-muted);
+}
+
+.viewer-light .loading {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(4px);
+}
+.viewer-light .loading p { color: var(--viewer-muted); }
+
+.viewer-light footer {
+  background: rgba(255, 255, 255, 0.94);
+  border-top: 1px solid var(--viewer-line);
+  color: var(--viewer-muted);
+}
+.viewer-light footer a { color: var(--viewer-accent); }
+
+.viewer-light select option {
+  background: #fff;
+  color: var(--viewer-ink);
+}

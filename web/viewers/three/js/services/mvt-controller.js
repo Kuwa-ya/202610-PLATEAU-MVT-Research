@@ -18,6 +18,7 @@
  */
 
 import { DATASETS, MVT_MAX_CAMERA_DISTANCE } from './mvt-config.js';
+import { MVT_VIEWER_LAYERS } from '../../../../shared/mvt/viewer-mvt-layers.js';
 import { decodeMvt } from './mvt-decode.js';
 import { viewCenterFromTarget } from './local-frame.js';
 import { planFetches } from './mvt-index.js';
@@ -32,7 +33,12 @@ export function createMvtController(THREE, scene, getCameraState) {
   root.name = 'plateau-mvt-root';
   scene.add(root);
   const tileGroups = new Map();
-  const datasetVisibility = new Map(DATASETS.map(dataset => [dataset.id, true]));
+  const datasetVisibility = new Map(
+    MVT_VIEWER_LAYERS.map(layer => [layer.datasetId, layer.defaultVisible])
+  );
+  const datasetOpacity = new Map(
+    MVT_VIEWER_LAYERS.map(layer => [layer.datasetId, layer.defaultOpacity])
+  );
   let generation = 0;
   let activeAbortController = null;
   let lastError = '';
@@ -45,6 +51,26 @@ export function createMvtController(THREE, scene, getCameraState) {
       west: center.lon - spanDeg,
       east: center.lon + spanDeg
     };
+  }
+
+  function styleForDataset(datasetId) {
+    const base = DATASETS.find(d => d.id === datasetId);
+    if (!base) return { id: datasetId, opacity: 0.5, color: 0xffffff };
+    return { ...base, opacity: datasetOpacity.get(datasetId) ?? base.opacity };
+  }
+
+  function applyOpacityToDataset(datasetId) {
+    const opacity = datasetOpacity.get(datasetId);
+    if (opacity == null) return;
+    for (const group of tileGroups.values()) {
+      if (group.userData.datasetId !== datasetId) continue;
+      group.traverse(node => {
+        const material = node.material;
+        if (!material) return;
+        if (Array.isArray(material)) material.forEach(m => { m.opacity = opacity; });
+        else material.opacity = opacity;
+      });
+    }
   }
 
   async function fetchTile(plan, origin, datasetStyle, signal) {
@@ -117,6 +143,13 @@ export function createMvtController(THREE, scene, getCameraState) {
     return hasDatasetTiles(datasetId);
   }
 
+  function setDatasetOpacity(datasetId, opacity) {
+    const value = Math.min(1, Math.max(0, Number(opacity)));
+    if (!Number.isFinite(value)) return;
+    datasetOpacity.set(datasetId, value);
+    applyOpacityToDataset(datasetId);
+  }
+
   async function sync() {
     const { origin, distance, target, datasetIds } = getCameraState();
     const viewCenter = viewCenterFromTarget(origin, target);
@@ -147,7 +180,7 @@ export function createMvtController(THREE, scene, getCameraState) {
     }
 
     const limited = plans.slice(0, MAX_TILES);
-    const styleById = Object.fromEntries(DATASETS.map(d => [d.id, d]));
+    const styleById = Object.fromEntries(DATASETS.map(d => [d.id, styleForDataset(d.id)]));
     const keepKeys = new Set(limited.map(p => `${p.datasetId}:${p.z}/${p.x}/${p.y}:${p.cityCode}`));
 
     const queue = limited.filter(plan => {
@@ -236,6 +269,7 @@ export function createMvtController(THREE, scene, getCameraState) {
     hasDatasetTiles,
     getVisibleTileCount,
     setDatasetVisible,
+    setDatasetOpacity,
     listLoadedTileKeys,
     root
   };

@@ -24,6 +24,67 @@ if (!existsSync(siteRoot) || !statSync(siteRoot).isDirectory()) {
   throw new Error(`公開ディレクトリが見つかりません: ${siteRoot}`);
 }
 
+const DEVEGOKKO_CONFIG_URL = "https://www.kuwa-ya.co.jp/app/devegokko_v3_config.json";
+let devegokkoConfigPromise = null;
+
+function loadDevegokkoConfigForProxy() {
+  if (!devegokkoConfigPromise) {
+    devegokkoConfigPromise = fetch(DEVEGOKKO_CONFIG_URL, {
+      headers: { Accept: "application/json" },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`設定JSON HTTP ${response.status}`);
+        }
+        const config = await response.json();
+        const key = config?.address?.api_key;
+        const base = String(config?.address?.url ?? "").replace(/\/+$/, "");
+        if (!key || !base) throw new Error("設定JSONの address ブロックが不正です。");
+        return { apiKey: key, baseUrl: base };
+      })
+      .catch((error) => {
+        devegokkoConfigPromise = null;
+        throw error;
+      });
+  }
+  return devegokkoConfigPromise;
+}
+
+async function proxyDevegokkoAddressGeocode(request, response, url) {
+  if (request.method !== "GET") {
+    response.writeHead(405, { "Content-Type": "text/plain; charset=utf-8" });
+    response.end("Method Not Allowed");
+    return;
+  }
+
+  let proxyTarget;
+  try {
+    proxyTarget = await loadDevegokkoConfigForProxy();
+  } catch (error) {
+    response.writeHead(502, { "Content-Type": "text/plain; charset=utf-8" });
+    response.end(`住所APIプロキシ: 設定JSONを読めません (${error.message})`);
+    return;
+  }
+
+  const upstreamPath = url.pathname.replace(/^\/devegokko-api/, "") || "/";
+  const upstreamUrl = new URL(upstreamPath + url.search, `${proxyTarget.baseUrl}/`);
+
+  const upstream = await fetch(upstreamUrl, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      "X-Address-Api-Key": proxyTarget.apiKey,
+    },
+  });
+
+  const body = Buffer.from(await upstream.arrayBuffer());
+  response.writeHead(upstream.status, {
+    "Content-Type": upstream.headers.get("content-type") ?? "application/json; charset=utf-8",
+    "Cache-Control": "no-store",
+  });
+  response.end(body);
+}
+
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
@@ -68,6 +129,17 @@ function resolveMountedFile(pathname) {
 
 const server = createServer((request, response) => {
   const url = new URL(request.url ?? "/", `http://${host}:${port}`);
+
+  if (url.pathname.startsWith("/devegokko-api/")) {
+    proxyDevegokkoAddressGeocode(request, response, url).catch((error) => {
+      if (!response.headersSent) {
+        response.writeHead(502, { "Content-Type": "text/plain; charset=utf-8" });
+        response.end(`住所APIプロキシ: ${error.message}`);
+      }
+    });
+    return;
+  }
+
   const candidate = resolveMountedFile(url.pathname);
 
   if (!candidate) {
@@ -101,6 +173,7 @@ server.listen(port, host, () => {
   console.log(`Three Viewer:        http://${host}:${port}/viewers/three/`);
   console.log(`kuwaya-geo 参照:     http://${host}:${port}/kuwaya-geo/`);
   console.log(`静的索引 data/:      http://${host}:${port}/data/mvt/manifest/`);
+  console.log(`住所APIプロキシ:     http://${host}:${port}/devegokko-api/address/geocode`);
 });
 
 export default server;

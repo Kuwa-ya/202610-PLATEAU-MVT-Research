@@ -30,6 +30,8 @@ import {
   createViewer
 } from '/kuwaya-geo/js/view/camera.js';
 import { DEFAULT_VIEWER_LOCATION } from '../../../../shared/geo/viewer-defaults.js';
+import { MVT_VIEWER_LAYERS } from '../../../../shared/mvt/viewer-mvt-layers.js';
+import { applyGeocodeResult, originRefFromTerrain } from './address-navigation.js';
 import { MVT_MAX_CAMERA_DISTANCE } from './mvt-config.js';
 import { createMvtController } from './mvt-controller.js';
 import { createTerrainPoc } from './terrain-poc.js';
@@ -53,6 +55,20 @@ export async function createSceneAdapter(viewModel, { canvas, ui, readEnabledDat
     lat: initialLocation.latitude,
     lon: initialLocation.longitude
   };
+
+  function syncOriginFromTerrain() {
+    const next = originRefFromTerrain(terrain);
+    if (!next) return;
+    originRef.lat = next.lat;
+    originRef.lon = next.lon;
+    viewModel.setOrigin(next.lat, next.lon);
+    if (ui.originLatitude) ui.originLatitude.value = String(next.lat);
+    if (ui.originLongitude) ui.originLongitude.value = String(next.lon);
+    if (ui.originStatus) {
+      ui.originStatus.textContent = `固定原点：${next.lat.toFixed(8)}, ${next.lon.toFixed(8)}`;
+    }
+  }
+
   viewModel.setOrigin(originRef.lat, originRef.lon);
 
   let mvtLoading = false;
@@ -82,15 +98,24 @@ export async function createSceneAdapter(viewModel, { canvas, ui, readEnabledDat
       terrainLoading = active;
       refreshLoadingOverlay();
     },
-    onStatus: (message, isError) => viewModel.setStatus(message, isError)
+    onStatus: (message, isError) => viewModel.setStatus(message, isError),
+    onTerrainCommitted: () => {
+      syncOriginFromTerrain();
+      scheduleSync();
+    }
   });
 
-  const mvt = createMvtController(THREE, scene, () => ({
-    origin: originRef,
-    distance: focusedSpherical.radius,
-    target: focusedTarget,
-    datasetIds: readEnabledDatasets()
-  }));
+  const { terrain } = terrainPoc;
+
+  const mvt = createMvtController(THREE, scene, () => {
+    const o = originRefFromTerrain(terrain) ?? originRef;
+    return {
+      origin: o,
+      distance: focusedSpherical.radius,
+      target: focusedTarget,
+      datasetIds: readEnabledDatasets()
+    };
+  });
 
   let syncTimer = null;
   let syncRequestId = 0;
@@ -184,8 +209,6 @@ export async function createSceneAdapter(viewModel, { canvas, ui, readEnabledDat
     }, 280);
   }
 
-  const { terrain } = terrainPoc;
-
   bindCameraInteractions(THREE, canvas, cameraState, {
     onZoom: () => {
       terrainPoc.scheduleLodRefresh();
@@ -224,9 +247,12 @@ export async function createSceneAdapter(viewModel, { canvas, ui, readEnabledDat
       resize();
       requestAnimationFrame(animate);
       terrainPoc.setVisible(ui.terrainVisibility?.value !== 'hide');
+      for (const layer of MVT_VIEWER_LAYERS) {
+        mvt.setDatasetOpacity(layer.datasetId, layer.defaultOpacity);
+      }
       terrainPoc.initialRequest(true);
       viewModel.setStatus(
-        '起動完了。地形の読み込み後、カメラを操作するか「MVT 表示距離まで寄る」を試してください。'
+        '起動完了。住所検索またはカメラ操作で移動し、900 m 以内で MVT を表示します。'
       );
       scheduleSync();
     },
@@ -236,11 +262,30 @@ export async function createSceneAdapter(viewModel, { canvas, ui, readEnabledDat
     },
 
     applyOrigin(lat, lon) {
-      originRef.lat = lat;
-      originRef.lon = lon;
-      viewModel.setOrigin(lat, lon);
       mvt.clearTiles();
-      terrainPoc.reload(true);
+      terrainPoc.requestAt(lat, lon, true);
+      terrainPoc.scheduleStream(80);
+      terrainPoc.scheduleLodRefresh();
+    },
+
+    goToGeocodeResult(result) {
+      const { originRebuilt } = applyGeocodeResult({
+        THREE,
+        result,
+        terrain,
+        focusedTarget,
+        focusedSpherical,
+        requestTerrainAt: (lat, lon, resetFocus) => terrainPoc.requestAt(lat, lon, resetFocus),
+        applyFocusElevation: () => terrainPoc.applyFocusElevation(),
+        scheduleStream: delay => terrainPoc.scheduleStream(delay),
+        scheduleLodRefresh: () => terrainPoc.scheduleLodRefresh(),
+        mvtMaxCameraDistance: MVT_MAX_CAMERA_DISTANCE
+      });
+      if (originRebuilt) {
+        mvt.clearTiles();
+      } else {
+        syncOriginFromTerrain();
+      }
       scheduleSync();
     },
 
@@ -290,6 +335,11 @@ export async function createSceneAdapter(viewModel, { canvas, ui, readEnabledDat
 
     refreshBuildingVisibility() {
       terrainPoc.refreshBuildingVisibility();
-    }
+    },
+
+    setDatasetOpacity(datasetId, opacity) {
+      mvt.setDatasetOpacity(datasetId, opacity);
+    },
+
   };
 }

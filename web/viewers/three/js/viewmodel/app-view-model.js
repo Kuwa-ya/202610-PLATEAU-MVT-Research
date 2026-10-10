@@ -75,4 +75,11 @@ export class AppViewModel extends EventTarget {
     this.state.origin = { lat, lon };
     this.notify();
   }
+
+  setAddressSearchStatus(message) {
+    const text = message ?? '';
+    if (this.state.addressSearchStatus === text) return;
+    this.state.addressSearchStatus = text;
+    this.notify();
+  }
 }

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PLATEAU MVT × Three（PoC）</title>
   <link rel="stylesheet" href="/kuwaya-geo/css/style.css?v=20261002" />
+  <link rel="stylesheet" href="/shared/geo/viewer-theme.css" />
   <link rel="stylesheet" href="./css/poc.css" />
   <!--
     PLATEAU MVT Research — JavaScript import map
@@ -28,7 +29,7 @@
   </script>
 </head>
 <body>
-  <main class="app-shell">
+  <main class="app-shell viewer-light">
     <header class="topbar">
       <div>
         <p class="eyebrow poc-eyebrow">
@@ -90,49 +91,41 @@
             </label>
           </fieldset>
 
-          <fieldset class="settings-section tile-settings">
+          <fieldset class="settings-section tile-settings mvt-layer-settings">
             <legend>PLATEAU MVT</legend>
-            <div class="layer-tabs" role="tablist" aria-label="MVT レイヤー">
-              <button id="luse-tab" class="layer-tab selected" type="button" role="tab" aria-selected="true" aria-controls="luse-panel" tabindex="0">土地利用</button>
-              <button id="tran-tab" class="layer-tab" type="button" role="tab" aria-selected="false" aria-controls="tran-panel" tabindex="-1">道路 LOD1</button>
-              <button id="usedistrict-tab" class="layer-tab" type="button" role="tab" aria-selected="false" aria-controls="usedistrict-panel" tabindex="-1">用途地域</button>
+            <p class="control-note">2D LAB と同様の ON/OFF。z16 はカメラ約 900 m 以内。土地利用内の道路は橙色（<code>luse_class</code> 等）。</p>
+            <div class="mvt-layer-card">
+              <div class="mvt-layer-head">
+                <span class="mvt-layer-name"><i class="mvt-swatch luse"></i>土地利用 <code>luse</code></span>
+                <button id="toggle-mvt-luse" class="layer-switch" type="button" aria-label="土地利用を切り替える" aria-pressed="true"></button>
+              </div>
             </div>
-            <div id="luse-panel" class="layer-panel" role="tabpanel" aria-labelledby="luse-tab">
-              <label>土地利用（luse-2025）
-                <select id="luse-visibility" name="luseVisibility">
-                  <option value="show" selected>表示</option>
-                  <option value="hide">非表示</option>
-                </select>
-              </label>
-              <p class="control-note">カメラが約 900 m 以内で z16 タイルを読み込みます。タイル境界ではバッファ部分をタイル範囲にクリップして描画します。</p>
+            <div class="mvt-layer-card">
+              <div class="mvt-layer-head">
+                <span class="mvt-layer-name"><i class="mvt-swatch tran"></i>道路 LOD1 <code>tran</code></span>
+                <button id="toggle-mvt-road" class="layer-switch" type="button" aria-label="道路を切り替える" aria-pressed="false"></button>
+              </div>
             </div>
-            <div id="usedistrict-panel" class="layer-panel" role="tabpanel" aria-labelledby="usedistrict-tab" hidden>
-              <label>用途地域（use-district-2025）
-                <select id="usedistrict-visibility" name="useDistrictVisibility">
-                  <option value="hide" selected>非表示</option>
-                  <option value="show">表示</option>
-                </select>
-              </label>
-              <p class="control-note">索引は <code>build:mvt-index:use-district</code>。タイル境界はクリップ描画（土地利用と同様）。</p>
+            <div class="mvt-layer-card">
+              <div class="mvt-layer-head">
+                <span class="mvt-layer-name"><i class="mvt-swatch usedistrict"></i>用途地域 <code>USE_DISTRICT</code></span>
+                <button id="toggle-mvt-usedistrict" class="layer-switch" type="button" aria-label="用途地域を切り替える" aria-pressed="false"></button>
+              </div>
+              <p class="control-note">索引 <code>build:mvt-index:use-district</code>。タイル境界はクリップ描画。</p>
             </div>
-            <div id="tran-panel" class="layer-panel" role="tabpanel" aria-labelledby="tran-tab" hidden>
-              <label>道路（tran-lod1-2025）
-                <select id="tran-visibility" name="tranVisibility">
-                  <option value="show" selected>表示</option>
-                  <option value="hide">非表示</option>
-                </select>
-              </label>
-              <p class="control-note">索引は市区コード最小値で fetch 先を決定します。</p>
-            </div>
-            <p class="mvt-legend" aria-hidden="true">
-              <span><i class="mvt-swatch luse"></i>土地利用</span>
-              <span><i class="mvt-swatch luse-road"></i>土地利用内の道路</span>
-              <span><i class="mvt-swatch tran"></i>道路</span>
-            </p>
+          </fieldset>
+
+          <fieldset class="settings-section address-search-settings">
+            <legend>住所検索</legend>
+            <label class="address-search-field">住所（都道府県名から）
+              <input id="address-search-input" name="addressSearch" type="search" enterkeyhint="search" placeholder="例：京都府京都市下京区駅前町" autocomplete="street-address">
+            </label>
+            <button id="address-search-submit" class="secondary-button" type="button">この住所へ移動</button>
+            <p id="address-search-status" class="control-note" aria-live="polite">原点を更新し、カメラ距離はちずうつし同様に滑らかに寄ります（<a href="https://www.kuwa-ya.co.jp/app/devegokko_v3_config.json" target="_blank" rel="noopener noreferrer">公開設定 JSON</a> の住所 API）。</p>
           </fieldset>
 
           <fieldset class="settings-section origin-settings">
-            <legend>ローカル原点</legend>
+            <legend>ローカル原点（手動）</legend>
             <label>原点緯度
               <input id="origin-latitude" name="originLatitude" type="number" min="-90" max="90" step="0.000001" value="34.986" inputmode="decimal">
             </label>
@@ -141,12 +134,6 @@
             </label>
             <button id="origin-apply" class="secondary-button" type="button">原点を反映</button>
             <p id="origin-status" class="control-note" aria-live="polite">固定原点：34.986, 135.759（京都駅付近）</p>
-          </fieldset>
-
-          <fieldset class="settings-section">
-            <legend>ビュー</legend>
-            <button id="view-reset" class="secondary-button" type="button">カメラを原点へ戻す</button>
-            <button id="view-zoom-mvt" class="primary-button" type="button">MVT 表示距離まで寄る</button>
           </fieldset>
         </div>
 

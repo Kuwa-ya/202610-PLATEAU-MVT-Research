@@ -6,6 +6,7 @@
  */
 
 import { dedupeRenderedFeaturesById } from '../../../../shared/mvt/rendered-feature-dedup.js';
+import { MVT_VIEWER_LAYERS } from '../../../../shared/mvt/viewer-mvt-layers.js';
 
 const CONFIG = Object.freeze({
   dataYear: '2025',
@@ -39,10 +40,22 @@ function uniqueRenderedFeatures(features) {
   return dedupeRenderedFeaturesById(features, layerKindFromId);
 }
 
+function visibilityFromLayers() {
+  const out = { cityBoundary: true, mesh: true, webTile: false };
+  for (const layer of MVT_VIEWER_LAYERS) out[layer.kind] = layer.defaultVisible;
+  return out;
+}
+
+function opacityFromLayers() {
+  const out = {};
+  for (const layer of MVT_VIEWER_LAYERS) out[layer.kind] = layer.defaultOpacity;
+  return out;
+}
+
 function createInitialState() {
   return {
-    visibility: { luse: true, road: false, useDistrict: false, cityBoundary: true, mesh: true, webTile: false },
-    opacity: { luse: 0.46, road: 0.58, useDistrict: 0.38 },
+    visibility: visibilityFromLayers(),
+    opacity: opacityFromLayers(),
     status: { message: '地図を準備中', mode: 'loading' },
     stats: { zoom: null, requests: 0, bytes: 0 },
     viewport: {
@@ -50,9 +63,7 @@ function createInitialState() {
       webTile: { zoom: 0, tiles: [], centerCode: null }
     },
     selectedFeature: null,
-    /** 同一 gml_id 重複排除（頂点数最大を残す） */
-    dedupeFeaturesById: true,
-    featurePickDebug: null
+    addressSearchStatus: ''
   };
 }
 
