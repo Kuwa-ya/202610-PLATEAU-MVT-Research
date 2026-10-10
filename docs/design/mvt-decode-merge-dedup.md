@@ -77,7 +77,7 @@ ID一致は「統合候補」を意味し、即時に同一地物と断定しな
 | MVTデコード | `@mapbox/vector-tile` + `pbf` | 3Dで既に利用。`loadGeometry()`と`toGeoJSON()`を用途に応じて選べる。 |
 | Polygon/MultiPolygon union | `polygon-clipping` | unionに機能を絞れ、PolygonとMultiPolygonを直接処理できる。出力は非重複MultiPolygonとなる。 |
 | GeoJSON形式でのunion | `@turf/union` | GeoJSON入出力が便利。ただし内部処理だけ必要な場合は依存範囲が広くなるため、第一候補は`polygon-clipping`。 |
-| 3D三角形化 | Three.js `ShapeGeometry` | 現行描画と整合する。内部三角形化は描画用であり、幾何unionの代替にはしない。 |
+| 3D三角形化 | Three.js `ShapeGeometry` | 現行描画と整合する。内部三角形化は描画用であり、幾何unionの代替にはしない。MVT の複数リングは `classifyPolygonRings`（`web/shared/mvt/polygon-rings.js`）で外周・穴に分割してから三角形化する — [three-mvt-polygon-rings.md](./three-mvt-polygon-rings.md)。 |
 | ハッシュ | Web Crypto `crypto.subtle.digest('SHA-256', ...)` | ブラウザ標準。大量処理ではまず軽量な文字列キーで比較し、必要時のみSHA-256を使う。 |
 
 `polygon-clipping`のunionは幾何演算、Three.jsの三角形化は描画用であり、役割が異なる。Earcut系の三角形化結果を使って地物結合を判定しない。

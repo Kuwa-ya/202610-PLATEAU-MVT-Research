@@ -56,7 +56,8 @@ export class AppView {
 
     for (const [select, datasetId] of [
       [elements.luseVisibility, 'luse-2025'],
-      [elements.tranVisibility, 'tran-lod1-2025']
+      [elements.tranVisibility, 'tran-lod1-2025'],
+      [elements.useDistrictVisibility, 'use-district-2025']
     ]) {
       select?.addEventListener('change', () => {
         const visible = select.value !== 'hide';

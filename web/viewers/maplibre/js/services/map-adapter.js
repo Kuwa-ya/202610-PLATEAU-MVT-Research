@@ -20,9 +20,14 @@
 import { DEFAULT_VIEWER_LOCATION } from '../../../../shared/geo/viewer-defaults.js';
 import { BOUNDARY_LAYERS } from '../../../../shared/mvt/data-region.js';
 import { maplibreLuseFillColorExpression } from '../../../../shared/mvt/feature-style.js';
-import { PLATEAU_ORTHO_2023 } from '../../../../shared/geo/plateau-basemap.js';
+import { DEFAULT_BASEMAP } from '../../../../shared/geo/plateau-basemap.js';
 import { USE_DISTRICT_DATASET_ID } from '../../../../shared/mvt/use-district.js';
 import { MeshUtils } from '../model/mesh-utils.js';
+import {
+  inspectFieldsForLayerKind,
+  layerKindFromMapLayerId
+} from '../../../../shared/mvt/feature-inspect.js';
+import { pickRenderedFeature } from '../../../../shared/mvt/rendered-feature-dedup.js';
 import { Model } from '../model/model.js';
 import { createIndexedMvtProtocol } from './indexed-mvt-protocol.js';
 
@@ -31,6 +36,9 @@ const EMPTY_FEATURE_COLLECTION = Object.freeze({ type: 'FeatureCollection', feat
 function regionBoundaryLineLayerIds() {
   return BOUNDARY_LAYERS.map(layer => `region-boundary-${layer.id}-line`);
 }
+const BASEMAP_SOURCE_ID = 'basemap-raster';
+const BASEMAP_LAYER_ID = 'basemap-raster';
+
 const OVERLAY_IDS = Object.freeze({
   meshSource: 'regional-mesh-grid',
   meshFill: 'regional-mesh-fill',
@@ -61,6 +69,8 @@ export class MapAdapter {
     this.transferredBytes = 0;
     this.sourceErrors = new Set();
     this.selectedFeatureTarget = null;
+    this.basemap = DEFAULT_BASEMAP;
+    this.dedupeFeaturesById = true;
     this.callbacks = {};
   }
 
@@ -92,21 +102,21 @@ export class MapAdapter {
       style: {
         version: 8,
         sources: {
-          [PLATEAU_ORTHO_2023.id]: {
+          [BASEMAP_SOURCE_ID]: {
             type: 'raster',
-            tiles: [...PLATEAU_ORTHO_2023.tiles],
-            tileSize: PLATEAU_ORTHO_2023.tileSize,
-            minzoom: PLATEAU_ORTHO_2023.minzoom,
-            maxzoom: PLATEAU_ORTHO_2023.maxzoom,
-            attribution: PLATEAU_ORTHO_2023.attribution
+            tiles: [...DEFAULT_BASEMAP.tiles],
+            tileSize: DEFAULT_BASEMAP.tileSize,
+            minzoom: DEFAULT_BASEMAP.minzoom,
+            maxzoom: DEFAULT_BASEMAP.maxzoom,
+            attribution: DEFAULT_BASEMAP.attribution
           }
         },
         layers: [
           { id: 'background', type: 'background', paint: { 'background-color': '#e7e9e4' } },
           {
-            id: PLATEAU_ORTHO_2023.id,
+            id: BASEMAP_LAYER_ID,
             type: 'raster',
-            source: PLATEAU_ORTHO_2023.id,
+            source: BASEMAP_SOURCE_ID,
             paint: { 'raster-opacity': 1 }
           }
         ]
@@ -203,19 +213,37 @@ export class MapAdapter {
       this.webTileOverlayKey = webTileKey;
       this.syncWebTileOverlay(state.visibility.webTile, state.viewport.webTile);
     }
+
+    this.dedupeFeaturesById = state.dedupeFeaturesById !== false;
   }
 
-  goToPlace(placeId) {
-    const place = Model.PLACES[placeId];
-    if (place && this.map) {
-      this.map.easeTo({
-        center: place.center,
-        zoom: place.zoom,
-        bearing: 0,
-        pitch: 0,
-        duration: 900
-      });
-    }
+  setBasemap(basemap) {
+    if (!basemap?.tiles?.length || !this.map) return;
+    this.basemap = basemap;
+    if (!this.ready) return;
+
+    if (this.map.getLayer(BASEMAP_LAYER_ID)) this.map.removeLayer(BASEMAP_LAYER_ID);
+    if (this.map.getSource(BASEMAP_SOURCE_ID)) this.map.removeSource(BASEMAP_SOURCE_ID);
+
+    this.map.addSource(BASEMAP_SOURCE_ID, {
+      type: 'raster',
+      tiles: [...basemap.tiles],
+      tileSize: basemap.tileSize,
+      minzoom: basemap.minzoom,
+      maxzoom: basemap.maxzoom,
+      attribution: basemap.attribution
+    });
+
+    const beforeId = this.map.getStyle().layers.find(layer => layer.id !== 'background')?.id;
+    this.map.addLayer(
+      {
+        id: BASEMAP_LAYER_ID,
+        type: 'raster',
+        source: BASEMAP_SOURCE_ID,
+        paint: { 'raster-opacity': 1 }
+      },
+      beforeId
+    );
   }
 
   /** 常に真上からの 2D（URL hash に傾きが残っていてもリセット） */
@@ -507,11 +535,8 @@ export class MapAdapter {
     })).then(labels => {
       if (generation !== this.webTileLabelGeneration) return;
       for (const { tile, luse, road } of labels) {
-        const luseLabel = luse.length ? luse.join(',') : '—';
-        const roadLabel = road.length ? road.join(',') : '—';
-        const cityLabel = luseLabel === roadLabel
-          ? `自治体 ${luseLabel}`
-          : `L:${luseLabel}  R:${roadLabel}`;
+        const unionCodes = [...new Set([...luse, ...road])].sort();
+        const cityLabel = unionCodes.length ? unionCodes.join(',') : '—';
         const bounds = MeshUtils.tileBounds(tile.x, tile.y, tile.z);
         this.webTileMarkers.push(this.addLabel(
           `${tile.z}/${tile.x}/${tile.y}\n${cityLabel}`,
@@ -583,31 +608,42 @@ export class MapAdapter {
 
   handleClick(event) {
     const layers = this.interactiveLayerIds();
-    const features = layers.length
+    const raw = layers.length
       ? this.visibleRenderedFeatures(this.map.queryRenderedFeatures(event.point, { layers }))
       : [];
-    const feature = Model.uniqueRenderedFeatures(features)[0];
+    const { feature, debug } = pickRenderedFeature(raw, {
+      dedupe: this.dedupeFeaturesById,
+      layerKindFromId: Model.layerKindFromId
+    });
     if (!feature) {
       this.clearSelectedFeature();
-      this.callbacks.onFeatureSelected(null);
+      this.callbacks.onFeatureSelected(null, null);
       return;
     }
     this.selectFeatureOnMap(feature);
-    this.callbacks.onFeatureSelected(feature);
+    this.callbacks.onFeatureSelected(feature, debug);
 
     const popup = document.createElement('div');
-    const label = document.createElement('div');
-    label.className = 'popup-label';
     const layerId = feature.layer.id;
-    label.textContent = layerId.startsWith('luse-')
-      ? 'LAND USE'
-      : layerId.startsWith('useDistrict-')
-        ? 'USE DISTRICT'
-        : 'ROAD';
-    const value = document.createElement('div');
-    value.className = 'popup-id';
-    value.textContent = String(feature.properties?.gml_id || feature.properties?.mvt_id || 'IDなし');
-    popup.append(label, value);
+    const kind = layerKindFromMapLayerId(layerId);
+    const title = document.createElement('div');
+    title.className = 'popup-label';
+    title.textContent =
+      kind === 'luse' ? 'LAND USE' : kind === 'useDistrict' ? 'USE DISTRICT' : 'ROAD';
+    popup.append(title);
+    const dedupeTag = document.createElement('div');
+    dedupeTag.className = 'popup-id';
+    dedupeTag.style.opacity = '0.85';
+    dedupeTag.textContent = debug.dedupeEnabled
+      ? `重複排除 ON — 命中 ${debug.rawCount} → 候補 ${debug.poolCount}`
+      : `重複排除 OFF — 命中 ${debug.rawCount}（最前面を採用）`;
+    popup.append(dedupeTag);
+    for (const field of inspectFieldsForLayerKind(kind, feature.properties)) {
+      const row = document.createElement('div');
+      row.className = 'popup-id';
+      row.textContent = `${field.label}: ${field.value}`;
+      popup.append(row);
+    }
     new this.maplibregl.Popup({ closeButton: true, maxWidth: '280px' })
       .setLngLat(event.lngLat)
       .setDOMContent(popup)
@@ -643,7 +679,7 @@ export class MapAdapter {
   handleMapError(event) {
     const sourceId = event?.sourceId;
     const message = event?.error?.message || 'データを読み込めませんでした';
-    if (sourceId === PLATEAU_ORTHO_2023.id) {
+    if (sourceId === BASEMAP_SOURCE_ID) {
       this.callbacks.onStatus('背景地図を読み込めませんでした', 'error');
     } else if (sourceId?.startsWith('region-boundary-')) {
       this.callbacks.onStatus('市区町村境界を読み込めませんでした', 'error');

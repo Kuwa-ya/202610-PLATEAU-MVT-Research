@@ -21,6 +21,7 @@ import { DATASETS, MVT_MAX_CAMERA_DISTANCE } from './mvt-config.js';
 import { decodeMvt } from './mvt-decode.js';
 import { viewCenterFromTarget } from './local-frame.js';
 import { planFetches } from './mvt-index.js';
+import { dedupeMvtFeatures } from '../../../../shared/mvt/mvt-feature-dedup.js';
 import { buildTileGroup, disposeObject3D } from './mvt-mesh.js';
 
 const MAX_CONCURRENT = 4;
@@ -50,8 +51,10 @@ export function createMvtController(THREE, scene, getCameraState) {
     const response = await fetch(plan.url, { signal });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const buffer = await response.arrayBuffer();
-    const { features, extent } = await decodeMvt(buffer, plan.sourceLayer);
+    let { features, extent } = await decodeMvt(buffer, plan.sourceLayer);
     if (!features.length) throw new Error('地物 0 件');
+    features = dedupeMvtFeatures(features);
+    if (!features.length) throw new Error('地物 0 件（重複排除後）');
     const group = buildTileGroup(
       THREE, features, plan.x, plan.y, plan.z, origin, datasetStyle, extent
     );
@@ -222,6 +225,10 @@ export function createMvtController(THREE, scene, getCameraState) {
     };
   }
 
+  function listLoadedTileKeys() {
+    return [...tileGroups.keys()].sort();
+  }
+
   return {
     sync,
     clearTiles,
@@ -229,6 +236,7 @@ export function createMvtController(THREE, scene, getCameraState) {
     hasDatasetTiles,
     getVisibleTileCount,
     setDatasetVisible,
+    listLoadedTileKeys,
     root
   };
 }

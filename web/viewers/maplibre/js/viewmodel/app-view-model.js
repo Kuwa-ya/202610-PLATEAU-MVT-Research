@@ -93,6 +93,16 @@ export class AppViewModel extends EventTarget {
     this.state.selectedFeature = feature ?? null;
     this.notify();
   }
+
+  setDedupeFeaturesById(enabled) {
+    this.state.dedupeFeaturesById = Boolean(enabled);
+    this.notify();
+  }
+
+  setFeaturePickDebug(debug) {
+    this.state.featurePickDebug = debug ?? null;
+    this.notify();
+  }
 }
 
 

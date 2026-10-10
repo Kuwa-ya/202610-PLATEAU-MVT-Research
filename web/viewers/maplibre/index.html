@@ -192,6 +192,10 @@
     .grid-label--mesh-10, .grid-label--mesh-11 { font-size: 9px; }
 
     .inspector-empty { color: var(--muted); font-size: 0.82rem; line-height: 1.6; }
+    .pick-debug { margin: 0 0 12px; font-size: 0.75rem; line-height: 1.45; color: var(--muted); }
+    .pick-debug table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+    .pick-debug th, .pick-debug td { border-bottom: 1px solid var(--line); padding: 4px 3px; text-align: left; vertical-align: top; }
+    .pick-debug tr.pick-chosen td { color: var(--accent); font-weight: 600; }
     .feature-title { margin: 0 0 8px; font-size: 0.92rem; }
     .properties { display: grid; gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; }
     .prop { display: grid; grid-template-columns: minmax(88px, .42fr) minmax(0, 1fr); gap: 10px; padding: 8px 9px; background: #0b1518; font-size: 0.72rem; }
@@ -274,17 +278,21 @@
 
       <div class="scroll">
         <section class="section">
-          <h2 class="section-title">自動タイル選択</h2>
-          <p class="hint">初期表示は京都駅。MVT 索引は東京都・埼玉県・京都府。z16 タイルごとに取得先自治体を自動決定します。</p>
-          <div class="chips" aria-label="表示地点">
-            <button class="chip" type="button" data-place="otemachi">大手町</button>
-            <button class="chip" type="button" data-place="kanda">神田</button>
-            <button class="chip" type="button" data-place="kasumigaseki">霞が関</button>
-          </div>
+          <h2 class="section-title">背景地図</h2>
+          <p class="hint">初期表示は京都駅。PLATEAU Ortho は配信範囲が限られるため、全域では地理院タイルを選べます。</p>
+          <label class="range-row" style="display:block;margin-top:8px">
+            <span style="display:block;margin-bottom:6px;font-size:0.82rem;color:var(--muted)">ラスタ底図</span>
+            <select id="basemap-select" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#0b1518;color:var(--ink)">
+              <option value="gsi-standard">地理院 標準地図</option>
+              <option value="gsi-seamlessphoto">地理院 航空写真</option>
+              <option value="plateau-ortho-2023" selected>PLATEAU Ortho 2023</option>
+            </select>
+          </label>
         </section>
 
         <section class="section">
           <h2 class="section-title">レイヤー</h2>
+          <p class="hint">MVT 索引は東京都・埼玉県・京都府。z16 タイルごとに取得先自治体を自動決定します。</p>
           <div class="layer-card">
             <div class="layer-head">
               <div class="layer-name"><span class="swatch landuse"></span>土地利用 <code>luse</code></div>
@@ -332,7 +340,7 @@
               <div class="layer-name"><span class="swatch" style="background:#dc2626"></span>Web Mercator <code>z/x/y</code></div>
               <button id="toggle-web-tile" class="toggle" type="button" aria-label="Web Mercatorタイル表示を切り替える" aria-pressed="false"></button>
             </div>
-            <p class="hint">現在の整数ズームに対応するXYZタイル番号と、MVT取得に使う土地利用（L）・道路（R）の全自治体コードを表示します。</p>
+            <p class="hint">現在の整数ズームの XYZ と、タイルに紐づく自治体コード（L/R 索引の和集合）を表示します。</p>
           </div>
 
           <div class="overlay-readout" aria-label="中心位置のメッシュ番号">
@@ -349,6 +357,14 @@
             <div class="stat"><span class="stat-label">転送量</span><strong id="stat-bytes" class="stat-value">—</strong></div>
           </div>
           <div id="zoom-note" class="zoom-note">ズーム16以上でMVTを表示します。</div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">クリック照会（検証）</h2>
+          <label class="hint" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin-bottom:10px">
+            <input id="toggle-dedupe-features" type="checkbox" checked style="margin-top:3px" />
+            <span><strong>同一 gml_id の重複排除</strong>（ON: 頂点数が最大の 1 件を採用 / OFF: MapLibre 最前面のみ）</span>
+          </label>
         </section>
 
         <section class="section">

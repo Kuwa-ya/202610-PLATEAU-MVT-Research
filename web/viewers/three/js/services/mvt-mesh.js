@@ -19,6 +19,7 @@
 
 import { tileBounds } from './web-tiles.js';
 import { featureColor } from '../../../../shared/mvt/feature-style.js';
+import { classifyPolygonRings } from '../../../../shared/mvt/polygon-rings.js';
 
 function lonLatToLocal(lon, lat, origin, metersPerDegLon, metersPerDegLat) {
   return {
@@ -102,37 +103,41 @@ export function buildTileGroup(THREE, features, tileX, tileY, zoom, origin, opti
         }
         const lineGeom = new THREE.BufferGeometry();
         lineGeom.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-        group.add(new THREE.Line(lineGeom, lineMaterialFor(color)));
+        const lineObj = new THREE.Line(lineGeom, lineMaterialFor(color));
+        group.add(lineObj);
       }
       continue;
     }
     if (feature.type === 3) {
-      const rings = geom;
-      const outer = rings[0];
-      if (!outer?.length) continue;
-      const shape = new THREE.Shape();
-      outer.forEach((p, idx) => {
-        const { lon, lat } = tileCoordToLonLat(p, tileX, tileY, zoom, extent, bounds);
-        const local = lonLatToLocal(lon, lat, origin, metersPerDegLon, metersPerDegLat);
-        if (idx === 0) shape.moveTo(local.x, local.z);
-        else shape.lineTo(local.x, local.z);
-      });
-      for (let r = 1; r < rings.length; r += 1) {
-        const hole = new THREE.Path();
-        rings[r].forEach((p, idx) => {
+      const parts = classifyPolygonRings(geom);
+      for (const partRings of parts) {
+        const outer = partRings[0];
+        if (!outer?.length) continue;
+        const shape = new THREE.Shape();
+        outer.forEach((p, idx) => {
           const { lon, lat } = tileCoordToLonLat(p, tileX, tileY, zoom, extent, bounds);
           const local = lonLatToLocal(lon, lat, origin, metersPerDegLon, metersPerDegLat);
-          if (idx === 0) hole.moveTo(local.x, local.z);
-          else hole.lineTo(local.x, local.z);
+          if (idx === 0) shape.moveTo(local.x, local.z);
+          else shape.lineTo(local.x, local.z);
         });
-        shape.holes.push(hole);
+        for (let r = 1; r < partRings.length; r += 1) {
+          const hole = new THREE.Path();
+          partRings[r].forEach((p, idx) => {
+            const { lon, lat } = tileCoordToLonLat(p, tileX, tileY, zoom, extent, bounds);
+            const local = lonLatToLocal(lon, lat, origin, metersPerDegLon, metersPerDegLat);
+            if (idx === 0) hole.moveTo(local.x, local.z);
+            else hole.lineTo(local.x, local.z);
+          });
+          shape.holes.push(hole);
+        }
+        const shapeGeom = new THREE.ShapeGeometry(shape);
+        // Shape の Y にローカル Z を入れているため、+90°で XZ 平面へ倒す。
+        // -90°では Z が反転し、地形（X=東、Z=南）と鏡像になってしまう。
+        shapeGeom.rotateX(Math.PI / 2);
+        shapeGeom.translate(0, 1.2, 0);
+        const mesh = new THREE.Mesh(shapeGeom, fillMaterialFor(color));
+        group.add(mesh);
       }
-      const shapeGeom = new THREE.ShapeGeometry(shape);
-      // Shape の Y にローカル Z を入れているため、+90°で XZ 平面へ倒す。
-      // -90°では Z が反転し、地形（X=東、Z=南）と鏡像になってしまう。
-      shapeGeom.rotateX(Math.PI / 2);
-      shapeGeom.translate(0, 1.2, 0);
-      group.add(new THREE.Mesh(shapeGeom, fillMaterialFor(color)));
     }
   }
   return group;

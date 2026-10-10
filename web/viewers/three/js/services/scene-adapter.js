@@ -120,6 +120,8 @@ export async function createSceneAdapter(viewModel, { canvas, ui, readEnabledDat
       isError = true;
     }
 
+    const tileCoordLabel = formatLoadedMvtTileCoords(mvt.listLoadedTileKeys());
+
     viewModel.setMetadata({
       viewLat: view.lat,
       viewLon: view.lon,
@@ -127,11 +129,26 @@ export async function createSceneAdapter(viewModel, { canvas, ui, readEnabledDat
       tileCount: result.count,
       planned: result.planned,
       mvtMode,
-      mvtTilesLabel: result.mode === 'on' ? `${result.count} / ${result.planned}` : '—',
+      mvtTilesLabel:
+        result.mode === 'on'
+          ? `${result.count} / ${result.planned}${tileCoordLabel ? ` · z16/${tileCoordLabel}` : ''}`
+          : '—',
       statusLine,
       hintLine,
       isError
     });
+  }
+
+  function formatLoadedMvtTileCoords(keys) {
+    const coords = new Set();
+    for (const key of keys) {
+      const match = key.match(/:16\/(\d+\/\d+):/);
+      if (match) coords.add(match[1]);
+    }
+    const list = [...coords].sort();
+    if (!list.length) return '';
+    if (list.length <= 4) return list.join(', ');
+    return `${list.slice(0, 3).join(', ')} +${list.length - 3}`;
   }
 
   function scheduleSync() {

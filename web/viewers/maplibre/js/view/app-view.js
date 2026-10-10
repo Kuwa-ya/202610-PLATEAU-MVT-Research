@@ -17,13 +17,10 @@
  * WITHOUT WARRANTY OF ANY KIND. SEE /legal/SOURCE-CODE-LICENSE.txt.
  */
 
+import { basemapById } from '../../../../shared/geo/plateau-basemap.js';
+import { inspectFieldsForLayerKind, layerKindFromMapLayerId } from '../../../../shared/mvt/feature-inspect.js';
 import { Model } from '../model/model.js';
-import {
-  formatUseDistrictSummary,
-  useDistrictCoveragePercent,
-  useDistrictFloorAreaPercent,
-  useDistrictLabel
-} from '../../../../shared/mvt/use-district.js';
+import { formatUseDistrictSummary } from '../../../../shared/mvt/use-district.js';
 
 export class AppView {
   constructor(documentRef, viewModel, mapAdapter) {
@@ -31,6 +28,7 @@ export class AppView {
     this.viewModel = viewModel;
     this.map = mapAdapter;
     this.lastSelectedFeature = undefined;
+    this.lastPickDebug = undefined;
 
     this.elements = {
       status: this.must('status'),
@@ -54,7 +52,9 @@ export class AppView {
       opacityUseDistrict: this.must('opacity-use-district'),
       opacityLuseValue: this.must('opacity-luse-value'),
       opacityRoadValue: this.must('opacity-road-value'),
-      opacityUseDistrictValue: this.must('opacity-use-district-value')
+      opacityUseDistrictValue: this.must('opacity-use-district-value'),
+      basemapSelect: this.must('basemap-select'),
+      toggleDedupeFeatures: this.must('toggle-dedupe-features')
     };
 
     this.bindEvents();
@@ -94,8 +94,13 @@ export class AppView {
       this.viewModel.setOpacity('useDistrict', Number(elements.opacityUseDistrict.value) / 100);
     });
 
-    this.document.querySelectorAll('[data-place]').forEach(button => {
-      button.addEventListener('click', () => this.map.goToPlace(button.dataset.place));
+    elements.basemapSelect.addEventListener('change', () => {
+      const basemap = basemapById(elements.basemapSelect.value);
+      this.map.setBasemap(basemap);
+    });
+
+    elements.toggleDedupeFeatures.addEventListener('change', () => {
+      this.viewModel.setDedupeFeaturesById(elements.toggleDedupeFeatures.checked);
     });
   }
 
@@ -140,9 +145,15 @@ export class AppView {
       ? `ズーム${Model.CONFIG.mvtMinZoom}未満では、重い低ズームMVTを読み込みません。`
       : `ズーム${Model.CONFIG.mvtMinZoom}以上。PLATEAU MVTをネイティブ表示しています。`;
 
-    if (state.selectedFeature !== this.lastSelectedFeature) {
-      this.renderInspector(state.selectedFeature);
+    this.elements.toggleDedupeFeatures.checked = state.dedupeFeaturesById !== false;
+
+    if (
+      state.selectedFeature !== this.lastSelectedFeature
+      || state.featurePickDebug !== this.lastPickDebug
+    ) {
+      this.renderInspector(state.selectedFeature, state.featurePickDebug);
       this.lastSelectedFeature = state.selectedFeature;
+      this.lastPickDebug = state.featurePickDebug;
     }
 
     this.map.sync(state);
@@ -152,7 +163,7 @@ export class AppView {
     element.setAttribute('aria-pressed', String(Boolean(enabled)));
   }
 
-  renderInspector(feature) {
+  renderInspector(feature, pickDebug) {
     const container = this.elements.inspector;
     container.replaceChildren();
     if (!feature) {
@@ -162,67 +173,69 @@ export class AppView {
     }
 
     container.className = '';
+    if (pickDebug?.hits?.length) {
+      container.append(this.buildPickDebugBlock(pickDebug));
+    }
     const layerId = feature.layer.id;
-    const isUseDistrict = layerId.startsWith('useDistrict-');
+    const kind = layerKindFromMapLayerId(layerId);
     const props = feature.properties || {};
 
     const title = this.document.createElement('h3');
     title.className = 'feature-title';
-    title.textContent = layerId.startsWith('luse-')
-      ? '土地利用'
-      : isUseDistrict
-        ? '用途地域'
-        : '道路';
+    title.textContent =
+      kind === 'luse' ? '土地利用' : kind === 'useDistrict' ? '用途地域' : '道路';
     container.append(title);
 
-    if (isUseDistrict) {
+    if (kind === 'useDistrict') {
       const summary = this.document.createElement('p');
       summary.className = 'feature-summary';
       summary.textContent = formatUseDistrictSummary(props);
       container.append(summary);
-
-      const metrics = this.document.createElement('dl');
-      metrics.className = 'feature-metrics';
-      const rows = [
-        ['種別', useDistrictLabel(props), false],
-        ['建ぺい率', useDistrictCoveragePercent(props), true],
-        ['容積率', useDistrictFloorAreaPercent(props), true]
-      ];
-      for (const [label, value, asPercent] of rows) {
-        const dt = this.document.createElement('dt');
-        dt.textContent = label;
-        const dd = this.document.createElement('dd');
-        dd.textContent =
-          value == null || value === ''
-            ? '—'
-            : asPercent
-              ? `${value}%`
-              : String(value);
-        metrics.append(dt, dd);
-      }
-      container.append(metrics);
     }
 
-    const list = this.document.createElement('div');
-    list.className = 'properties';
-    const entries = Object.entries(feature.properties || {})
-      .filter(([, value]) => value !== null && value !== '')
-      .sort(([a], [b]) => a.localeCompare(b));
-
-    for (const [key, rawValue] of entries) {
-      const row = this.document.createElement('div');
-      row.className = 'prop';
-      const name = this.document.createElement('span');
-      name.className = 'prop-key';
-      name.textContent = key;
-      const value = this.document.createElement('span');
-      value.className = 'prop-value';
-      const text = typeof rawValue === 'string' ? rawValue : JSON.stringify(rawValue);
-      value.textContent = text.length > 600 ? `${text.slice(0, 600)}…` : text;
-      row.append(name, value);
-      list.append(row);
+    const metrics = this.document.createElement('dl');
+    metrics.className = 'feature-metrics';
+    for (const field of inspectFieldsForLayerKind(kind, props)) {
+      const dt = this.document.createElement('dt');
+      dt.textContent = field.label;
+      const dd = this.document.createElement('dd');
+      dd.textContent = field.value;
+      metrics.append(dt, dd);
     }
-    container.append(list);
+    container.append(metrics);
+
+    const featureId = props.gml_id ?? props.mvt_id;
+    if (featureId != null && featureId !== '') {
+      const idNote = this.document.createElement('p');
+      idNote.className = 'hint';
+      idNote.style.marginTop = '10px';
+      idNote.textContent = `gml_id: ${String(featureId)}`;
+      container.append(idNote);
+    }
+  }
+
+  buildPickDebugBlock(pickDebug) {
+    const wrap = this.document.createElement('div');
+    wrap.className = 'pick-debug';
+    const summary = this.document.createElement('p');
+    summary.textContent = pickDebug.dedupeEnabled
+      ? `重複排除 ON — 命中 ${pickDebug.rawCount} 件 → 候補 ${pickDebug.poolCount} 件（先頭を表示）`
+      : `重複排除 OFF — 命中 ${pickDebug.rawCount} 件（描画最前面を表示）`;
+    wrap.append(summary);
+
+    const table = this.document.createElement('table');
+    table.innerHTML =
+      '<thead><tr><th>#</th><th>gml_id</th><th>頂点</th><th>layer</th><th></th></tr></thead>';
+    const tbody = this.document.createElement('tbody');
+    for (const hit of pickDebug.hits) {
+      const tr = this.document.createElement('tr');
+      if (hit.isChosen) tr.className = 'pick-chosen';
+      tr.innerHTML = `<td>${hit.order + 1}</td><td>${hit.featureId}</td><td>${hit.vertices}</td><td>${hit.layerId}</td><td>${hit.isChosen ? '← 採用' : ''}</td>`;
+      tbody.append(tr);
+    }
+    table.append(tbody);
+    wrap.append(table);
+    return wrap;
   }
 }
 

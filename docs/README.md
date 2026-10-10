@@ -36,6 +36,8 @@
   参照実装へMVT機能を統合する場合の接続点を整理しています。
 - [MVTデコード・結合・重複排除設計](design/mvt-decode-merge-dedup.md)
   2D・3D共通のデコード方針、同一IDの結合、重複排除、利用ライブラリ、データフローを整理しています。
+- [Three MVT — ポリゴンリング分類（道路欠け）](design/three-mvt-polygon-rings.md)
+  タイル境界付近で土地利用道路が欠けた事象と `classifyPolygonRings` による対処（京都 z16/57481/25960 等）。
 
 ### 参照
 

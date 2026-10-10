@@ -25,7 +25,7 @@
 ## 手動確認（推奨）
 
 - 2D MapLibre: 京都駅へ移動、土地利用 ON、タイル境界で継ぎ目・欠けがないか
-- 3D: カメラ 900 m 以内で MVT 表示、PLATEAU Ortho 地表と位置ずれが許容範囲か
+- 3D: カメラ 900 m 以内で MVT 表示、PLATEAU Ortho 地表と位置ずれが許容範囲か。土地利用の **道路用地（橙）** がタイル境界で欠けないか — [three-mvt-polygon-rings.md](./three-mvt-polygon-rings.md)
 - Even G2: 中心タップで用途地域サマリ＋紫枠（pack 同梱索引あり）
 
 ## 関連コマンド
