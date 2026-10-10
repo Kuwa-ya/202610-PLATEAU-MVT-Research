@@ -18,7 +18,8 @@
     "check:mvt-style": "node --check web/shared/mvt/feature-style.js && node scripts/check-mvt-style.js",
     "check:web-paths": "node scripts/check-web-paths.js",
     "precheck": "npm run check:boundaries && npm run check:mvt-style && npm run check:web-paths",
-    "check": "node scripts/check-source.js && node scripts/check-mesh.js && node scripts/check-indexed-mvt.js"
+    "check": "node scripts/check-source.js && node scripts/check-mesh.js && node scripts/check-indexed-mvt.js",
+    "probe:kyoto-mvt": "node scripts/probe-kyoto-mvt.js"
   },
   "engines": {
     "node": ">=20"

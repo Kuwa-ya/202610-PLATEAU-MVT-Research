@@ -8,9 +8,9 @@
 npm run build:mvt-index
 ```
 
-- カタログを `data/snapshot/plateau-datasets-2025.json` に保存
-- `data/manifest/luse-2025.json` / `tran-lod1-2025.json`
-- `data/index/{dataset}/12/{x}/{y}.json`（PoC 矩形内 z12 親 **154 件**）
+- カタログを `web/data/snapshot/plateau-datasets-2025.json` に保存
+- `web/data/mvt/manifest/` … 市区マスタ
+- `web/data/mvt/index/{dataset}/12/{x}/{y}.json`
 
 市区 bbox は [JapanCityGeoJson](https://github.com/niiyz/JapanCityGeoJson) を参照します。TileJSON は各自治体ごとに 1 回取得します。
 

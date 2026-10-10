@@ -1,7 +1,7 @@
 const PROTOCOL_NAME = 'plateau-indexed';
 const FETCH_ZOOM = 16;
 const INDEX_ZOOM = 12;
-const DATA_BASE = '/data';
+import { DATA_BASE } from '../../../../shared/mvt/data-region.js';
 const EMPTY_TILE = new ArrayBuffer(0);
 
 const manifestCache = new Map();

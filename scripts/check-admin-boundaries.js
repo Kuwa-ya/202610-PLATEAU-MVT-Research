@@ -1,5 +1,13 @@
 import assert from 'node:assert/strict';
-import { geometryIntersectsBounds } from '../tools/build-mvt-index/admin-boundaries.js';
+import {
+  adminGeometriesForCityCode,
+  geometryIntersectsBounds,
+  loadAdminBoundaries
+} from '../tools/build-mvt-index/admin-boundaries.js';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 const polygon = {
   type: 'Polygon',
@@ -22,5 +30,11 @@ assert.equal(geometryIntersectsBounds(polygon, {
 assert.equal(geometryIntersectsBounds(polygon, {
   west: 140.1, east: 140.2, south: 35.1, north: 35.2
 }), false, '自治体外部');
+
+const kyotoPath = join(repoRoot, 'web/data/boundaries/kyoto-cities.geojson');
+const kyotoBoundaries = await loadAdminBoundaries(kyotoPath);
+assert.equal(kyotoBoundaries.size, 36, '京都府 36 市町村');
+const kyotoWardGeoms = adminGeometriesForCityCode('26100', kyotoBoundaries);
+assert.equal(kyotoWardGeoms.length, 11, '京都市 26100 は 11 区ポリゴンで判定');
 
 console.log('行政界ポリゴン・タイル交差判定: OK');

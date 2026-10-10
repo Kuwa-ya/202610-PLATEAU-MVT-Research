@@ -6,14 +6,18 @@ import {
   DATA_YEAR,
   DATASETS,
   FETCH_Z,
+  INDEX_REGIONS,
   INDEX_Z,
-  POC_BOUNDS,
+  MVT_OUTPUT_RELATIVE,
   POC_PREF_CODES
 } from './config.js';
 import { fetchCityBbox } from './geojson-bbox.js';
-import { geometryIntersectsBounds, loadAdminBoundaries } from './admin-boundaries.js';
 import {
-  boundsIntersect,
+  bboxFromAdminBoundaries,
+  cityTileIntersects,
+  loadAdminBoundariesFromPaths
+} from './admin-boundaries.js';
+import {
   tileBounds,
   tilesForBounds,
   tilesZ16InParent
@@ -21,8 +25,8 @@ import {
 
 const toolDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(toolDir, '..', '..');
-const dataRoot = join(repoRoot, 'data');
-const adminBoundaryPath = join(dataRoot, 'city_geojson', 'r2ka13_city.geojson');
+const dataRoot = join(repoRoot, 'web', 'data');
+const ADMIN_BOUNDARY_PATHS = INDEX_REGIONS.map(region => join(dataRoot, region.boundariesRelative));
 
 const CATALOG_URL = 'https://api.plateauview.mlit.go.jp/datacatalog/plateau-datasets';
 
@@ -75,15 +79,16 @@ async function resolveTileJson(row, dataset) {
   };
 }
 
-async function buildManifest(dataset, catalogRows) {
+async function buildManifest(dataset, catalogRows, adminBoundaries) {
   const rows = catalogRows.filter(row => matchesDataset(row, dataset));
   const cities = [];
   for (const row of rows) {
     const cityCode = String(row.city_code);
     const prefCode = String(row.pref_code);
     let bbox = await fetchCityBbox(cityCode, prefCode);
+    if (!bbox) bbox = bboxFromAdminBoundaries(cityCode, adminBoundaries);
     if (!bbox) {
-      console.warn(`  bbox 未取得: ${cityCode} ${row.city ?? ''}（索引精度が落ちます）`);
+      console.warn(`  bbox 未取得: ${cityCode} ${row.city ?? ''}（索引から除外）`);
       continue;
     }
     await sleep(80);
@@ -120,21 +125,14 @@ async function buildManifest(dataset, catalogRows) {
 function cityCodesForTile(tileBoundsGeo, cities, adminBoundaries) {
   const codes = [];
   for (const city of cities) {
-    if (!boundsIntersect(tileBoundsGeo, city.bbox)) continue;
-    const boundary = adminBoundaries.get(city.cityCode);
-    if (!boundary || geometryIntersectsBounds(boundary.geometry, tileBoundsGeo)) {
-      codes.push(city.cityCode);
-    }
+    if (cityTileIntersects(city, tileBoundsGeo, adminBoundaries)) codes.push(city.cityCode);
   }
   codes.sort((a, b) => Number(a) - Number(b));
   return [...new Set(codes)];
 }
 
-async function writeIndexParents(datasetId, cities, adminBoundaries) {
-  const parents = tilesForBounds(POC_BOUNDS, INDEX_Z);
-  if (parents.length !== 154) {
-    console.warn(`  z12 親タイル数: ${parents.length}（設計値 154 と不一致）`);
-  }
+async function writeIndexParentsForRegion(datasetId, cities, adminBoundaries, regionBounds) {
+  const parents = tilesForBounds(regionBounds, INDEX_Z);
   let multiCandidate = 0;
   for (const parent of parents) {
     const childTiles = tilesZ16InParent(parent.x, parent.y, INDEX_Z, FETCH_Z);
@@ -146,21 +144,55 @@ async function writeIndexParents(datasetId, cities, adminBoundaries) {
       if (codes.length) tiles[key] = codes;
       if (codes.length > 1) multiCandidate += 1;
     }
+    const outPath = join(
+      dataRoot,
+      MVT_OUTPUT_RELATIVE,
+      'index',
+      datasetId,
+      String(INDEX_Z),
+      String(parent.x),
+      `${parent.y}.json`
+    );
+    await mkdir(dirname(outPath), { recursive: true });
     const doc = {
       schemaVersion: 1,
       dataset: datasetId,
       parent: `${INDEX_Z}/${parent.x}/${parent.y}`,
       tiles
     };
-    const outPath = join(dataRoot, 'index', datasetId, String(INDEX_Z), String(parent.x), `${parent.y}.json`);
-    await mkdir(dirname(outPath), { recursive: true });
     await writeFile(outPath, `${JSON.stringify(doc)}\n`, 'utf8');
   }
   return { parentCount: parents.length, multiCandidate };
 }
 
+async function writeMvtOutputs(datasetId, manifest, adminBoundaries) {
+  const manifestPath = join(dataRoot, MVT_OUTPUT_RELATIVE, 'manifest', `${datasetId}.json`);
+  await mkdir(dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+  console.log(`  manifest: ${manifest.cities.length} 市区`);
+
+  let parentCount = 0;
+  let multiCandidate = 0;
+  for (const region of INDEX_REGIONS) {
+    const result = await writeIndexParentsForRegion(
+      datasetId,
+      manifest.cities,
+      adminBoundaries,
+      region.bounds
+    );
+    parentCount += result.parentCount;
+    multiCandidate += result.multiCandidate;
+    console.log(`  index (${region.id}): ${result.parentCount} 親`);
+  }
+  const kantoParents = tilesForBounds(INDEX_REGIONS[0].bounds, INDEX_Z);
+  if (kantoParents.length !== 154) {
+    console.warn(`  z12 親タイル数 (kanto): ${kantoParents.length}（設計値 154 と不一致）`);
+  }
+  return { parentCount, multiCandidate };
+}
+
 async function main() {
-  const adminBoundaries = await loadAdminBoundaries(adminBoundaryPath);
+  const adminBoundaries = await loadAdminBoundariesFromPaths(ADMIN_BOUNDARY_PATHS);
   console.log(`Admin boundaries: ${adminBoundaries.size} exact polygons`);
   const snapshotPath = join(dataRoot, 'snapshot', `plateau-datasets-${DATA_YEAR}.json`);
   let catalog;
@@ -173,24 +205,19 @@ async function main() {
     await writeFile(snapshotPath, `${JSON.stringify(catalog)}\n`, 'utf8');
   }
   const rows = catalog.datasets ?? [];
-  await mkdir(join(dataRoot, 'manifest'), { recursive: true });
 
   for (const dataset of DATASETS) {
     console.log(`\n=== ${dataset.id} ===`);
-    const manifestPath = join(dataRoot, 'manifest', `${dataset.id}.json`);
+    const manifestPath = join(dataRoot, MVT_OUTPUT_RELATIVE, 'manifest', `${dataset.id}.json`);
     const manifest = process.env.REUSE_MANIFESTS === '1' && existsSync(manifestPath)
       ? JSON.parse(await readFile(manifestPath, 'utf8'))
-      : await buildManifest(dataset, rows);
-    if (process.env.REUSE_MANIFESTS !== '1') {
-      await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
-    }
-    console.log(`  manifest: ${manifest.cities.length} 市区`);
-    const { parentCount, multiCandidate } = await writeIndexParents(
-      dataset.id, manifest.cities, adminBoundaries
+      : await buildManifest(dataset, rows, adminBoundaries);
+    const { parentCount, multiCandidate } = await writeMvtOutputs(
+      dataset.id, manifest, adminBoundaries
     );
-    console.log(`  index: ${parentCount} 親 / 複数市区 z16: ${multiCandidate}`);
+    console.log(`  index 合計: ${parentCount} 親 / 複数市区 z16: ${multiCandidate}`);
   }
-  console.log('\n完了');
+  console.log('\n完了 → web/data/mvt/');
 }
 
 main().catch(error => {

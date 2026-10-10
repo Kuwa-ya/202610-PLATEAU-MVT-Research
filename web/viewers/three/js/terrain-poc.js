@@ -113,7 +113,7 @@ export function createTerrainPoc(THREE, options) {
     buildingLayer: noopFeatureLayer,
     transportLayer: noopFeatureLayer,
     initialLocation,
-    initialZone: Number(ui.jprcZone?.value ?? 9),
+    initialZone: Number(ui.jprcZone?.value ?? 6),
     displayRadius: DISPLAY_RADIUS,
     lodDelay: TERRAIN_LOD_DELAY,
     getContourIntervalForLod: contourIntervalForLod,

@@ -104,3 +104,63 @@ export async function loadAdminBoundaries(path) {
   }
   return byCode;
 }
+
+/** 京都市 MVT（26100）は政令市一体配信のため、区ポリゴン（26101–26111）で交差判定する */
+const KYOTO_CITY_MVT_CODE = '26100';
+const KYOTO_WARD_CODES = Object.freeze(
+  Array.from({ length: 11 }, (_, index) => `261${String(index + 1).padStart(2, '0')}`)
+);
+
+export function adminGeometriesForCityCode(cityCode, adminBoundaries) {
+  if (cityCode === KYOTO_CITY_MVT_CODE) {
+    return KYOTO_WARD_CODES
+      .map(code => adminBoundaries.get(code)?.geometry)
+      .filter(Boolean);
+  }
+  const entry = adminBoundaries.get(cityCode);
+  return entry ? [entry.geometry] : [];
+}
+
+export function cityTileIntersects(city, tileBoundsGeo, adminBoundaries) {
+  const cityBbox = city.bbox;
+  if (
+    tileBoundsGeo.east < cityBbox.west
+    || tileBoundsGeo.west > cityBbox.east
+    || tileBoundsGeo.north < cityBbox.south
+    || tileBoundsGeo.south > cityBbox.north
+  ) {
+    return false;
+  }
+  const geometries = adminGeometriesForCityCode(city.cityCode, adminBoundaries);
+  if (geometries.length === 0) return true;
+  return geometries.some(geometry => geometryIntersectsBounds(geometry, tileBoundsGeo));
+}
+
+export async function loadAdminBoundariesFromPaths(paths) {
+  const merged = new Map();
+  for (const path of paths) {
+    const partial = await loadAdminBoundaries(path);
+    for (const [code, entry] of partial) merged.set(code, entry);
+  }
+  return merged;
+}
+
+function mergeBboxes(boxes) {
+  const merged = { north: -Infinity, south: Infinity, west: Infinity, east: -Infinity };
+  for (const box of boxes) {
+    if (!box) continue;
+    merged.north = Math.max(merged.north, box.north);
+    merged.south = Math.min(merged.south, box.south);
+    merged.west = Math.min(merged.west, box.west);
+    merged.east = Math.max(merged.east, box.east);
+  }
+  return Number.isFinite(merged.north) ? merged : null;
+}
+
+/** 政令市一体コード（26100）など、ローカル行政界から bbox を補う */
+export function bboxFromAdminBoundaries(cityCode, adminBoundaries) {
+  if (cityCode === KYOTO_CITY_MVT_CODE) {
+    return mergeBboxes(KYOTO_WARD_CODES.map(code => adminBoundaries.get(code)?.bbox));
+  }
+  return adminBoundaries.get(cityCode)?.bbox ?? null;
+}

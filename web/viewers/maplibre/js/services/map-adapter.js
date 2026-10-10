@@ -1,11 +1,16 @@
+import { DEFAULT_VIEWER_LOCATION } from '../../../../shared/geo/viewer-defaults.js';
+import { BOUNDARY_LAYERS } from '../../../../shared/mvt/data-region.js';
+import { maplibreLuseFillColorExpression } from '../../../../shared/mvt/feature-style.js';
 import { MeshUtils } from '../model/mesh-utils.js';
 import { Model } from '../model/model.js';
 import { createIndexedMvtProtocol } from './indexed-mvt-protocol.js';
 
 const EMPTY_FEATURE_COLLECTION = Object.freeze({ type: 'FeatureCollection', features: [] });
+
+function regionBoundaryLineLayerIds() {
+  return BOUNDARY_LAYERS.map(layer => `region-boundary-${layer.id}-line`);
+}
 const OVERLAY_IDS = Object.freeze({
-  cityBoundarySource: 'city-boundary-source',
-  cityBoundaryLine: 'city-boundary-line',
   meshSource: 'regional-mesh-grid',
   meshFill: 'regional-mesh-fill',
   meshLine: 'regional-mesh-line',
@@ -50,7 +55,7 @@ export class MapAdapter {
 
     this.map = new this.maplibregl.Map({
       container: this.containerId,
-      center: [139.7670, 35.6834],
+      center: [DEFAULT_VIEWER_LOCATION.longitude, DEFAULT_VIEWER_LOCATION.latitude],
       zoom: 16.2,
       minZoom: 5,
       maxZoom: 19,
@@ -173,21 +178,24 @@ export class MapAdapter {
 
   ensureOverlayLayers() {
     const map = this.map;
-    map.addSource(OVERLAY_IDS.cityBoundarySource, {
-      type: 'geojson',
-      data: '/data/city_geojson/r2ka13_city.geojson'
-    });
-    map.addLayer({
-      id: OVERLAY_IDS.cityBoundaryLine,
-      type: 'line',
-      source: OVERLAY_IDS.cityBoundarySource,
-      paint: {
-        'line-color': '#f43f5e',
-        'line-width': ['interpolate', ['linear'], ['zoom'], 8, 1, 14, 1.8, 18, 3],
-        'line-opacity': 0.92,
-        'line-dasharray': [3, 1.5]
-      }
-    });
+    for (const layer of BOUNDARY_LAYERS) {
+      const sourceId = `region-boundary-${layer.id}`;
+      map.addSource(sourceId, {
+        type: 'geojson',
+        data: layer.url
+      });
+      map.addLayer({
+        id: `${sourceId}-line`,
+        type: 'line',
+        source: sourceId,
+        paint: {
+          'line-color': layer.boundaryColor,
+          'line-width': ['interpolate', ['linear'], ['zoom'], 8, 1, 14, 1.8, 18, 3],
+          'line-opacity': 0.9,
+          'line-dasharray': layer.dasharray
+        }
+      });
+    }
     map.addSource(OVERLAY_IDS.meshSource, { type: 'geojson', data: EMPTY_FEATURE_COLLECTION });
     map.addLayer({
       id: OVERLAY_IDS.meshFill,
@@ -249,14 +257,7 @@ export class MapAdapter {
         'source-layer': sourceLayer,
         minzoom: Model.CONFIG.mvtMinZoom,
         paint: {
-          'fill-color': this.selectedAwareValue('#ff4d8d', isLuse ? [
-            'match', ['get', 'uro_orgLandUse'],
-            '道路', '#f59e48',
-            '公園', '#40c98a',
-            '河川', '#4ca9df',
-            '水面・河川・水路', '#4ca9df',
-            '#47e6b1'
-          ] : '#ffc85a'),
+          'fill-color': this.selectedAwareValue('#ff4d8d', isLuse ? maplibreLuseFillColorExpression() : '#ffc85a'),
           'fill-opacity': this.featureOpacity(isLuse ? 0.46 : 0.58, 0.78)
         }
     });
@@ -304,12 +305,10 @@ export class MapAdapter {
   }
 
   syncCityBoundaryStyle(visible) {
-    if (!this.map.getLayer(OVERLAY_IDS.cityBoundaryLine)) return;
-    this.map.setLayoutProperty(
-      OVERLAY_IDS.cityBoundaryLine,
-      'visibility',
-      visible ? 'visible' : 'none'
-    );
+    for (const lineId of regionBoundaryLineLayerIds()) {
+      if (!this.map.getLayer(lineId)) continue;
+      this.map.setLayoutProperty(lineId, 'visibility', visible ? 'visible' : 'none');
+    }
   }
 
   selectedAwareValue(selectedValue, defaultValue) {
@@ -435,7 +434,7 @@ export class MapAdapter {
       OVERLAY_IDS.meshFill,
       OVERLAY_IDS.meshLine,
       OVERLAY_IDS.webTileLine,
-      OVERLAY_IDS.cityBoundaryLine
+      ...regionBoundaryLineLayerIds()
     ].forEach(id => {
       if (this.map.getLayer(id)) this.map.moveLayer(id);
     });
@@ -513,7 +512,7 @@ export class MapAdapter {
     const message = event?.error?.message || 'データを読み込めませんでした';
     if (sourceId === 'gsi-base') {
       this.callbacks.onStatus('背景地図を読み込めませんでした', 'error');
-    } else if (sourceId === OVERLAY_IDS.cityBoundarySource) {
+    } else if (sourceId?.startsWith('region-boundary-')) {
       this.callbacks.onStatus('市区町村境界を読み込めませんでした', 'error');
     } else if (sourceId && this.sourceIds.includes(sourceId)) {
       this.sourceErrors.add(sourceId);

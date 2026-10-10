@@ -11,7 +11,7 @@ const port = Number.parseInt(process.env.PORT ?? "4173", 10);
 
 const mounts = [
   { prefix: "/modules", root: resolve(repositoryRoot, "node_modules") },
-  { prefix: "/data", root: resolve(repositoryRoot, "data") },
+  { prefix: "/data", root: resolve(siteRoot, "data") },
   { prefix: "/kuwaya-geo", root: resolve(repositoryRoot, "docs/ref/kuwaya-geo") },
   { prefix: "", root: siteRoot }
 ];
@@ -100,7 +100,7 @@ server.listen(port, host, () => {
   console.log(`MapLibre Viewer:     http://${host}:${port}/viewers/maplibre/`);
   console.log(`Three Viewer:        http://${host}:${port}/viewers/three/`);
   console.log(`kuwaya-geo 参照:     http://${host}:${port}/kuwaya-geo/`);
-  console.log(`静的索引 data/:      http://${host}:${port}/data/manifest/`);
+  console.log(`静的索引 data/:      http://${host}:${port}/data/mvt/manifest/`);
 });
 
 export default server;

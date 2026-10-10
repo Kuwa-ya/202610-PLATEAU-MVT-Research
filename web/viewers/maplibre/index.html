@@ -260,7 +260,7 @@
       <div class="scroll">
         <section class="section">
           <h2 class="section-title">自動タイル選択</h2>
-          <p class="hint">東京都・埼玉県の静的索引を使い、z16タイルごとに取得先の自治体を自動決定します。自治体コードの指定は不要です。</p>
+          <p class="hint">初期表示は京都駅。MVT 索引は東京都・埼玉県・京都府。z16 タイルごとに取得先自治体を自動決定します。</p>
           <div class="chips" aria-label="表示地点">
             <button class="chip" type="button" data-place="otemachi">大手町</button>
             <button class="chip" type="button" data-place="kanda">神田</button>
@@ -289,9 +289,10 @@
           <div class="layer-card">
             <div class="layer-head">
               <div class="layer-name"><span class="swatch" style="background:#f43f5e"></span>市区町村境界（東京都）</div>
+              <div class="layer-name"><span class="swatch" style="background:#7c3aed"></span>市区町村境界（京都府）</div>
               <button id="toggle-city-boundary" class="toggle" type="button" aria-label="市区町村境界表示を切り替える" aria-pressed="true"></button>
             </div>
-            <p class="hint"><code>data/city_geojson/r2ka13_city.geojson</code> の63市区町村を表示します。</p>
+            <p class="hint"><code>web/data/boundaries/*.geojson</code> の行政界を表示します。</p>
           </div>
 
           <div class="layer-card">

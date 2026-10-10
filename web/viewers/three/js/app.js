@@ -2,10 +2,12 @@ import {
   CAMERA_DEFAULT_DISTANCE,
   CAMERA_LERP_RATE,
   CAMERA_MIN_DISTANCE,
-  INITIAL_LOCATION,
   TERRAIN_STREAM_ACTIVE_DELAY,
   TERRAIN_STREAM_DELAY
 } from '/kuwaya-geo/js/config.js';
+import { DEFAULT_VIEWER_LOCATION } from '../../../shared/geo/viewer-defaults.js';
+
+const INITIAL_LOCATION = DEFAULT_VIEWER_LOCATION;
 import {
   bindCameraInteractions,
   createCameraController,

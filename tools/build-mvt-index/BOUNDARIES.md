@@ -2,12 +2,12 @@
 
 ## 入力と配置
 
-- 共有原本: `data/city_geojson/r2ka13_city.geojson`
+- 共有原本: `web/data/boundaries/kanto-cities.geojson` / `web/data/boundaries/kyoto-cities.geojson`
 - 交差判定: `admin-boundaries.js`
 - 索引生成: `build.js`
 - 単体確認: `scripts/check-admin-boundaries.js`
 
-大容量GeoJSONを`web/`と`tools/`へ二重配置しない。開発サーバーは`data/`を`/data`へマウントするため、Viewer表示とビルド入力で同じ原本を利用できる。
+大容量 GeoJSON を二重配置しない。Viewer とビルドは同じ `web/data/boundaries/` を参照する。
 
 ## 採用するタイル
 

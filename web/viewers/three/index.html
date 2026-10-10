@@ -27,7 +27,7 @@
         <h1>PLATEAU MVT × Three</h1>
       </div>
       <div class="topbar-actions">
-        <p class="topbar-copy">z12 静的索引 → z16 取得（東京都・埼玉県）</p>
+        <p class="topbar-copy">初期: 京都駅 — 索引: 京都府・東京都・埼玉県</p>
         <a class="about-link" href="/kuwaya-geo/">ちずうつし（地形 3D）</a>
         <button id="menu-toggle" class="menu-toggle" type="button" aria-label="設定メニューを開閉" aria-controls="control-panel" aria-expanded="true">メニュー</button>
       </div>
@@ -57,7 +57,8 @@
             <legend>座標</legend>
             <label>平面直角座標系
               <select id="jprc-zone" name="jprcZone">
-                <option value="9" selected>第IX系（東京）</option>
+                <option value="6" selected>第VI系（京都）</option>
+                <option value="9">第IX系（東京）</option>
                 <option value="8">第VIII系</option>
                 <option value="10">第X系</option>
                 <option value="7">第VII系</option>
@@ -99,13 +100,13 @@
           <fieldset class="settings-section origin-settings">
             <legend>ローカル原点</legend>
             <label>原点緯度
-              <input id="origin-latitude" name="originLatitude" type="number" min="-90" max="90" step="0.00000001" value="35.68100000" inputmode="decimal">
+              <input id="origin-latitude" name="originLatitude" type="number" min="-90" max="90" step="0.000001" value="34.986" inputmode="decimal">
             </label>
             <label>原点経度
-              <input id="origin-longitude" name="originLongitude" type="number" min="-180" max="180" step="0.00000001" value="139.76700000" inputmode="decimal">
+              <input id="origin-longitude" name="originLongitude" type="number" min="-180" max="180" step="0.000001" value="135.759" inputmode="decimal">
             </label>
             <button id="origin-apply" class="secondary-button" type="button">原点を反映</button>
-            <p id="origin-status" class="control-note" aria-live="polite">固定原点：35.68100000, 139.76700000（東京駅付近）</p>
+            <p id="origin-status" class="control-note" aria-live="polite">固定原点：34.986, 135.759（京都駅付近）</p>
           </fieldset>
 
           <fieldset class="settings-section">
@@ -152,7 +153,7 @@
 
     <footer>
       <p>出典：<a href="https://www.mlit.go.jp/plateau/" target="_blank" rel="noopener noreferrer">国土交通省 PLATEAU</a>／UI は <a href="/kuwaya-geo/">ちずうつし</a> を参照</p>
-      <p><code>npm install</code> 後 <code>npm run dev</code> — 索引 <code>data/manifest/</code></p>
+      <p><code>npm install</code> 後 <code>npm run dev</code> — 索引 <code>web/data/mvt/</code>（要 <code>build:mvt-index</code>）</p>
     </footer>
   </main>
 

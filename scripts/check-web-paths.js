@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const webRoot = join(root, "web");
 const mountRoots = new Map([
-  ["data", join(root, "data")],
+  ["data", join(root, "web", "data")],
   ["kuwaya-geo", join(root, "docs", "ref", "kuwaya-geo")],
   ["modules", join(root, "node_modules")],
 ]);

@@ -18,7 +18,7 @@ npm.cmd run dev
 
 ブラウザで <http://127.0.0.1:4173/> を開き、2D／3D Viewerを選択します。2Dは `/viewers/maplibre/`、3Dは `/viewers/three/` です。終了は `Ctrl+C` です。ポートは環境変数 `PORT`、待受アドレスは `HOST` で変更できます。
 
-静的索引（東京都＋埼玉県）を生成する場合:
+静的索引を生成する場合:
 
 ```console
 npm run build:mvt-index
@@ -36,7 +36,7 @@ npm.cmd run dev
 - 2025年度の土地利用（`luse`）と道路（`tran-lod1`）をz16タイル単位で自動読み込み
 - 土地利用MVTの `uro_orgLandUse` が「道路」の地物を橙色で表示（2D・3D共通）
 - 3D表示と同じ静的索引を使い、各タイルに複数の候補自治体がある場合は全自治体のMVTを重ねて表示
-- `data/city_geojson/r2ka13_city.geojson` の東京都63市区町村境界を比較用ラインとして表示
+- `web/data/boundaries/*.geojson` の市区町村境界を比較用ラインとして表示
 - ズーム5まで縮小可能。PLATEAU MVT は索引粒度に合わせてズーム16以上で表示
 - 地域メッシュをズームに応じて4・6・8・9・10・11桁で切り替え、メッシュコードを表示
 - Web Mercator タイル境界と `z/x/y` を表示（初期状態はオフ）
@@ -78,7 +78,7 @@ npm run check
 
 ## データとライセンス
 
-`data/manifest/` と `data/index/` に東京都・埼玉県の静的索引を配置しています。背景地図と索引が選択したMVT本体は表示時に外部配信元から取得するため、地図表示にはインターネット接続が必要です。
+`web/data/mvt/` に静的索引を配置します（`npm run build:mvt-index`）。**`web/` をサーバーに載せるときは `web/data/` も同梱**してください。MVT 本体は表示時に外部配信から取得するため、地図表示にはインターネット接続が必要です。
 
 MapLibre GL JS 5.24.0（BSD-3-Clause）は `web/vendor/maplibre-gl/`、Three.jsは `web/vendor/three/` に同梱しています。MapLibreの詳細は[vendor README](web/vendor/maplibre-gl/README.md)を参照してください。
 
