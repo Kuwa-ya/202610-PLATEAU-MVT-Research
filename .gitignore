@@ -8,6 +8,15 @@ web/data/mvt/manifest/
 web/data/mvt/index/
 web/data/snapshot/
 
+# 生成・キャプチャ（正本は web/data/output/、再生成可能）
+web/data/output/**
+!web/data/output/**/
+!web/data/output/**/.gitkeep
+
+web/viewers/even-g2/hub-app/public/preview.png
+web/viewers/even-g2/sample-preview.png
+*.ehpk
+
 # Local configuration and logs
 .env
 .env.*

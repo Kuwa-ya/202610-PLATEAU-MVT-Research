@@ -6,8 +6,8 @@
 
 ## 手順
 
-1. 同梱の `public/preview.png`（サンプル地形）で動作確認できる。実データに差し替える場合は 3D Viewer で「G2 向けプレビュー保存」し、同パスへコピー
-2. サンプル再生成: リポジトリルートで `npm run generate:g2-preview`
+1. 正本: `web/data/output/previews/preview.png`（Git 外）。`npm run build` / `pack` 時に `public/preview.png` に自動同期
+2. 再生成: リポジトリルートで `npm run generate:g2-preview`。3D Viewer の PNG は `web/data/output/g2-captures/` へ保存し、`preview.png` を上書きしても可
 3. `npm install` → **`npm run dev`**（Vite + シミュレータ + 実機用 QR を同時起動）
    - Vite だけ: `npm run dev:vite`
    - GPS 試行用 HTTPS: `npm run dev:https`（下記トレードオフ）
@@ -30,13 +30,17 @@
 1. ターミナルの `http://<IP>:5173/` を **スマホのブラウザ**で開く
 2. 同一 Wi‑Fi・ファイアウォール（ポート 5173）— [Network & Firewall Setup](https://hub.evenrealities.com/docs/test/network-firewall)
 
-## パック
+## ビルド・パック
 
-```bash
-npm run pack
-```
+| コマンド（hub-app 内） | 出力（リポジトリルートから） |
+| --- | --- |
+| `npm run build` | `web/data/output/even-g2/dist/` |
+| `npm run pack` | `web/data/output/even-g2/plateau-mvt-g2.ehpk` |
 
-生成された `.ehpk` を Even Hub 開発者ポータルから配布できます。
+ルートからは `npm run build:even-g2` / `npm run pack:even-g2` でも同じです。いずれも **Git 外**（`web/data/output/`）。ポータルへは **`.ehpk`** をアップロード。
+
+- `app.json` の `name` は **20 文字以内**（Even Hub CLI 制約）
+- `min_app_version` は SDK に合わせて CLI が **2.2.10 などへ自動引き上げ**する場合あり（警告は通常そのままで可）
 
 ## 検証 3（送信性能）
 

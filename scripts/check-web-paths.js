@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { dirname, extname, join, resolve } from "node:path";
+import { basename, dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -14,7 +14,9 @@ const errors = [];
 
 function walk(directory) {
   for (const entry of readdirSync(directory)) {
+    if (entry === "node_modules" || entry === "dist") continue;
     const path = join(directory, entry);
+    if (entry === "output" && basename(directory) === "data") continue;
     if (statSync(path).isDirectory()) walk(path);
     else if ([".html", ".js", ".css"].includes(extname(path))) files.push(path);
   }

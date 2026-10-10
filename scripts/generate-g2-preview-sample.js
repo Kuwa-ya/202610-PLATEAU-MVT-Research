@@ -128,15 +128,21 @@ function encodePng(rgba, width, height) {
 async function main() {
   const rgba = renderFrame();
   const png = encodePng(Buffer.from(rgba), WIDTH, HEIGHT);
+  const previewDir = join(root, 'web', 'data', 'output', 'previews');
   const targets = [
-    join(root, 'web', 'viewers', 'even-g2', 'hub-app', 'public', 'preview.png'),
-    join(root, 'web', 'viewers', 'even-g2', 'sample-preview.png')
+    join(previewDir, 'preview.png'),
+    join(previewDir, 'sample-preview.png')
   ];
   for (const out of targets) {
     await mkdir(dirname(out), { recursive: true });
     await writeFile(out, png);
     console.log(`Wrote ${out} (${png.length} bytes)`);
   }
+
+  const hubPublic = join(root, 'web', 'viewers', 'even-g2', 'hub-app', 'public', 'preview.png');
+  await mkdir(dirname(hubPublic), { recursive: true });
+  await writeFile(hubPublic, png);
+  console.log(`Wrote ${hubPublic} (${png.length} bytes)`);
 }
 
 main().catch(err => {

@@ -17,12 +17,14 @@
     "check:boundaries": "node --check tools/build-mvt-index/admin-boundaries.js && node scripts/check-admin-boundaries.js",
     "check:mvt-style": "node --check web/shared/mvt/feature-style.js && node scripts/check-mvt-style.js",
     "check:web-paths": "node scripts/check-web-paths.js",
-    "precheck": "npm run check:boundaries && npm run check:mvt-style && npm run check:web-paths",
+    "precheck": "npm run check:boundaries && npm run check:mvt-style && node scripts/ensure-g2-preview.js && npm run check:web-paths",
     "check": "node scripts/check-source.js && node scripts/check-mesh.js && node scripts/check-indexed-mvt.js",
     "probe:kyoto-mvt": "node scripts/probe-kyoto-mvt.js",
     "probe:kyoto-usedistrict": "node scripts/probe-kyoto-usedistrict.js",
     "generate:g2-preview": "node scripts/generate-g2-preview-sample.js",
-    "dev:even-g2": "npm run dev --prefix web/viewers/even-g2/hub-app"
+    "dev:even-g2": "npm run dev --prefix web/viewers/even-g2/hub-app",
+    "build:even-g2": "npm run build --prefix web/viewers/even-g2/hub-app",
+    "pack:even-g2": "npm run pack --prefix web/viewers/even-g2/hub-app"
   },
   "engines": {
     "node": ">=20"

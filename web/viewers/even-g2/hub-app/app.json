@@ -1,7 +1,7 @@
 {
   "package_id": "com.plateau.mvt.g2preview",
   "edition": "202601",
-  "name": "PLATEAU MVT G2 Preview",
+  "name": "PLATEAU MVT G2",
   "version": "0.1.0",
   "min_app_version": "2.0.0",
   "min_sdk_version": "0.0.10",

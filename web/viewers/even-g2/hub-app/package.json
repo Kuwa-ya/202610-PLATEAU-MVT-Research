@@ -7,9 +7,9 @@
     "dev": "node scripts/dev-all.js",
     "dev:https": "node scripts/dev-all.js --https",
     "dev:vite": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "node ../../../../scripts/ensure-g2-preview.js && tsc --noEmit && vite build",
     "preview": "vite preview",
-    "pack": "npm run build && evenhub pack app.json dist",
+    "pack": "npm run build && evenhub pack app.json ../../../data/output/even-g2/dist -o ../../../data/output/even-g2/plateau-mvt-g2.ehpk",
     "simulate": "evenhub-simulator http://localhost:5173"
   },
   "dependencies": {
@@ -18,6 +18,7 @@
   "devDependencies": {
     "@evenrealities/evenhub-cli": "^0.1.12",
     "@evenrealities/evenhub-simulator": "^0.7.2",
+    "@types/node": "^22.20.5",
     "@vitejs/plugin-basic-ssl": "^1.2.0",
     "typescript": "^5.7.0",
     "vite": "^5.4.0"

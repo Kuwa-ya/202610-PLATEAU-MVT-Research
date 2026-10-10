@@ -47,7 +47,7 @@
           <input id="file-input" type="file" accept="image/png,image/jpeg" hidden />
         </label>
       </div>
-      <img id="preview" src="./sample-preview.png" alt="G2 プレビュー" />
+      <img id="preview" src="/data/output/previews/sample-preview.png" alt="G2 プレビュー" />
     </section>
 
     <section>
@@ -60,7 +60,7 @@
     const log = document.getElementById('log');
     const preview = document.getElementById('preview');
     const input = document.getElementById('file-input');
-    const sampleUrl = new URL('./sample-preview.png', import.meta.url).href;
+    const sampleUrl = '/data/output/previews/sample-preview.png';
 
     function showPreview(src, label) {
       preview.src = src;

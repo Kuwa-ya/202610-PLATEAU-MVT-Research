@@ -24,7 +24,8 @@ const files = [
   'web/viewers/three/js/services/mvt-index.js',
   'web/viewers/three/js/services/mvt-mesh.js',
   'web/viewers/even-g2/hub-app/scripts/dev-all.js',
-  'scripts/generate-g2-preview-sample.js'
+  'scripts/generate-g2-preview-sample.js',
+  'scripts/ensure-g2-preview.js'
 ];
 
 for (const file of files) {
