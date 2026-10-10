@@ -48,7 +48,7 @@
       <aside id="control-panel" class="control-panel">
         <div id="viewer-controls">
           <fieldset class="settings-section tile-settings">
-            <legend>地形（地理院タイル）</legend>
+            <legend>地形（地表テクスチャ）</legend>
             <label>地形表示
               <select id="terrain-visibility" name="terrainVisibility">
                 <option value="show" selected>表示</option>
@@ -57,8 +57,9 @@
             </label>
             <label>地表テクスチャ
               <select id="texture-type" name="textureType">
-                <option value="photo" selected>航空写真</option>
-                <option value="standard">標準地図</option>
+                <option value="plateau-ortho-2023" selected>PLATEAU Ortho 2023</option>
+                <option value="photo">地理院シームレス写真</option>
+                <option value="standard">地理院標準地図</option>
               </select>
             </label>
             <p class="control-note">表示 LOD・標高解像度はカメラ距離に応じて自動調整されます（<a href="/kuwaya-geo/">ちずうつし</a> と同様）。</p>
@@ -94,6 +95,7 @@
             <div class="layer-tabs" role="tablist" aria-label="MVT レイヤー">
               <button id="luse-tab" class="layer-tab selected" type="button" role="tab" aria-selected="true" aria-controls="luse-panel" tabindex="0">土地利用</button>
               <button id="tran-tab" class="layer-tab" type="button" role="tab" aria-selected="false" aria-controls="tran-panel" tabindex="-1">道路 LOD1</button>
+              <button id="usedistrict-tab" class="layer-tab" type="button" role="tab" aria-selected="false" aria-controls="usedistrict-panel" tabindex="-1">用途地域</button>
             </div>
             <div id="luse-panel" class="layer-panel" role="tabpanel" aria-labelledby="luse-tab">
               <label>土地利用（luse-2025）
@@ -103,6 +105,15 @@
                 </select>
               </label>
               <p class="control-note">カメラが約 900 m 以内で z16 タイルを読み込みます。タイル境界ではバッファ部分をタイル範囲にクリップして描画します。</p>
+            </div>
+            <div id="usedistrict-panel" class="layer-panel" role="tabpanel" aria-labelledby="usedistrict-tab" hidden>
+              <label>用途地域（use-district-2025）
+                <select id="usedistrict-visibility" name="useDistrictVisibility">
+                  <option value="hide" selected>非表示</option>
+                  <option value="show">表示</option>
+                </select>
+              </label>
+              <p class="control-note">索引は <code>build:mvt-index:use-district</code>。タイル境界はクリップ描画（土地利用と同様）。</p>
             </div>
             <div id="tran-panel" class="layer-panel" role="tabpanel" aria-labelledby="tran-tab" hidden>
               <label>道路（tran-lod1-2025）

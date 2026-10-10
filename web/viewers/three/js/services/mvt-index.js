@@ -17,7 +17,9 @@
  * WITHOUT WARRANTY OF ANY KIND. SEE /legal/SOURCE-CODE-LICENSE.txt.
  */
 
-import { DATA_BASE, MVT_FETCH_ZOOM, MVT_INDEX_ZOOM } from './mvt-config.js';
+import { getMvtDataBase } from '../../../../shared/mvt/data-region.js';
+import { manifestEntriesForCity } from '../../../../shared/mvt/manifest-cities.js';
+import { MVT_FETCH_ZOOM, MVT_INDEX_ZOOM } from './mvt-config.js';
 import { parentKeyForChild, tilesForBounds } from './web-tiles.js';
 
 const manifestCache = new Map();
@@ -25,7 +27,7 @@ const parentIndexCache = new Map();
 
 export async function loadManifest(datasetId) {
   if (manifestCache.has(datasetId)) return manifestCache.get(datasetId);
-  const url = `${DATA_BASE}/manifest/${datasetId}.json`;
+  const url = `${getMvtDataBase()}/manifest/${datasetId}.json`;
   const response = await fetch(url);
   if (!response.ok) throw new Error(`manifest: ${url}`);
   const manifest = await response.json();
@@ -37,7 +39,7 @@ export async function loadManifest(datasetId) {
 export async function loadParentIndex(datasetId, parentKey) {
   const cacheKey = `${datasetId}:${parentKey}`;
   if (parentIndexCache.has(cacheKey)) return parentIndexCache.get(cacheKey);
-  const url = `${DATA_BASE}/index/${datasetId}/${parentKey}.json`;
+  const url = `${getMvtDataBase()}/index/${datasetId}/${parentKey}.json`;
   const response = await fetch(url);
   if (!response.ok) throw new Error(`index: ${url}`);
   const doc = await response.json();
@@ -50,17 +52,12 @@ export function pickFetchCityCodes(codes) {
   return [...new Set(codes)].sort((a, b) => Number(a) - Number(b));
 }
 
-function mvtUrlFor(manifest, cityCode, z, x, y) {
-  const city = manifest.byCode.get(cityCode);
-  if (!city) return null;
+function mvtUrlFor(city, z, x, y) {
+  if (!city?.mvtUrlTemplate) return null;
   return city.mvtUrlTemplate
     .replace('{z}', String(z))
     .replace('{x}', String(x))
     .replace('{y}', String(y));
-}
-
-function sourceLayerFor(manifest, cityCode) {
-  return manifest.byCode.get(cityCode)?.sourceLayer ?? null;
 }
 
 export async function planFetches(bounds, datasetIds) {
@@ -93,18 +90,24 @@ export async function planFetches(bounds, datasetIds) {
       const codes = indexDoc.tiles?.[tileKey];
       if (!Array.isArray(codes) || codes.length === 0) continue;
       for (const cityCode of pickFetchCityCodes(codes)) {
-        const dedupe = `${datasetId}:${MVT_FETCH_ZOOM}/${child.x}/${child.y}:${cityCode}`;
-        if (seen.has(dedupe)) continue;
-        seen.add(dedupe);
-        plans.push({
-          datasetId,
-          z: MVT_FETCH_ZOOM,
-          x: child.x,
-          y: child.y,
-          cityCode,
-          sourceLayer: sourceLayerFor(manifest, cityCode),
-          url: mvtUrlFor(manifest, cityCode, MVT_FETCH_ZOOM, child.x, child.y)
-        });
+        const entries = manifestEntriesForCity(manifest, cityCode);
+        const cities = entries.length ? entries : [manifest.byCode.get(cityCode)].filter(Boolean);
+        for (const city of cities) {
+          const dedupe = `${datasetId}:${MVT_FETCH_ZOOM}/${child.x}/${child.y}:${cityCode}:${city.sourceLayer}`;
+          if (seen.has(dedupe)) continue;
+          seen.add(dedupe);
+          const url = mvtUrlFor(city, MVT_FETCH_ZOOM, child.x, child.y);
+          if (!url || !city.sourceLayer) continue;
+          plans.push({
+            datasetId,
+            z: MVT_FETCH_ZOOM,
+            x: child.x,
+            y: child.y,
+            cityCode,
+            sourceLayer: city.sourceLayer,
+            url
+          });
+        }
       }
     }
   }

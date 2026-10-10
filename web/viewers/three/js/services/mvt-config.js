@@ -29,7 +29,13 @@ export const MVT_INDEX_ZOOM = 12;
 
 export const DATASETS = Object.freeze([
   { id: 'luse-2025', label: '土地利用', color: MVT_COLORS.luseDefault, opacity: 0.55 },
-  { id: 'tran-lod1-2025', label: '道路 LOD1', color: MVT_COLORS.transport, opacity: 0.65 }
+  { id: 'tran-lod1-2025', label: '道路 LOD1', color: MVT_COLORS.transport, opacity: 0.65 },
+  {
+    id: 'use-district-2025',
+    label: '用途地域',
+    color: MVT_COLORS.useDistrict,
+    opacity: 0.42
+  }
 ]);
 
 /** この距離より近いと MVT を読込（初期カメラは約 500m） */

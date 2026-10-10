@@ -24,6 +24,10 @@
 
 ### 設計
 
+- [**2D / 3D / G2 作業計画（viewer-work-plan）**](design/viewer-work-plan.md)  
+  UI 調整、地表切替、G2 地形、道路ドレープ、luse→用途地域連動など **これから着手するタスク**の一覧。
+- [**G2 右画面・住所・モバイル UI（g2-display-and-address）**](design/g2-display-and-address.md)  
+  G2 メイン表示項目、16 方位、町丁目 GeoJSON の **2 段階読込**、`presentation/` 非編集の注意。
 - [サイト構成](architecture.md)  
   Vanilla JSによるMVVMの責務分担、地図オーバーレイ、参照実装との関係をまとめています。
 - [MVT 静的タイル索引と Three.js 統合](design/mvt-static-tile-index.md)  

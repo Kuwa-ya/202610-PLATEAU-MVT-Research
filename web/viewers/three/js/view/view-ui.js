@@ -41,6 +41,7 @@ export function bindViewUi(document) {
     requestedLod: document.querySelector('#requested-lod'),
     luseVisibility: document.querySelector('#luse-visibility'),
     tranVisibility: document.querySelector('#tran-visibility'),
+    useDistrictVisibility: document.querySelector('#usedistrict-visibility'),
     originLatitude: document.querySelector('#origin-latitude'),
     originLongitude: document.querySelector('#origin-longitude'),
     originApply: document.querySelector('#origin-apply'),
@@ -126,5 +127,6 @@ export function readEnabledDatasets(elements) {
   const ids = [];
   if (elements.luseVisibility?.value !== 'hide') ids.push('luse-2025');
   if (elements.tranVisibility?.value !== 'hide') ids.push('tran-lod1-2025');
+  if (elements.useDistrictVisibility?.value === 'show') ids.push('use-district-2025');
   return ids;
 }

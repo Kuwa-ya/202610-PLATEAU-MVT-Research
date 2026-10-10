@@ -28,6 +28,10 @@ let cachedMvtDataBase;
 
 export function getMvtDataBase() {
   if (cachedMvtDataBase) return cachedMvtDataBase;
+  if (typeof process !== 'undefined' && process.env?.MVT_DATA_BASE) {
+    cachedMvtDataBase = process.env.MVT_DATA_BASE.replace(/\/$/, '');
+    return cachedMvtDataBase;
+  }
   const viteBase =
     typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL;
   if (viteBase === './' && typeof document !== 'undefined' && document.baseURI) {

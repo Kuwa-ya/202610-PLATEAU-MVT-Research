@@ -22,7 +22,8 @@ export const MVT_COLORS = Object.freeze({
   luseRoad: 0xf59e48,
   lusePark: 0x40c98a,
   luseWater: 0x4ca9df,
-  transport: 0xffc85a
+  transport: 0xffc85a,
+  useDistrict: 0xc084fc
 });
 
 const LUSE_ROAD_FILL_HEX = '#f59e48';
@@ -65,5 +66,7 @@ export function landUseColor(properties = {}) {
 }
 
 export function featureColor(datasetId, properties, fallbackColor) {
-  return datasetId === 'luse-2025' ? landUseColor(properties) : fallbackColor;
+  if (datasetId === 'luse-2025') return landUseColor(properties);
+  if (datasetId === 'use-district-2025') return MVT_COLORS.useDistrict ?? fallbackColor;
+  return fallbackColor;
 }

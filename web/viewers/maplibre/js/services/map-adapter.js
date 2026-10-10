@@ -20,6 +20,7 @@
 import { DEFAULT_VIEWER_LOCATION } from '../../../../shared/geo/viewer-defaults.js';
 import { BOUNDARY_LAYERS } from '../../../../shared/mvt/data-region.js';
 import { maplibreLuseFillColorExpression } from '../../../../shared/mvt/feature-style.js';
+import { PLATEAU_ORTHO_2023 } from '../../../../shared/geo/plateau-basemap.js';
 import { USE_DISTRICT_DATASET_ID } from '../../../../shared/mvt/use-district.js';
 import { MeshUtils } from '../model/mesh-utils.js';
 import { Model } from '../model/model.js';
@@ -91,22 +92,22 @@ export class MapAdapter {
       style: {
         version: 8,
         sources: {
-          'gsi-base': {
+          [PLATEAU_ORTHO_2023.id]: {
             type: 'raster',
-            tiles: ['https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png'],
-            tileSize: 256,
-            minzoom: 2,
-            maxzoom: 18,
-            attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'
+            tiles: [...PLATEAU_ORTHO_2023.tiles],
+            tileSize: PLATEAU_ORTHO_2023.tileSize,
+            minzoom: PLATEAU_ORTHO_2023.minzoom,
+            maxzoom: PLATEAU_ORTHO_2023.maxzoom,
+            attribution: PLATEAU_ORTHO_2023.attribution
           }
         },
         layers: [
           { id: 'background', type: 'background', paint: { 'background-color': '#e7e9e4' } },
           {
-            id: 'gsi-base',
+            id: PLATEAU_ORTHO_2023.id,
             type: 'raster',
-            source: 'gsi-base',
-            paint: { 'raster-opacity': 1, 'raster-saturation': -0.15, 'raster-contrast': 0.04 }
+            source: PLATEAU_ORTHO_2023.id,
+            paint: { 'raster-opacity': 1 }
           }
         ]
       }
@@ -642,7 +643,7 @@ export class MapAdapter {
   handleMapError(event) {
     const sourceId = event?.sourceId;
     const message = event?.error?.message || 'データを読み込めませんでした';
-    if (sourceId === 'gsi-base') {
+    if (sourceId === PLATEAU_ORTHO_2023.id) {
       this.callbacks.onStatus('背景地図を読み込めませんでした', 'error');
     } else if (sourceId?.startsWith('region-boundary-')) {
       this.callbacks.onStatus('市区町村境界を読み込めませんでした', 'error');

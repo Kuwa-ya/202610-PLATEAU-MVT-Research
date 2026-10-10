@@ -19,11 +19,22 @@
 
 import { VIEW_RENDER_BACKEND } from '../config/defaults.js';
 import type { GeoJsonFeatureCollection } from './geojson-types.js';
+// @ts-expect-error 共有 geo（JS）
+import { footprintIntersectsRingLonLat } from '../../../../../shared/geo/point-in-polygon.js';
 import { buildingsFromCollection } from './geojson-buildings.js';
+import type { BuildingVolume } from './geojson-buildings.js';
 import type { RegionalMeshBounds } from './mesh-code.js';
 import type { UseDistrictHighlight } from './use-district-highlight.js';
 import { renderBuildingsObliqueWebGL } from './render-oblique-webgl.js';
 import { canvasToPngBytes, renderBuildingsOblique } from './render-oblique.js';
+
+function clipBuildingsToUseDistrict(
+  buildings: BuildingVolume[],
+  ring: Array<[number, number]>
+): BuildingVolume[] {
+  const clipped = buildings.filter(b => footprintIntersectsRingLonLat(b.outer, ring));
+  return clipped.length ? clipped : buildings;
+}
 
 export type BuildingFrameResult = {
   bytes: Uint8Array;
@@ -59,7 +70,10 @@ export async function renderCachedBldgFrame(request: RenderCachedBldgRequest): P
     height
   } = request;
 
-  const buildings = buildingsFromCollection(collection);
+  let buildings = buildingsFromCollection(collection);
+  if (useDistrictHighlight?.ring?.length) {
+    buildings = clipBuildingsToUseDistrict(buildings, useDistrictHighlight.ring);
+  }
   const renderStart = performance.now();
   const renderOpts = {
     width,

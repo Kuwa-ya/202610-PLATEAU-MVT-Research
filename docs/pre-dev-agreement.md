@@ -34,10 +34,12 @@
 
 ### 次のアクション（合意に基づく）
 
+**詳細タスク一覧（2D/3D UI・G2 地形・道路ドレープ等）:** [design/viewer-work-plan.md](design/viewer-work-plan.md)
+
 1. 京都府の市区町村 GeoJSON を出力し、内容を開発側で共有・通知する。
-2. 京都における **zoom 16 MVT** の実データ検証（東京と同様の観点で合格基準を定義）。
-3. 地理院 **Ortho 差し替え**で京都駅周辺の描画確認。
-4. Even G2：**静止画生成 → 実機送信**（[even-g2-3d-summary.md](even-g2-3d-summary.md) 検証 1〜3）を先行。
+2. 京都における **zoom 16 MVT** の実データ検証 — **ゲート脚本・合格基準**: [design/kyoto-z16-gate.md](design/kyoto-z16-gate.md)（`npm run verify:kyoto-z16-gate`）。
+3. 地表画像 — PLATEAU Ortho 部分配信を踏まえ **地理院標準／航空写真／PLATEAU Ortho の切替**（作業計画 A.2）。
+4. Even G2 — 検証 1〜4 は概ね完了。**地形 9 タイル・道路強調** 等は作業計画 B を参照。
 
 ### 未決・要検討
 
@@ -48,7 +50,7 @@
 | zoom 16 合格基準の文言 | 京都検証後に、東京と揃えた判定条件を本書または設計書に追記。 |
 | 検証順序 1〜6 のゲート | 必要なら承認・証跡の粒度を追加整理（現状は even-g2-3d-summary の表を参照）。 |
 | 性能の数値基準 | 画像サイズ・遅延は **実測後**に確定（転送優先の方針は合意済み）。 |
-| 用途地域クリッピングの実装方式 | 準必須。採用方式が決まったら design または integration メモにまとめる。 |
+| 用途地域クリッピングの実装方式 | G2 建物フィルタは [use-district-clip-g2.md](design/use-district-clip-g2.md)。2D luse→urf 連動は [viewer-work-plan.md](design/viewer-work-plan.md) B.4。 |
 | 共通化境界の細部 | 現行方針で進め、必要なら一覧を短く整理。 |
 
 ---
@@ -166,9 +168,9 @@
 合意後に変わった場合だけ、下記にメモする。
 
 - [x] 京都駅原点（緯度経度・小数 3 桁）を数値で記載した（34.986, 135.759）
-- [ ] 京都 zoom 16 検証完了・合格基準を文書化した
+- [x] 京都 zoom 16 検証完了・合格基準を文書化した（`docs/design/kyoto-z16-gate.md`, `npm run verify:kyoto-z16-gate`）
 - [ ] 京都府 GeoJSON / 索引をリポジトリに反映し共有した
-- [ ] Ortho 差し替えの結果を記録した
+- [x] Ortho 差し替え（PLATEAU Ortho 2023 — 2D MapLibre / 3D 地表テクスチャ既定）
 - [ ] 用途地域クリッピング方式を design 等に記載した
 - [ ] 「研究完了」の線引きを再合意した
 

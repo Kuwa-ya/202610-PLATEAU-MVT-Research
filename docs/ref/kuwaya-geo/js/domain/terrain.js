@@ -602,6 +602,14 @@ async function buildElevationGrid(loader, tile, decodeTile = decodeDemTile, sign
 
 function textureSource(type) {
   if (type === 'standard') return { id: 'std', extension: 'png', mimeType: 'image/png' };
+  if (type === 'plateau-ortho-2023') {
+    return {
+      id: 'plateau-ortho-2023',
+      extension: 'png',
+      mimeType: 'image/png',
+      urlTemplate: 'https://tile.plateauview.mlit.go.jp/tiles/plateau-ortho-2023/{z}/{x}/{y}.png'
+    };
+  }
   return { id: 'seamlessphoto', extension: 'jpg', mimeType: 'image/jpeg' };
 }
 
@@ -637,7 +645,12 @@ async function buildTexture(loader, tile, type, textureZoom, signal, priority) {
   const context = canvas.getContext('2d');
 
   await Promise.all(tiles.map(async item => {
-    const url = `https://cyberjapandata.gsi.go.jp/xyz/${source.id}/${item.z}/${item.x}/${item.y}.${source.extension}`;
+    const url = source.urlTemplate
+      ? source.urlTemplate
+          .replace('{z}', String(item.z))
+          .replace('{x}', String(item.x))
+          .replace('{y}', String(item.y))
+      : `https://cyberjapandata.gsi.go.jp/xyz/${source.id}/${item.z}/${item.x}/${item.y}.${source.extension}`;
     const bitmap = await loader.loadBitmap(url, `texture:${source.id}:${item.z}/${item.x}/${item.y}`, undefined, signal, priority);
     try {
       signal?.throwIfAborted();
