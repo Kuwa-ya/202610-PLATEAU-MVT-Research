@@ -1,4 +1,4 @@
-export type FrameTrigger = 'init' | 'tap' | 'gps' | 'tick';
+export type FrameTrigger = 'init' | 'tap' | 'gps' | 'tick' | 'heading';
 
 export type FrameSample = {
   at: string;

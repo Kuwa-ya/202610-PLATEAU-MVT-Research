@@ -1,6 +1,8 @@
+import { VIEW_RENDER_BACKEND } from '../config/defaults.js';
 import type { GeoJsonFeatureCollection } from './geojson-types.js';
 import { buildingsFromCollection } from './geojson-buildings.js';
 import type { RegionalMeshBounds } from './mesh-code.js';
+import { renderBuildingsObliqueWebGL } from './render-oblique-webgl.js';
 import { canvasToPngBytes, renderBuildingsOblique } from './render-oblique.js';
 
 export type BuildingFrameResult = {
@@ -37,14 +39,18 @@ export async function renderCachedBldgFrame(request: RenderCachedBldgRequest): P
 
   const buildings = buildingsFromCollection(collection);
   const renderStart = performance.now();
-  const canvas = renderBuildingsOblique(buildings, {
+  const renderOpts = {
     width,
     height,
     bounds,
     userLat: latitude,
     userLon: longitude,
     headingDeg
-  });
+  };
+  const canvas =
+    VIEW_RENDER_BACKEND === 'webgl'
+      ? renderBuildingsObliqueWebGL(buildings, renderOpts)
+      : renderBuildingsOblique(buildings, renderOpts);
   const bytes = await canvasToPngBytes(canvas);
   const renderMs = performance.now() - renderStart;
 

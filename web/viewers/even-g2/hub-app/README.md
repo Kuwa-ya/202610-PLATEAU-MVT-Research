@@ -26,7 +26,8 @@ Even Hub ポータルへ `.ehpk` をアップロード（Private build）。
 
 - GeoJSON DL: **11 桁メッシュが変わったときだけ**（`mesh-data-key.ts`）
 - 描画: 約 **750ms** ＋ 位置/方位の微小変化
-- 方位: コンパス（iOS は「コンパス許可」）・手動 ±15°
+- 既定は **Three.js WebGL** → 288×144 canvas → PNG → G2（`defaults.ts` の `VIEW_RENDER_BACKEND`。`canvas2d` で従来の `render-oblique.ts`）
+- 方位: **手動 ±15°**（歩行中は GPS 進行方位を加味）
 
 ## HTTP / HTTPS
 

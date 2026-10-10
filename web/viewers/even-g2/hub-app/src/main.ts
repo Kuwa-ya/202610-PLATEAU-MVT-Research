@@ -182,6 +182,11 @@ async function bootstrap() {
     hubDetail: runtime.mode === 'simulation' ? runtime.reason : 'Even Hub'
   });
 
+  headingSession.onHeadingChange(() => {
+    viewPresenter.present('heading', true).catch(console.error);
+    phonePanel.refresh();
+  });
+
   window.__g2Metrics = metrics;
   window.__g2Gps = gpsSession;
   window.__g2Heading = headingSession;

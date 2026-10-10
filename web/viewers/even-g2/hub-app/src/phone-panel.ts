@@ -1,7 +1,6 @@
 import { VIEW_REFRESH_MS } from './config/defaults.js';
 import type { GpsSession } from './geo/gps-session.js';
 import type { HeadingSession } from './geo/heading-session.js';
-import { compassNeedsPermissionPrompt } from './geo/device-orientation.js';
 import { getManualGeoControls } from './geo/manual-geo-dev.js';
 import type { FrameMetrics } from './metrics/frame-metrics.js';
 import { getPhonePreviewUrl, subscribePhonePreview } from './preview/phone-preview.js';
@@ -22,7 +21,6 @@ export function mountPhonePanel(
   if (!root) return { refresh: () => {} };
 
   const showManual = !window.isSecureContext;
-  const needsCompassPermission = compassNeedsPermissionPrompt();
 
   root.innerHTML = `
     <div style="font-family:system-ui,sans-serif;padding:16px;line-height:1.5;max-width:36rem">
@@ -30,7 +28,7 @@ export function mountPhonePanel(
       <p id="hub-mode-banner" style="margin:0 0 8px;padding:8px 10px;border-radius:8px;font-size:13px;line-height:1.4"></p>
       <p style="margin:0 0 12px;color:#555">
         約 ${VIEW_REFRESH_MS}ms ごとに再描画（GeoJSON は 11 桁メッシュが変わったときだけ DL）。
-        青い矢印＝向き（コンパスまたは下の回転）。
+        青い矢印＝向き（<strong>左/右 15°</strong>で調整。歩行中は GPS 進行方位を加味）。
       </p>
       <figure style="margin:0 0 12px">
         <img id="g2-phone-preview" alt="G2 プレビュー" width="288" height="144"
@@ -41,11 +39,6 @@ export function mountPhonePanel(
         <button type="button" data-heading="-15">左へ 15°</button>
         <button type="button" data-heading="15">右へ 15°</button>
         <button type="button" data-heading-reset>向きリセット</button>
-        ${
-          needsCompassPermission
-            ? '<button type="button" id="compass-permit">コンパス許可</button>'
-            : ''
-        }
       </div>
       ${
         showManual
@@ -81,10 +74,6 @@ export function mountPhonePanel(
   root.querySelector('#heading-controls')?.addEventListener('click', event => {
     const target = event.target;
     if (!(target instanceof HTMLButtonElement)) return;
-    if (target.id === 'compass-permit') {
-      heading.requestPermission().then(() => onViewRefresh());
-      return;
-    }
     if (target.hasAttribute('data-heading-reset')) {
       heading.resetManual();
       onViewRefresh();
@@ -132,8 +121,9 @@ export function mountPhonePanel(
   const refresh = () => {
     syncPreviewImage();
     if (!pre) return;
-    const headingLine = `向き: ${heading.getHeadingDeg().toFixed(0)}°`;
-    pre.textContent = `${gps.formatReport()}\n${headingLine}\n\n${metrics.formatPhoneReport()}`;
+    const headingLine = `表示向き: ${heading.getHeadingDeg().toFixed(0)}°`;
+    pre.textContent =
+      `${gps.formatReport()}\n${heading.formatHeadingStatus()}\n${headingLine}\n\n${metrics.formatPhoneReport()}`;
   };
   refresh();
   return { refresh };
