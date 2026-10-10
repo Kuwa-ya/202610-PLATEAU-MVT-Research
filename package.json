@@ -19,7 +19,10 @@
     "check:web-paths": "node scripts/check-web-paths.js",
     "precheck": "npm run check:boundaries && npm run check:mvt-style && npm run check:web-paths",
     "check": "node scripts/check-source.js && node scripts/check-mesh.js && node scripts/check-indexed-mvt.js",
-    "probe:kyoto-mvt": "node scripts/probe-kyoto-mvt.js"
+    "probe:kyoto-mvt": "node scripts/probe-kyoto-mvt.js",
+    "probe:kyoto-usedistrict": "node scripts/probe-kyoto-usedistrict.js",
+    "generate:g2-preview": "node scripts/generate-g2-preview-sample.js",
+    "dev:even-g2": "npm run dev --prefix web/viewers/even-g2/hub-app"
   },
   "engines": {
     "node": ">=20"

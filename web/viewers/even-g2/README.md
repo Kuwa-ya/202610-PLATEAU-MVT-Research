@@ -1,19 +1,29 @@
-# Even G2 向けアプリ（予定）
+# Even G2 向けアプリ
 
-Even Hub SDK 用のパッケージは、静的 `web/` ビューワとは **別ディレクトリ** で管理する。
+## いまできること（検証 1）
 
-## 方針
+1. [3D Viewer](/viewers/three/) で京都周辺を表示
+2. **G2 向けプレビュー保存** → `web/shared/g2/canvas-capture.js` で最大幅 640px の PNG
+3. [even-g2/index.html](./index.html) で手順とプレビュー確認
 
-- [even-g2-3d-summary.md](../../../docs/even-g2-3d-summary.md) — スマホ側描画 → 画像転送
-- 共通処理は `web/shared/`（MVT・座標・標高）を import して再利用する
-- 同梱データは **`web/data/`**（行政界 + ビルド済み `mvt/`）をパッケージに含める
-- SDK テンプレート: [evenhub-templates](https://github.com/even-realities/evenhub-templates)
+## 検証 2 — Even Hub SDK（最小アプリ）
 
-## 検証順序（要約）
+[`hub-app/`](./hub-app/) に Vite + `@evenrealities/even_hub_sdk` の構成があります。
 
-1. スマホ WebView で京都周辺の地形・土地利用を静止画化
-2. Even G2 へ画像送信
-3. 送信性能の実測
-4. GPS / 方位連動
+1. `hub-app/public/preview.png` は同梱済み（`npm run generate:g2-preview` で再生成可）。実画面に差し替える場合は検証 1 の PNG を同パスへコピー
+2. `cd hub-app && npm install && npm run dev`（開発サーバー・シミュレータ・実機 QR を一括起動）
+3. ルートからは `npm run dev:even-g2` でも可
 
-実装は Even Hub の推奨構成が確認でき次第、このディレクトリに最小アプリを追加する。
+## これから（検証 3 以降）
+
+- WebView 内での Three.js 描画 → 自動キャプチャ送信
+- GPS・方位・現在地属性（用途地域・建ぺい率・容積率）
+- 同梱データ: `web/data/`（`DATA_BASE` = `/data/mvt`）
+
+公式: [Even Hub ドキュメント](https://hub.evenrealities.com/docs/build/display)
+
+## 用途地域 MVT の調査
+
+```bash
+npm run probe:kyoto-usedistrict
+```

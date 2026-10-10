@@ -16,9 +16,15 @@ const files = [
   'web/viewers/maplibre/js/view/app-view.js',
   'web/viewers/maplibre/js/app.js',
   'web/viewers/three/js/app.js',
-  'web/viewers/three/js/mvt-controller.js',
-  'web/viewers/three/js/mvt-index.js',
-  'web/viewers/three/js/mvt-mesh.js'
+  'web/viewers/three/js/model/model.js',
+  'web/viewers/three/js/viewmodel/app-view-model.js',
+  'web/viewers/three/js/view/app-view.js',
+  'web/viewers/three/js/services/scene-adapter.js',
+  'web/viewers/three/js/services/mvt-controller.js',
+  'web/viewers/three/js/services/mvt-index.js',
+  'web/viewers/three/js/services/mvt-mesh.js',
+  'web/viewers/even-g2/hub-app/scripts/dev-all.js',
+  'scripts/generate-g2-preview-sample.js'
 ];
 
 for (const file of files) {

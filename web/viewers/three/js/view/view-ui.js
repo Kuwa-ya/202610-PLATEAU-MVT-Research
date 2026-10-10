@@ -26,6 +26,7 @@ export function bindViewUi(document) {
     originStatus: document.querySelector('#origin-status'),
     viewReset: document.querySelector('#view-reset'),
     viewZoomMvt: document.querySelector('#view-zoom-mvt'),
+    g2CapturePreview: document.querySelector('#g2-capture-preview'),
     currentLatitude: document.querySelector('#current-latitude'),
     currentLongitude: document.querySelector('#current-longitude'),
     cameraDistance: document.querySelector('#camera-distance'),

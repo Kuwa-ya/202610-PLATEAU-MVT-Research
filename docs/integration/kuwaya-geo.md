@@ -8,9 +8,9 @@
 
 | kuwaya-geo | MVT 統合 |
 | --- | --- |
-| `lod.js` / `settingForDistance` | `BUILDING_MIN_LOD` / `TRANSPORT_MIN_LOD`（16）以上で [`mvt-controller.js`](../../web/viewers/three/js/mvt-controller.js) の `sync()` |
+| `lod.js` / `settingForDistance` | `BUILDING_MIN_LOD` / `TRANSPORT_MIN_LOD`（16）以上で [`mvt-controller.js`](../../web/viewers/three/js/services/mvt-controller.js) の `sync()` |
 | `terrain-controller.js` の `moveend` 相当 | カメラ更新後に MVT sync |
 | `selection-controller.js` / エクスポート | 設計書 §10.4: MVT 閾値未満では不可（メッセージ） |
 | 静的データ | リポジトリ `data/manifest` + `data/index` |
 
-索引ローダーは [`mvt-index.js`](../../web/viewers/three/js/mvt-index.js) をES moduleとして再利用できます。
+索引ローダーは [`mvt-index.js`](../../web/viewers/three/js/services/mvt-index.js) をES moduleとして再利用できます。

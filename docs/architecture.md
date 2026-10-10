@@ -16,6 +16,19 @@ Webアプリはビルド不要のVanilla JSとし、ブラウザ標準ES Modules
 | `services/indexed-mvt-protocol.js` | Service | z16タイルを静的索引から自治体別MVT URLへ解決 |
 | `app.js` | Composition Root | 各要素の生成とコールバック接続。`web/viewers/maplibre/js/` 直下に配置 |
 
+### Three.js Viewer（`web/viewers/three/js/`）
+
+MapLibre と同様に MVVM を分離します。`app.js` は Composition Root のみです。
+
+| ファイル | 区分 | 責務 |
+|---|---|---|
+| `model/model.js` | Model | 初期画面状態・MVT 距離などの定数 |
+| `viewmodel/app-view-model.js` | ViewModel | ステータス・ローディング・MVT メタデータ・原点の保持と通知 |
+| `view/app-view.js` | View | DOM 操作とユーザー操作の受け口、ViewModel の状態反映 |
+| `view/view-ui.js` | View | 要素参照・タブ UI・メタデータ表示ヘルパ |
+| `services/scene-adapter.js` | View Adapter | Three.js シーン、地形 PoC、MVT 同期、カメラループ |
+| `services/mvt-*.js` 等 | Service | MVT 索引・デコード・メッシュ、地形 PoC、座標系 |
+
 ## データフロー
 
 ```text
