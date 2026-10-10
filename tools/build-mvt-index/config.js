@@ -50,6 +50,16 @@ export const DATASETS = Object.freeze([
     lodSuffix: '-lod1',
     sourceLayer: 'Road',
     specSuffix: 'tran-lod1'
+  },
+  {
+    id: 'use-district-2025',
+    featureType: 'urf-usedistrict',
+    catalogTypeEn: 'urf',
+    catalogIdIncludes: 'UseDistrict',
+    sourceLayer: 'UseDistrict',
+    specSuffix: 'urf-UseDistrict-lod1',
+    /** composite TileJSON は別地物型を指すため、カタログ row.url を直接使う */
+    useCatalogMvtUrl: true
   }
 ]);
 

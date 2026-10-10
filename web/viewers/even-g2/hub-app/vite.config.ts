@@ -1,5 +1,7 @@
-import { dirname, join } from 'node:path';
+import { createReadStream, existsSync, statSync } from 'node:fs';
+import { dirname, extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { Plugin } from 'vite';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 import { defineConfig } from 'vite';
 
@@ -15,11 +17,44 @@ const hubMode =
 export const EVEN_G2_BUILD_DIR = join(hubAppRoot, '..', '..', '..', 'data', 'output', 'even-g2');
 export const EVEN_G2_DIST_DIR = join(EVEN_G2_BUILD_DIR, 'dist');
 
+const dataRoot = join(webRoot, 'data');
+
+function serveWebDataPlugin(): Plugin {
+  return {
+    name: 'serve-web-data',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const url = req.url?.split('?')[0] ?? '';
+        if (!url.startsWith('/data/')) return next();
+        const relative = normalize(url.slice('/data/'.length));
+        if (relative.startsWith('..')) {
+          res.statusCode = 403;
+          res.end();
+          return;
+        }
+        const filePath = resolve(dataRoot, relative);
+        if (!filePath.startsWith(resolve(dataRoot)) || !existsSync(filePath) || !statSync(filePath).isFile()) {
+          res.statusCode = 404;
+          res.end();
+          return;
+        }
+        const types: Record<string, string> = {
+          '.json': 'application/json; charset=utf-8',
+          '.mvt': 'application/vnd.mapbox-vector-tile',
+          '.geojson': 'application/geo+json; charset=utf-8'
+        };
+        res.setHeader('Content-Type', types[extname(filePath)] ?? 'application/octet-stream');
+        createReadStream(filePath).pipe(res);
+      });
+    }
+  };
+}
+
 export default defineConfig({
   define: {
     'import.meta.env.VITE_HUB_MODE': JSON.stringify(hubMode)
   },
-  plugins: useHttps ? [basicSsl()] : [],
+  plugins: [serveWebDataPlugin(), ...(useHttps ? [basicSsl()] : [])],
   server: {
     host: true,
     port: 5173,

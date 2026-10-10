@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PLATEAU MVT LAB</title>
-  <meta name="description" content="Cesiumを使わず、MapLibreでPLATEAUの土地利用・道路MVTを検証するビューア" />
+  <meta name="description" content="MapLibreでPLATEAUの土地利用・道路・用途地域MVTを検証するビューア" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1215'/%3E%3Cpath d='M13 45 25 18l9 18 7-13 10 22' fill='none' stroke='%2347e6b1' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="/vendor/maplibre-gl/maplibre-gl.css" />
   <style>
@@ -122,6 +122,21 @@
     .swatch { width: 11px; height: 11px; border-radius: 3px; }
     .swatch.landuse { background: var(--accent); }
     .swatch.road { background: var(--accent-2); }
+    .swatch.usedistrict { background: #c084fc; }
+    .feature-summary { margin: 0 0 10px; color: #e9d5ff; font-size: 0.86rem; line-height: 1.45; }
+    .feature-metrics {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 12px;
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(192, 132, 252, 0.08);
+      font-size: 0.8rem;
+    }
+    .feature-metrics dt { color: var(--muted); }
+    .feature-metrics dd { margin: 0; color: var(--ink); }
 
     .toggle {
       position: relative;
@@ -224,7 +239,7 @@
     }
     .zoom-gate.visible { display: block; }
 
-    .maplibregl-ctrl-top-right { top: 58px; right: 6px; }
+    .maplibregl-ctrl-top-right { top: 16px; right: 6px; }
     .maplibregl-ctrl-group { overflow: hidden; border: 1px solid var(--line) !important; border-radius: 11px !important; background: rgba(10,18,21,.9) !important; box-shadow: 0 10px 24px rgba(0,0,0,.22) !important; }
     .maplibregl-ctrl-group button { filter: invert(1) opacity(.82); }
     .maplibregl-ctrl-attrib { background: rgba(5,10,12,.75) !important; color: #a7b7b3; }
@@ -281,9 +296,18 @@
           <div class="layer-card">
             <div class="layer-head">
               <div class="layer-name"><span class="swatch road"></span>道路 LOD1 <code>tran</code></div>
-              <button id="toggle-road" class="toggle" type="button" aria-label="道路レイヤーを切り替える" aria-pressed="true"></button>
+              <button id="toggle-road" class="toggle" type="button" aria-label="道路レイヤーを切り替える" aria-pressed="false"></button>
             </div>
             <label class="range-row">透明度<input id="opacity-road" type="range" min="0" max="100" value="58" /><span id="opacity-road-value" class="range-value">58%</span></label>
+          </div>
+
+          <div class="layer-card">
+            <div class="layer-head">
+              <div class="layer-name"><span class="swatch usedistrict"></span>用途地域 <code>USE_DISTRICT</code></div>
+              <button id="toggle-use-district" class="toggle" type="button" aria-label="用途地域レイヤーを切り替える" aria-pressed="false"></button>
+            </div>
+            <label class="range-row">透明度<input id="opacity-use-district" type="range" min="0" max="100" value="38" /><span id="opacity-use-district-value" class="range-value">38%</span></label>
+            <p class="hint">索引 <code>use-district-2025</code>。クリックで <code>urf_function</code>・建ぺい率・容積率を表示。</p>
           </div>
 
           <div class="layer-card">

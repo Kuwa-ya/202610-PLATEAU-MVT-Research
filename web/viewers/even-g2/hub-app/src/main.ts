@@ -198,12 +198,20 @@ async function bootstrap() {
     }
   );
 
-  phonePanel = mountPhonePanel(metrics, gpsSession, () => {
-    viewPresenter.present('tick', true).catch(console.error);
-  }, {
-    hubMode: runtime.mode,
-    hubDetail: runtime.mode === 'simulation' ? runtime.reason : 'Even Hub'
-  });
+  phonePanel = mountPhonePanel(
+    metrics,
+    gpsSession,
+    () => {
+      viewPresenter.present('tick', true).catch(console.error);
+    },
+    {
+      hubMode: runtime.mode,
+      hubDetail: runtime.mode === 'simulation' ? runtime.reason : 'Even Hub'
+    },
+    () => {
+      viewPresenter.onUserRingTap().catch(console.error);
+    }
+  );
 
   window.__g2Metrics = metrics;
   window.__g2Gps = gpsSession;
@@ -270,7 +278,7 @@ async function bootstrap() {
       const textType = eventTypeOf(event.textEvent);
 
       if (sysType === OsEventTypeList.CLICK_EVENT || textType === OsEventTypeList.CLICK_EVENT) {
-        viewPresenter.present('tap', true).catch(console.error);
+        viewPresenter.onUserRingTap().catch(console.error);
         return;
       }
 

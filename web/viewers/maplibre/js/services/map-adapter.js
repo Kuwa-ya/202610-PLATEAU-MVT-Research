@@ -1,6 +1,7 @@
 import { DEFAULT_VIEWER_LOCATION } from '../../../../shared/geo/viewer-defaults.js';
 import { BOUNDARY_LAYERS } from '../../../../shared/mvt/data-region.js';
 import { maplibreLuseFillColorExpression } from '../../../../shared/mvt/feature-style.js';
+import { USE_DISTRICT_DATASET_ID } from '../../../../shared/mvt/use-district.js';
 import { MeshUtils } from '../model/mesh-utils.js';
 import { Model } from '../model/model.js';
 import { createIndexedMvtProtocol } from './indexed-mvt-protocol.js';
@@ -29,8 +30,8 @@ export class MapAdapter {
     this.mvtSourcesPromise = null;
     this.indexedMvt = createIndexedMvtProtocol();
     this.sourceIds = [];
-    this.layerIds = { luse: [], road: [] };
-    this.fillLayerIds = { luse: [], road: [] };
+    this.layerIds = { luse: [], road: [], useDistrict: [] };
+    this.fillLayerIds = { luse: [], road: [], useDistrict: [] };
     this.meshMarkers = [];
     this.webTileMarkers = [];
     this.webTileLabelGeneration = 0;
@@ -57,8 +58,15 @@ export class MapAdapter {
       container: this.containerId,
       center: [DEFAULT_VIEWER_LOCATION.longitude, DEFAULT_VIEWER_LOCATION.latitude],
       zoom: 16.2,
+      bearing: 0,
+      pitch: 0,
       minZoom: 5,
       maxZoom: 19,
+      minPitch: 0,
+      maxPitch: 0,
+      dragRotate: false,
+      pitchWithRotate: false,
+      touchPitch: false,
       hash: true,
       attributionControl: false,
       style: {
@@ -85,10 +93,18 @@ export class MapAdapter {
       }
     });
 
-    this.map.addControl(new this.maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
+    this.map.addControl(
+      new this.maplibregl.NavigationControl({ showCompass: false, visualizePitch: false }),
+      'top-right'
+    );
     this.map.addControl(new this.maplibregl.AttributionControl({ compact: true }), 'bottom-right');
 
+    this.map.dragRotate?.disable?.();
+    this.map.touchZoomRotate?.disableRotation?.();
+    this.map.touchPitch?.disable?.();
+
     this.map.on('load', () => {
+      this.enforceFlatView();
       this.ready = true;
       this.ensureOverlayLayers();
       if (this.pendingState) this.sync(this.pendingState);
@@ -97,7 +113,10 @@ export class MapAdapter {
       this.callbacks.onStatus(`${Model.CONFIG.dataYear}年度 PLATEAU MVT 接続済み`, 'ready');
     });
 
-    this.map.on('moveend', () => this.emitViewport());
+    this.map.on('moveend', () => {
+      this.enforceFlatView();
+      this.emitViewport();
+    });
     this.map.on('zoomend', () => this.emitViewport());
     this.map.on('sourcedataloading', event => {
       if (this.sourceIds.includes(event.sourceId)) this.callbacks.onStatus('MVTを読み込み中', 'loading');
@@ -120,10 +139,24 @@ export class MapAdapter {
 
     if (!this.mvtSourcesReady) {
       if (!this.mvtSourcesPromise) {
-        this.mvtSourcesPromise = this.syncMvtSources().then(() => {
-          this.mvtSourcesReady = true;
-          this.sync(this.pendingState);
-        }).catch(error => this.callbacks.onStatus(error.message, 'error'));
+        this.mvtSourcesPromise = this.syncMvtSources()
+          .then(summary => {
+            if (summary?.useDistrictLayerCount === 0) {
+              this.callbacks.onStatus(
+                '用途地域なし — `npm run build:mvt-index:use-district` を実行してください',
+                'error'
+              );
+            }
+          })
+          .catch(error => {
+            console.error('[map] syncMvtSources', error);
+            this.callbacks.onStatus(error.message, 'error');
+          })
+          .finally(() => {
+            this.mvtSourcesReady = true;
+            if (this.pendingState) this.syncMvtStyle(this.pendingState);
+            this.sync(this.pendingState);
+          });
       }
     } else {
       this.syncMvtStyle(state);
@@ -154,7 +187,24 @@ export class MapAdapter {
 
   goToPlace(placeId) {
     const place = Model.PLACES[placeId];
-    if (place && this.map) this.map.easeTo({ center: place.center, zoom: place.zoom, duration: 900 });
+    if (place && this.map) {
+      this.map.easeTo({
+        center: place.center,
+        zoom: place.zoom,
+        bearing: 0,
+        pitch: 0,
+        duration: 900
+      });
+    }
+  }
+
+  /** 常に真上からの 2D（URL hash に傾きが残っていてもリセット） */
+  enforceFlatView() {
+    if (!this.map) return;
+    const bearing = this.map.getBearing();
+    const pitch = this.map.getPitch();
+    if (Math.abs(bearing) < 0.01 && Math.abs(pitch) < 0.01) return;
+    this.map.jumpTo({ bearing: 0, pitch: 0 });
   }
 
   emitViewport() {
@@ -225,15 +275,58 @@ export class MapAdapter {
     this.sourceErrors.clear();
     this.callbacks.onStats({ requests: 0, bytes: 0 });
 
-    const definitions = [
-      { kind: 'luse', datasetId: 'luse-2025', sourceLayer: 'luse' },
-      { kind: 'road', datasetId: 'tran-lod1-2025', sourceLayer: 'Road' }
+    const primary = [
+      { kind: 'luse', datasetId: 'luse-2025', sourceLayer: 'luse', required: true },
+      { kind: 'road', datasetId: 'tran-lod1-2025', sourceLayer: 'Road', required: true }
     ];
-    for (const definition of definitions) {
-      const manifest = await this.indexedMvt.loadManifest(definition.datasetId);
-      for (const city of manifest.cities) this.addMvtCity(definition, city.cityCode);
+    const luseCodes = await this.loadMvtDefinitionCities(primary[0]);
+    await this.loadMvtDefinitionCities(primary[1]);
+
+    const useDistrictDef = {
+      kind: 'useDistrict',
+      datasetId: USE_DISTRICT_DATASET_ID,
+      sourceLayer: 'UseDistrict',
+      required: false
+    };
+    let useDistrictLayerCount = 0;
+    try {
+      const manifest = await this.indexedMvt.loadManifest(USE_DISTRICT_DATASET_ID);
+      const cities = luseCodes.size
+        ? manifest.cities.filter(city => luseCodes.has(city.cityCode))
+        : manifest.cities;
+      useDistrictLayerCount = await this.loadMvtDefinitionCities(useDistrictDef, cities);
+    } catch (error) {
+      console.warn('用途地域 manifest 未生成:', error.message);
     }
+
     this.bringOverlaysToFront();
+    return { useDistrictLayerCount };
+  }
+
+  /** @returns {Promise<number>} 追加した fill レイヤ数 */
+  async loadMvtDefinitionCities(definition, citiesOverride = null) {
+    let manifest;
+    try {
+      manifest = await this.indexedMvt.loadManifest(definition.datasetId);
+    } catch (error) {
+      if (definition.required) throw error;
+      console.warn(`${definition.datasetId}:`, error.message);
+      return 0;
+    }
+    const cities = citiesOverride ?? manifest.cities;
+    let added = 0;
+    for (const city of cities) {
+      try {
+        this.addMvtCity(definition, city.cityCode);
+        if (definition.kind === 'useDistrict') added += 1;
+      } catch (error) {
+        console.warn(`MVTレイヤ追加スキップ ${definition.kind}/${city.cityCode}:`, error.message);
+      }
+    }
+    if (definition.kind === 'luse') {
+      return new Set(cities.map(city => city.cityCode));
+    }
+    return added;
   }
 
   addMvtCity({ kind, datasetId, sourceLayer }, cityCode) {
@@ -250,6 +343,14 @@ export class MapAdapter {
     });
 
     const isLuse = kind === 'luse';
+    const isUseDistrict = kind === 'useDistrict';
+    const defaultFill = isLuse
+      ? maplibreLuseFillColorExpression()
+      : isUseDistrict
+        ? '#c084fc'
+        : '#ffc85a';
+    const defaultOpacity = isLuse ? 0.46 : isUseDistrict ? 0.38 : 0.58;
+    const defaultLine = isLuse ? '#116d54' : isUseDistrict ? '#6d28d9' : '#7f5c12';
     this.map.addLayer({
         id: fill,
         type: 'fill',
@@ -257,8 +358,8 @@ export class MapAdapter {
         'source-layer': sourceLayer,
         minzoom: Model.CONFIG.mvtMinZoom,
         paint: {
-          'fill-color': this.selectedAwareValue('#ff4d8d', isLuse ? maplibreLuseFillColorExpression() : '#ffc85a'),
-          'fill-opacity': this.featureOpacity(isLuse ? 0.46 : 0.58, 0.78)
+          'fill-color': this.selectedAwareValue('#ff4d8d', defaultFill),
+          'fill-opacity': this.featureOpacity(defaultOpacity, 0.78)
         }
     });
     this.map.addLayer({
@@ -268,9 +369,9 @@ export class MapAdapter {
         'source-layer': sourceLayer,
         minzoom: Model.CONFIG.mvtMinZoom,
         paint: {
-          'line-color': this.selectedAwareValue('#ffffff', isLuse ? '#116d54' : '#7f5c12'),
-          'line-width': this.selectedAwareValue(3.2, ['interpolate', ['linear'], ['zoom'], 14, isLuse ? 0.5 : 0.6, 17, isLuse ? 1.4 : 1.6]),
-          'line-opacity': this.featureOpacity(isLuse ? 0.84 : 0.9, 1)
+          'line-color': this.selectedAwareValue('#ffffff', defaultLine),
+          'line-width': this.selectedAwareValue(3.2, ['interpolate', ['linear'], ['zoom'], 14, isUseDistrict ? 0.55 : isLuse ? 0.5 : 0.6, 17, isUseDistrict ? 1.5 : isLuse ? 1.4 : 1.6]),
+          'line-opacity': this.featureOpacity(isUseDistrict ? 0.88 : isLuse ? 0.84 : 0.9, 1)
         }
     });
     this.sourceIds.push(source);
@@ -287,17 +388,20 @@ export class MapAdapter {
       if (this.map.getSource(id)) this.map.removeSource(id);
     });
     this.sourceIds = [];
-    this.layerIds = { luse: [], road: [] };
-    this.fillLayerIds = { luse: [], road: [] };
+    this.layerIds = { luse: [], road: [], useDistrict: [] };
+    this.fillLayerIds = { luse: [], road: [], useDistrict: [] };
   }
 
   syncMvtStyle(state) {
-    for (const kind of ['luse', 'road']) {
-      const visibility = state.visibility[kind] ? 'visible' : 'none';
+    const defaultOpacity = { luse: 0.46, road: 0.58, useDistrict: 0.38 };
+    for (const kind of ['luse', 'road', 'useDistrict']) {
+      const visible = state.visibility?.[kind] !== false;
+      const visibility = visible ? 'visible' : 'none';
       this.layerIds[kind].forEach(id => {
         if (this.map.getLayer(id)) this.map.setLayoutProperty(id, 'visibility', visibility);
       });
-      const opacity = this.featureOpacity(state.opacity[kind], 0.78);
+      const baseOpacity = state.opacity?.[kind] ?? defaultOpacity[kind];
+      const opacity = this.featureOpacity(baseOpacity, 0.78);
       this.fillLayerIds[kind].forEach(id => {
         if (this.map.getLayer(id)) this.map.setPaintProperty(id, 'fill-opacity', opacity);
       });
@@ -441,7 +545,11 @@ export class MapAdapter {
   }
 
   interactiveLayerIds() {
-    return [...this.fillLayerIds.luse, ...this.fillLayerIds.road].filter(id => this.map.getLayer(id));
+    return [
+      ...this.fillLayerIds.luse,
+      ...this.fillLayerIds.useDistrict,
+      ...this.fillLayerIds.road
+    ].filter(id => this.map.getLayer(id));
   }
 
   handleMouseMove(event) {
@@ -470,7 +578,12 @@ export class MapAdapter {
     const popup = document.createElement('div');
     const label = document.createElement('div');
     label.className = 'popup-label';
-    label.textContent = feature.layer.id.startsWith('luse-') ? 'LAND USE' : 'ROAD';
+    const layerId = feature.layer.id;
+    label.textContent = layerId.startsWith('luse-')
+      ? 'LAND USE'
+      : layerId.startsWith('useDistrict-')
+        ? 'USE DISTRICT'
+        : 'ROAD';
     const value = document.createElement('div');
     value.className = 'popup-id';
     value.textContent = String(feature.properties?.gml_id || feature.properties?.mvt_id || 'IDなし');

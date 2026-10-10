@@ -31,17 +31,16 @@ hub-app で計測。実機では合計・SDK・平均とも **おおよそ 300�
 
 計測 UI: スマホパネル / G2 ステータス / `window.__g2Metrics.getSamples()`。
 
-## 検証 4 — GPS 連動
+## 検証 4 — GPS ＋ 現在地建物描画
 
-hub-app で `navigator.geolocation` を監視。**10 m 以上**移動かつ **500 ms** 以上空いたときに画像を再送（初回 fix は基準点のみ）。スマホパネルに座標・再送回数・`window.__g2Gps` を表示。画像はまだ同じ `preview.png`（次段で位置に応じた描画へ差し替え）。
+hub-app で GPS（または手動移動）に連動し、**kuwa-ya 建物 GeoJSON** を WebGL 描画して G2 送信。詳細は [`hub-app/README.md`](./hub-app/README.md)。
 
-実機: **`npm run dev`（HTTP）** で起動。端末 GPS は HTTP では使えない → スマホ画面の **手動 15m 移動ボタン**で検証 4 の再送を試す。**シミュレータ**では localhost 経由で本物 GPS が使える。
+## これから（B）
 
-## これから（検証 5 以降）
+1. **2D Viewer** — 用途地域 `use-district-2025` 索引＋MapLibre レイヤー（クリックで建ぺい率・容積率）。索引生成: `npm run build:mvt-index:use-district`
+2. **G2** — 2D で属性確認後、右テキストを **タップで情報切替** などに整理して属性表示。
 
-- WebView 内での Three.js 描画 → 位置に応じた自動キャプチャ
-- 方位・用途地域・建ぺい率・容積率
-- 同梱データ: `web/data/`（`DATA_BASE` = `/data/mvt`）
+同梱データ: `web/data/`（`DATA_BASE` = `/data/mvt`）
 
 公式: [Even Hub ドキュメント](https://hub.evenrealities.com/docs/build/display)
 

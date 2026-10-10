@@ -56,11 +56,25 @@ function matchesDataset(row, dataset) {
   if (dataset.featureType === 'tran') {
     return typeEn === 'tran' && String(row.lod ?? '') === '1';
   }
+  if (dataset.featureType === 'urf-usedistrict') {
+    const id = String(row.id ?? '');
+    const needle = dataset.catalogIdIncludes ?? 'UseDistrict';
+    return typeEn === 'urf' && id.includes(needle);
+  }
   return false;
 }
 
 async function resolveTileJson(row, dataset) {
   const cityCode = row.city_code;
+  if (dataset.useCatalogMvtUrl && row.url?.includes('{z}')) {
+    return {
+      maxzoom: FETCH_Z,
+      minzoomCatalog: 10,
+      mvtUrlTemplate: row.url,
+      sourceLayer: row.layers?.[0] ?? dataset.sourceLayer,
+      tilejsonUrl: row.composite_url ?? row.url
+    };
+  }
   const spec = `${cityCode}-${dataset.specSuffix}-${DATA_YEAR}`;
   const tilejsonUrl = row.composite_url
     ?? `https://api.plateauview.mlit.go.jp/datacatalog/mvt/${spec}/tilejson.json`;
@@ -206,7 +220,12 @@ async function main() {
   }
   const rows = catalog.datasets ?? [];
 
+  const datasetFilter = process.env.MVT_DATASET_ID
+    ? process.env.MVT_DATASET_ID.split(',').map(s => s.trim()).filter(Boolean)
+    : null;
+
   for (const dataset of DATASETS) {
+    if (datasetFilter?.length && !datasetFilter.includes(dataset.id)) continue;
     console.log(`\n=== ${dataset.id} ===`);
     const manifestPath = join(dataRoot, MVT_OUTPUT_RELATIVE, 'manifest', `${dataset.id}.json`);
     const manifest = process.env.REUSE_MANIFESTS === '1' && existsSync(manifestPath)

@@ -2,10 +2,10 @@ import * as THREE from 'three';
 import type { BuildingVolume } from './geojson-buildings.js';
 import type { RegionalMeshBounds } from './mesh-code.js';
 import type { ObliqueRenderOptions } from './render-oblique.js';
+import { enToGroundVector3, lonLatToEnMeters } from './en-footprint.js';
 import { getViewCameraSpherical } from '../view/view-camera-state.js';
 
 const DEG_TO_RAD = Math.PI / 180;
-const METERS_PER_DEG_LAT = 111_320;
 
 function lonLatToEn(
   lon: number,
@@ -14,11 +14,7 @@ function lonLatToEn(
   userLat: number,
   pivotLat: number
 ): { east: number; north: number } {
-  const cosLat = Math.cos(pivotLat * DEG_TO_RAD);
-  return {
-    east: (lon - userLon) * METERS_PER_DEG_LAT * cosLat,
-    north: (lat - userLat) * METERS_PER_DEG_LAT
-  };
+  return lonLatToEnMeters(lon, lat, userLon, userLat, pivotLat);
 }
 
 /**
@@ -87,6 +83,28 @@ function getRenderer(width: number, height: number): THREE.WebGLRenderer {
   return sharedRenderer;
 }
 
+function addUseDistrictOutline(
+  world: THREE.Group,
+  ring: Array<[number, number]>,
+  userLon: number,
+  userLat: number,
+  pivotLat: number
+) {
+  if (ring.length < 3) return;
+  const pts = ring.map(([lon, lat]) => {
+    const { east, north } = lonLatToEn(lon, lat, userLon, userLat, pivotLat);
+    const g = enToGroundVector3(east, north, 0.5);
+    return new THREE.Vector3(g.x, g.y, g.z);
+  });
+  const geom = new THREE.BufferGeometry().setFromPoints(pts);
+  world.add(
+    new THREE.LineLoop(
+      geom,
+      new THREE.LineBasicMaterial({ color: 0xc084fc, transparent: true, opacity: 0.95 })
+    )
+  );
+}
+
 function addUserMarker(world: THREE.Group, movementBearingDeg: number | null) {
   const ringGeom = new THREE.RingGeometry(2.8, 4.6, 28);
   const ring = new THREE.Mesh(
@@ -130,7 +148,7 @@ export function renderBuildingsObliqueWebGL(
   buildings: BuildingVolume[],
   options: ObliqueRenderOptions
 ): HTMLCanvasElement {
-  const { width, height, userLat, userLon, movementBearingDeg } = options;
+  const { width, height, userLat, userLon, movementBearingDeg, useDistrictRing } = options;
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x1a1f24);
@@ -147,6 +165,10 @@ export function renderBuildingsObliqueWebGL(
   const pivotLat = userLat;
   for (const building of buildings) {
     world.add(buildingMesh(building, pivotLat, userLon, userLat));
+  }
+
+  if (useDistrictRing?.length) {
+    addUseDistrictOutline(world, useDistrictRing, userLon, userLat, pivotLat);
   }
 
   addUserMarker(world, movementBearingDeg);

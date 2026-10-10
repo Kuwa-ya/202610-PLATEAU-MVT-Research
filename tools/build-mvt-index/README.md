@@ -19,3 +19,13 @@ npm run build:mvt-index
 | 変数 | 意味 |
 | --- | --- |
 | `SKIP_CATALOG_FETCH=1` | スナップショット JSON を再利用（TileJSON 取得は行う） |
+| `MVT_DATASET_ID` | カンマ区切りでデータセットだけビルド（例: `use-district-2025`） |
+| `REUSE_MANIFESTS=1` | 既存 manifest を読み直して index だけ再生成 |
+
+用途地域のみ:
+
+```bash
+npm run build:mvt-index:use-district
+```
+
+`urf:UseDistrict` は composite TileJSON が別地物型を指すため、manifest はカタログの **直 URL テンプレート** を記録します。

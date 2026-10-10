@@ -55,7 +55,7 @@ async function loadCachedJson(cache, key, url, allowMissing = false) {
   }
 }
 
-async function loadManifest(datasetId) {
+export async function loadMvtManifest(datasetId) {
   const manifest = await loadCachedJson(
     manifestCache,
     datasetId,
@@ -65,6 +65,10 @@ async function loadManifest(datasetId) {
     manifest.byCode = new Map(manifest.cities.map(city => [city.cityCode, city]));
   }
   return manifest;
+}
+
+async function loadManifest(datasetId) {
+  return loadMvtManifest(datasetId);
 }
 
 async function loadIndex(datasetId, parentKey) {
@@ -77,11 +81,15 @@ async function loadIndex(datasetId, parentKey) {
   );
 }
 
-async function resolveCityCodes(datasetId, z, x, y) {
+export async function resolveMvtCityCodes(datasetId, z, x, y) {
   const tile = canonicalFetchTile(z, x, y);
   if (!tile) return [];
   const index = await loadIndex(datasetId, parentKeyForTile(tile.x, tile.y));
   return pickFetchCityCodes(index?.tiles?.[`${tile.x}/${tile.y}`]);
+}
+
+async function resolveCityCodes(datasetId, z, x, y) {
+  return resolveMvtCityCodes(datasetId, z, x, y);
 }
 
 function tileUrl(city, z, x, y) {

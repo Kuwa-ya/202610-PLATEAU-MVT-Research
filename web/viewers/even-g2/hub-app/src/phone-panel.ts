@@ -14,7 +14,8 @@ export function mountPhonePanel(
   metrics: FrameMetrics,
   gps: GpsSession,
   onViewRefresh: () => void,
-  hub: PhonePanelHubInfo = { hubMode: 'simulation' }
+  hub: PhonePanelHubInfo = { hubMode: 'simulation' },
+  onPreviewTap?: () => void
 ) {
   const root = document.querySelector('#app');
   if (!root) return { refresh: () => {} };
@@ -27,7 +28,7 @@ export function mountPhonePanel(
       <p id="hub-mode-banner" style="margin:0 0 8px;padding:8px 10px;border-radius:8px;font-size:13px;line-height:1.4"></p>
       <p style="margin:0 0 12px;color:#555">
         約 ${VIEW_REFRESH_MS}ms ごとに再描画（GeoJSON は 11 桁メッシュが変わったときだけ DL）。
-        地図は<strong>北上固定</strong>。黄矢印＝直前位置からの移動方向。G2 実機では<strong>上/下スワイプ</strong>でカメラ仰角。
+        地図は<strong>北上固定</strong>。黄矢印＝直前位置からの移動方向。<strong>プレビュー／G2 タップ</strong>で現在地の用途地域を表示（再タップで OFF）。G2 実機では<strong>上/下スワイプ</strong>でカメラ仰角。
       </p>
       <figure style="margin:0 0 12px">
         <img id="g2-phone-preview" alt="G2 プレビュー" width="288" height="144"
@@ -94,6 +95,12 @@ export function mountPhonePanel(
   };
 
   subscribePhonePreview(syncPreviewImage);
+
+  if (onPreviewTap && previewImg) {
+    previewImg.style.cursor = 'pointer';
+    previewImg.title = 'タップで用途地域を表示／非表示';
+    previewImg.addEventListener('click', () => onPreviewTap());
+  }
 
   const refresh = () => {
     syncPreviewImage();

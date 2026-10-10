@@ -57,7 +57,8 @@ function offsetMeters(lat: number, lon: number, northM: number, eastM: number) {
 function collectProjectedPoints(
   buildings: BuildingVolume[],
   bounds: RegionalMeshBounds,
-  frame: SceneFrame
+  frame: SceneFrame,
+  useDistrictRing?: Array<[number, number]>
 ): Point2[] {
   const points: Point2[] = [];
   const cornerLons = [bounds.west, bounds.east];
@@ -67,6 +68,12 @@ function collectProjectedPoints(
       points.push(projectLonLat(lon, lat, 0, frame));
     }
   }
+  if (useDistrictRing) {
+    for (const [lon, lat] of useDistrictRing) {
+      points.push(projectLonLat(lon, lat, 0, frame));
+    }
+  }
+
   for (const building of buildings) {
     const h = building.heightM;
     for (const [lon, lat] of building.outer) {
@@ -164,6 +171,8 @@ export type ObliqueRenderOptions = {
   userLon: number;
   /** 直前位置からの移動方位（0=北）。null なら矢印なし */
   movementBearingDeg: number | null;
+  /** 用途地域の外環（中心タップ時） */
+  useDistrictRing?: Array<[number, number]>;
   paddingPx?: number;
 };
 
@@ -180,7 +189,7 @@ export function renderBuildingsOblique(
     headingDeg: 0
   };
 
-  const projected = collectProjectedPoints(buildings, bounds, frame);
+  const projected = collectProjectedPoints(buildings, bounds, frame, options.useDistrictRing);
   const { toScreen } = fitProjectedPoints(projected, width, height, padding);
 
   const projectRing = (ring: Array<[number, number, number]>, heightM: number): Point2[] =>
@@ -198,6 +207,23 @@ export function renderBuildingsOblique(
   const sorted = [...buildings].sort(
     (a, b) => buildingDepthKey(a, frame) - buildingDepthKey(b, frame)
   );
+
+  const districtRing = options.useDistrictRing;
+  if (districtRing && districtRing.length >= 3) {
+    const ground = districtRing.map(([lon, lat]) => toScreen(projectLonLat(lon, lat, 0, frame)));
+    ctx.strokeStyle = 'rgba(192, 132, 252, 0.95)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    for (let i = 0; i < ground.length; i += 1) {
+      const p = ground[i];
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
 
   for (const building of sorted) {
     const enRing = ringEnPoints(building.outer, frame);

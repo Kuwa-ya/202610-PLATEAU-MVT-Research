@@ -1,4 +1,10 @@
 import { Model } from '../model/model.js';
+import {
+  formatUseDistrictSummary,
+  useDistrictCoveragePercent,
+  useDistrictFloorAreaPercent,
+  useDistrictLabel
+} from '../../../../shared/mvt/use-district.js';
 
 export class AppView {
   constructor(documentRef, viewModel, mapAdapter) {
@@ -20,13 +26,16 @@ export class AppView {
       inspector: this.must('inspector'),
       toggleLuse: this.must('toggle-luse'),
       toggleRoad: this.must('toggle-road'),
+      toggleUseDistrict: this.must('toggle-use-district'),
       toggleCityBoundary: this.must('toggle-city-boundary'),
       toggleMesh: this.must('toggle-mesh'),
       toggleWebTile: this.must('toggle-web-tile'),
       opacityLuse: this.must('opacity-luse'),
       opacityRoad: this.must('opacity-road'),
+      opacityUseDistrict: this.must('opacity-use-district'),
       opacityLuseValue: this.must('opacity-luse-value'),
-      opacityRoadValue: this.must('opacity-road-value')
+      opacityRoadValue: this.must('opacity-road-value'),
+      opacityUseDistrictValue: this.must('opacity-use-district-value')
     };
 
     this.bindEvents();
@@ -44,13 +53,15 @@ export class AppView {
     const toggles = [
       [elements.toggleLuse, 'luse'],
       [elements.toggleRoad, 'road'],
+      [elements.toggleUseDistrict, 'useDistrict'],
       [elements.toggleCityBoundary, 'cityBoundary'],
       [elements.toggleMesh, 'mesh'],
       [elements.toggleWebTile, 'webTile']
     ];
     for (const [element, kind] of toggles) {
       element.addEventListener('click', () => {
-        this.viewModel.setVisibility(kind, element.getAttribute('aria-pressed') !== 'true');
+        const current = this.viewModel.getState().visibility[kind];
+        this.viewModel.setVisibility(kind, !current);
       });
     }
 
@@ -60,6 +71,9 @@ export class AppView {
     elements.opacityRoad.addEventListener('input', () => {
       this.viewModel.setOpacity('road', Number(elements.opacityRoad.value) / 100);
     });
+    elements.opacityUseDistrict.addEventListener('input', () => {
+      this.viewModel.setOpacity('useDistrict', Number(elements.opacityUseDistrict.value) / 100);
+    });
 
     this.document.querySelectorAll('[data-place]').forEach(button => {
       button.addEventListener('click', () => this.map.goToPlace(button.dataset.place));
@@ -67,18 +81,22 @@ export class AppView {
   }
 
   render(state) {
-    this.setToggle(this.elements.toggleLuse, state.visibility.luse);
-    this.setToggle(this.elements.toggleRoad, state.visibility.road);
+    this.setToggle(this.elements.toggleLuse, state.visibility?.luse !== false);
+    this.setToggle(this.elements.toggleRoad, state.visibility?.road !== false);
+    this.setToggle(this.elements.toggleUseDistrict, state.visibility?.useDistrict !== false);
     this.setToggle(this.elements.toggleCityBoundary, state.visibility.cityBoundary);
     this.setToggle(this.elements.toggleMesh, state.visibility.mesh);
     this.setToggle(this.elements.toggleWebTile, state.visibility.webTile);
 
-    const lusePercent = Math.round(state.opacity.luse * 100);
-    const roadPercent = Math.round(state.opacity.road * 100);
+    const lusePercent = Math.round((state.opacity?.luse ?? 0.46) * 100);
+    const roadPercent = Math.round((state.opacity?.road ?? 0.58) * 100);
+    const useDistrictPercent = Math.round((state.opacity?.useDistrict ?? 0.38) * 100);
     this.elements.opacityLuse.value = String(lusePercent);
     this.elements.opacityRoad.value = String(roadPercent);
+    this.elements.opacityUseDistrict.value = String(useDistrictPercent);
     this.elements.opacityLuseValue.textContent = `${lusePercent}%`;
     this.elements.opacityRoadValue.textContent = `${roadPercent}%`;
+    this.elements.opacityUseDistrictValue.textContent = `${useDistrictPercent}%`;
 
     this.elements.status.classList.toggle('loading', state.status.mode === 'loading');
     this.elements.status.classList.toggle('error', state.status.mode === 'error');
@@ -120,15 +138,51 @@ export class AppView {
     container.replaceChildren();
     if (!feature) {
       container.className = 'inspector-empty';
-      container.textContent = '地図上の土地利用または道路をクリックすると、MVTに含まれる属性を表示します。';
+      container.textContent = '土地利用・用途地域・道路をクリックすると属性を表示します（用途地域は建ぺい率・容積率を上部に要約）。';
       return;
     }
 
     container.className = '';
+    const layerId = feature.layer.id;
+    const isUseDistrict = layerId.startsWith('useDistrict-');
+    const props = feature.properties || {};
+
     const title = this.document.createElement('h3');
     title.className = 'feature-title';
-    title.textContent = feature.layer.id.startsWith('luse-') ? '土地利用' : '道路';
+    title.textContent = layerId.startsWith('luse-')
+      ? '土地利用'
+      : isUseDistrict
+        ? '用途地域'
+        : '道路';
     container.append(title);
+
+    if (isUseDistrict) {
+      const summary = this.document.createElement('p');
+      summary.className = 'feature-summary';
+      summary.textContent = formatUseDistrictSummary(props);
+      container.append(summary);
+
+      const metrics = this.document.createElement('dl');
+      metrics.className = 'feature-metrics';
+      const rows = [
+        ['種別', useDistrictLabel(props), false],
+        ['建ぺい率', useDistrictCoveragePercent(props), true],
+        ['容積率', useDistrictFloorAreaPercent(props), true]
+      ];
+      for (const [label, value, asPercent] of rows) {
+        const dt = this.document.createElement('dt');
+        dt.textContent = label;
+        const dd = this.document.createElement('dd');
+        dd.textContent =
+          value == null || value === ''
+            ? '—'
+            : asPercent
+              ? `${value}%`
+              : String(value);
+        metrics.append(dt, dd);
+      }
+      container.append(metrics);
+    }
 
     const list = this.document.createElement('div');
     list.className = 'properties';

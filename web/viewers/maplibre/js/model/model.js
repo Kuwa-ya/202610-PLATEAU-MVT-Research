@@ -26,10 +26,16 @@ function geometrySignature(feature) {
   return `${feature.geometry.type}:${JSON.stringify(normalize(feature.geometry.coordinates))}`;
 }
 
+function layerKindFromId(layerId) {
+  if (layerId.startsWith('luse-')) return 'luse';
+  if (layerId.startsWith('useDistrict-')) return 'useDistrict';
+  return 'road';
+}
+
 function uniqueRenderedFeatures(features) {
   const seen = new Set();
   return features.filter(feature => {
-    const kind = feature.layer.id.startsWith('luse-') ? 'luse' : 'road';
+    const kind = layerKindFromId(feature.layer.id);
     const featureId = feature.properties?.gml_id ?? feature.properties?.mvt_id;
     const key = featureId === undefined
       ? `${kind}:${geometrySignature(feature)}`
@@ -42,8 +48,8 @@ function uniqueRenderedFeatures(features) {
 
 function createInitialState() {
   return {
-    visibility: { luse: true, road: true, cityBoundary: true, mesh: true, webTile: false },
-    opacity: { luse: 0.46, road: 0.58 },
+    visibility: { luse: true, road: false, useDistrict: false, cityBoundary: true, mesh: true, webTile: false },
+    opacity: { luse: 0.46, road: 0.58, useDistrict: 0.38 },
     status: { message: '地図を準備中', mode: 'loading' },
     stats: { zoom: null, requests: 0, bytes: 0 },
     viewport: {
@@ -59,6 +65,7 @@ export const Model = Object.freeze({
   PLACES,
   createInitialState,
   geometrySignature,
+  layerKindFromId,
   layerId,
   sourceId,
   uniqueRenderedFeatures

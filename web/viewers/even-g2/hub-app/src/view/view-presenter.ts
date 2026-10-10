@@ -6,6 +6,10 @@ import type { FrameSample, FrameTrigger } from '../metrics/frame-metrics.js';
 import { BldgMeshCache } from '../plateau/bldg-mesh-cache.js';
 import { renderCachedBldgFrame } from '../plateau/building-frame.js';
 import { regionalBldgMeshKey } from '../plateau/mesh-data-key.js';
+import {
+  fetchUseDistrictHighlight,
+  type UseDistrictHighlight
+} from '../plateau/use-district-highlight.js';
 
 export type PresentHooks = {
   onFrame: (sample: FrameSample, detail: PresentDetail) => void | Promise<void>;
@@ -21,6 +25,9 @@ export type PresentDetail = {
   /** 直前フレームからの移動方位（null=静止） */
   movementBearingDeg: number | null;
   dataFetched: boolean;
+  /** 中心タップで用途地域表示 ON のとき */
+  useDistrictSummary: string | null;
+  useDistrictMiss: boolean;
 };
 
 type LastPresent = {
@@ -38,6 +45,10 @@ export class ViewPresenter {
   private last: LastPresent | null = null;
   private inFlight = false;
   private timer: ReturnType<typeof setInterval> | null = null;
+  private useDistrictVisible = false;
+  private useDistrictHighlight: UseDistrictHighlight | null = null;
+  private useDistrictMiss = false;
+  private useDistrictAbort: AbortController | null = null;
 
   constructor(
     getFix: () => GeoFix | null,
@@ -65,6 +76,46 @@ export class ViewPresenter {
   stop() {
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
+    this.useDistrictAbort?.abort();
+    this.useDistrictAbort = null;
+  }
+
+  /** 現在地（リング）タップ: 用途地域の表示／非表示を切り替え */
+  async onUserRingTap(): Promise<void> {
+    if (this.useDistrictVisible) {
+      this.useDistrictVisible = false;
+      this.useDistrictHighlight = null;
+      this.useDistrictMiss = false;
+      this.useDistrictAbort?.abort();
+      this.useDistrictAbort = null;
+      await this.present('tap', true);
+      return;
+    }
+
+    const fix = this.getFix();
+    if (!fix) return;
+
+    this.useDistrictVisible = true;
+    this.useDistrictAbort?.abort();
+    const ac = new AbortController();
+    this.useDistrictAbort = ac;
+    try {
+      this.useDistrictHighlight = await fetchUseDistrictHighlight(
+        fix.latitude,
+        fix.longitude,
+        ac.signal
+      );
+      this.useDistrictMiss = !this.useDistrictHighlight;
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        console.error('[use-district]', error);
+      }
+      this.useDistrictHighlight = null;
+      this.useDistrictMiss = true;
+    } finally {
+      if (this.useDistrictAbort === ac) this.useDistrictAbort = null;
+    }
+    await this.present('tap', true);
   }
 
   async present(trigger: FrameTrigger, force = false): Promise<FrameSample | null> {
@@ -102,6 +153,7 @@ export class ViewPresenter {
         latitude,
         longitude,
         movementBearingDeg,
+        useDistrictHighlight: this.useDistrictVisible ? this.useDistrictHighlight : null,
         width: this.width,
         height: this.height
       });
@@ -124,7 +176,12 @@ export class ViewPresenter {
         geoFetchMs: fetched ? geoFetchMs : 0,
         renderMs: built.renderMs,
         movementBearingDeg,
-        dataFetched: fetched
+        dataFetched: fetched,
+        useDistrictSummary:
+          this.useDistrictVisible && this.useDistrictHighlight
+            ? this.useDistrictHighlight.summary
+            : null,
+        useDistrictMiss: this.useDistrictVisible && this.useDistrictMiss
       });
 
       this.last = { lat: latitude, lon: longitude, meshKey };

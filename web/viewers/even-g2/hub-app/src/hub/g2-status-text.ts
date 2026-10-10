@@ -10,11 +10,17 @@ export function formatG2StatusMeta(fix: GeoFix, detail: PresentDetail): string {
     detail.movementBearingDeg != null
       ? `移動 ${Math.round(detail.movementBearingDeg)}°`
       : '北上固定';
-  return [
+  const lines = [
     formatFixShort(fix),
     `${move} · ${fetchTag}`,
     `面 ${detail.ringCount} · ${detail.meshCode}`
-  ].join('\n');
+  ];
+  if (detail.useDistrictSummary) {
+    lines.push(detail.useDistrictSummary);
+  } else if (detail.useDistrictMiss) {
+    lines.push('用途地域: 該当なし');
+  }
+  return lines.join('\n');
 }
 
 export function formatG2StatusPerf(sample: FrameSample, sdkResult: string): string {

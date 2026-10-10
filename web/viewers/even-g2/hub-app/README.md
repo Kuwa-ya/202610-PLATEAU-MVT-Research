@@ -1,6 +1,6 @@
 # Even Hub SDK — 建物 GeoJSON → G2 画像
 
-**現在地の PLATEAU 建物 GeoJSON**（kuwa-ya 本番）を **南側 45° 俯瞰**で描画し、288×144 PNG を G2 へ送ります（Even 接続時）。
+**現在地周辺の PLATEAU 建物 GeoJSON**（kuwa-ya 本番）を WebGL で斜め俯瞰し、**288×144** の PNG を G2 へ送ります（Even 接続時）。地図は **北上固定**、黄矢印は **直前位置からの移動方向**。
 
 ## 開発モード（推奨）
 
@@ -11,28 +11,37 @@
 | **`npm run dev:even`** | `VITE_HUB_MODE=even` — ブリッジ必須で G2 送信 |
 
 HTTP の実機 QR で「プロトタイプ・読み込み中…」が続くのは **Even WebView / TLS / ブリッジ**の制約が多いです。  
-**日常の検証はシミュレータ＋モバイルプレビュー**、**実機 G2 は `npm run pack` の `.ehpk` または HTTPS 配布**で確認する想定です。
+**日常の検証はシミュレータ＋モバイルプレビュー**、**実機 G2 は `npm run pack` の `.ehpk`** で確認する想定です。
 
 ## 本番・実機 G2
 
 ```bash
 npm run build    # VITE_HUB_MODE=even（vite production）
-npm run pack     # plateau-mvt-g2-v{app.jsonのversion}.ehpk（上書きしない）
+npm run pack     # web/data/output/even-g2/plateau-mvt-g2-v{app.json version}.ehpk
 ```
 
 Even Hub ポータルへ `.ehpk` をアップロード（Private build）。
 
 ## データ・描画
 
-- GeoJSON DL: **11 桁メッシュが変わったときだけ**（`mesh-data-key.ts`）
-- 描画: 約 **500ms** ＋ 位置/方位の微小変化
-- G2 レイアウト: **左 288×144 地図**、**右半分をテキスト 2 段**（位置・メッシュ / カメラ・送信）
-- 既定は **Three.js WebGL** → 288×144 canvas → PNG → G2（`defaults.ts` の `VIEW_RENDER_BACKEND`。`canvas2d` で従来の `render-oblique.ts`）
-- 方位: **GPS 進行方位**（静止時は 0°＝北）
-- カメラ: kuwaya Three 同型の球面（南固定・ユーザー注視）。G2 **上/下スワイプ**で仰角。距離既定約 280 m
-- 建物: 現在地 11 桁メッシュの **3×3 タイル**（最大 9 本の GeoJSON）をマージ
+- GeoJSON DL: 中心 **11 桁メッシュが変わったとき**（同一タイル内はキャッシュ再利用）
+- 取得範囲: 11 桁中心の **3×3（最大 9 タイル）** をマージ
+- 再描画: 約 **500 ms** ポーリング。移動 **&lt; 0.5 m** かつ同一メッシュならスキップ（`defaults.ts`）
+- G2 レイアウト: **左 288×144 地図**、**右テキスト 2 段**（位置・メッシュ / カメラ・送信 ms）
+- 描画: 既定 **Three.js WebGL**（`VIEW_RENDER_BACKEND=webgl`）。`canvas2d` で `render-oblique.ts` に切替可
+- 建物: 半透明。現在地はリング＋ポールで強調
+- カメラ: kuwaya 型球面（**南側固定**・ユーザー注視）。既定 **仰角 60°**（**15°〜90°**、G2 **上/下スワイプ**で変更）。距離既定約 **280 m**
 
-## HTTP / HTTPS
+## 検証の位置づけ（親 README と共通）
+
+| # | 内容 | 状態 |
+| --- | --- | --- |
+| 1–2 | 静止画 / SDK 最小アプリ | 済 |
+| 3 | 送信性能（実機 **300〜400 ms** 程度） | 済 |
+| 4 | GPS → 位置に応じた再描画 | 済（実機 `.ehpk` でも確認済み想定） |
+| 5+ | 用途地域・建ぺい率・容積率など | **一部** — 中心タップで MVT 照会・右テキスト表示・3D 紫ライン（再タップで OFF）。索引 `build:mvt-index:use-district` 要 |
+
+## HTTP / GPS
 
 | | QR 実機 HTTP | シミュレータ |
 | --- | --- | --- |
@@ -40,5 +49,7 @@ Even Hub ポータルへ `.ehpk` をアップロード（Private build）。
 | **simulation**（`dev:vite` 単体） | プレビュー可 | プレビューのみ |
 | **even** | 不安定になりがち | `dev:even` で試す |
 | **.ehpk** | アプリ経由で検証 | — |
+
+実機 HTTP では Geolocation が使えないことが多い → 開発用 **手動 15 m 移動ボタン**（非 Secure Context 時）。シミュレータ／localhost では GPS 可。
 
 公式: [Display API](https://hub.evenrealities.com/docs/build/display)

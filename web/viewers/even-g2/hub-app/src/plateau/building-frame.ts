@@ -2,6 +2,7 @@ import { VIEW_RENDER_BACKEND } from '../config/defaults.js';
 import type { GeoJsonFeatureCollection } from './geojson-types.js';
 import { buildingsFromCollection } from './geojson-buildings.js';
 import type { RegionalMeshBounds } from './mesh-code.js';
+import type { UseDistrictHighlight } from './use-district-highlight.js';
 import { renderBuildingsObliqueWebGL } from './render-oblique-webgl.js';
 import { canvasToPngBytes, renderBuildingsOblique } from './render-oblique.js';
 
@@ -21,6 +22,7 @@ export type RenderCachedBldgRequest = {
   latitude: number;
   longitude: number;
   movementBearingDeg: number | null;
+  useDistrictHighlight: UseDistrictHighlight | null;
   width: number;
   height: number;
 };
@@ -33,6 +35,7 @@ export async function renderCachedBldgFrame(request: RenderCachedBldgRequest): P
     latitude,
     longitude,
     movementBearingDeg,
+    useDistrictHighlight,
     width,
     height
   } = request;
@@ -45,7 +48,8 @@ export async function renderCachedBldgFrame(request: RenderCachedBldgRequest): P
     bounds,
     userLat: latitude,
     userLon: longitude,
-    movementBearingDeg
+    movementBearingDeg,
+    useDistrictRing: useDistrictHighlight?.ring
   };
   const canvas =
     VIEW_RENDER_BACKEND === 'webgl'
