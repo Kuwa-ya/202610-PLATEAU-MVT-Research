@@ -47,7 +47,8 @@ export function bindViewUi(document) {
     localOrigin: document.querySelector('#local-origin'),
     viewerMvtMode: document.querySelector('#viewer-mvt-mode'),
     viewerMvtTiles: document.querySelector('#viewer-mvt-tiles'),
-    inspector: document.querySelector('#inspector')
+    inspector: document.querySelector('#inspector'),
+    mapPopup: document.querySelector('#viewer-map-popup')
   };
 
   elements.menuToggle?.addEventListener('click', () => {

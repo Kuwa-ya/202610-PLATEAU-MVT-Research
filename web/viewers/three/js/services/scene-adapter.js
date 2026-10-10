@@ -36,6 +36,7 @@ import { MVT_MAX_CAMERA_DISTANCE } from './mvt-config.js';
 import { createMvtController } from './mvt-controller.js';
 import { mvtPickHoverAt, pickMvtAt } from './mvt-pick.js';
 import { layerKindFromDatasetId } from '../../../../shared/mvt/feature-inspect.js';
+import { findUseDistrictPicksOverlappingFootprint } from '../../../../shared/mvt/mvt-luse-urf-overlap.js';
 import { sampleDisplayedTerrainLocalY } from '/kuwaya-geo/js/domain/terrain.js';
 import { createTerrainPoc } from './terrain-poc.js';
 import { isTerrainVisible } from '../view/view-ui.js';
@@ -249,10 +250,17 @@ export async function createSceneAdapter(viewModel, { canvas, ui, readEnabledDat
         THREE, mvt.getRoot(), camera, canvas, event.clientX, event.clientY, origin
       );
       if (hit) {
-        mvt.setSelectedPick(hit.pick);
+        const kind = layerKindFromDatasetId(hit.pick.datasetId);
+        const relatedUseDistricts =
+          kind === 'luse' && hit.pick.footprint
+            ? findUseDistrictPicksOverlappingFootprint(mvt.getRoot(), hit.pick.footprint)
+            : [];
+        mvt.setSelectedPick(hit.pick, relatedUseDistricts);
         viewModel.setSelectedFeature({
-          kind: layerKindFromDatasetId(hit.pick.datasetId),
-          properties: hit.pick.properties ?? {}
+          kind,
+          properties: hit.pick.properties ?? {},
+          overlappingUseDistricts: relatedUseDistricts.map(entry => ({ ...entry.properties })),
+          popupAnchor: { clientX: event.clientX, clientY: event.clientY }
         });
       } else {
         mvt.setSelectedPick(null);

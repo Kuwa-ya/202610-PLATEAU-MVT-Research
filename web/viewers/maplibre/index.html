@@ -208,10 +208,15 @@
     .maplibregl-ctrl-group { overflow: hidden; border: 1px solid var(--line) !important; border-radius: 11px !important; background: #fff !important; box-shadow: var(--shadow) !important; }
     .maplibregl-ctrl-attrib { background: rgba(255,255,255,.85) !important; color: var(--muted); }
     .maplibregl-ctrl-attrib a { color: var(--accent); }
-    .maplibregl-popup-content { border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); box-shadow: var(--shadow); }
+    .maplibregl-popup-content { border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); box-shadow: var(--shadow); padding: 0; }
+    .maplibregl-popup-content .mvt-feature-popup { padding: 12px 14px 10px; box-shadow: none; border: none; }
     .maplibregl-popup-close-button { color: var(--muted); font-size: 20px; }
     .popup-label { color: var(--accent); font-size: 0.72rem; font-weight: 800; letter-spacing: .08em; }
-    .popup-id { max-width: 240px; margin-top: 4px; overflow-wrap: anywhere; font-size: .78rem; }
+    .popup-label--section { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); }
+    .popup-urf-block { margin-top: 6px; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+    .popup-urf-block:last-child { border-bottom: none; }
+    .popup-id { max-width: 280px; margin-top: 4px; overflow-wrap: anywhere; font-size: .78rem; }
+    .popup-id--summary { color: #6b21a8; font-weight: 600; }
 
     @media (max-width: 720px) {
       .sidebar { top: auto; height: min(46vh, 430px); width: auto; right: 10px; bottom: 10px; left: 10px; border-radius: 16px; }

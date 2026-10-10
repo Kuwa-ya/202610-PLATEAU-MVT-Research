@@ -152,7 +152,8 @@ export class AppView {
     container.replaceChildren();
     if (!feature) {
       container.className = 'inspector-empty';
-      container.textContent = '土地利用・用途地域・道路をクリックすると属性を表示します（用途地域は建ぺい率・容積率を上部に要約）。';
+      container.textContent =
+        'クリックした地物の概要を右に表示します。土地利用の重畳用途地域は地図上のポップアップに一覧します。';
       return;
     }
 

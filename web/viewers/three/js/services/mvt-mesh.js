@@ -24,7 +24,8 @@ import { classifyPolygonRings } from '../../../../shared/mvt/polygon-rings.js';
 import {
   drapeBufferGeometryY,
   MVT_FLAT_Y,
-  MVT_LUSE_DRAPE_OFFSET_M
+  MVT_LUSE_DRAPE_OFFSET_M,
+  MVT_URF_DRAPE_OFFSET_M
 } from './mvt-drape.js';
 
 function lonLatToLocal(lon, lat, origin, metersPerDegLon, metersPerDegLat) {
@@ -162,15 +163,20 @@ export function buildTileGroup(THREE, features, tileX, tileY, zoom, origin, opti
         // -90°では Z が反転し、地形（X=東、Z=南）と鏡像になってしまう。
         shapeGeom.rotateX(Math.PI / 2);
         shapeGeom.translate(0, MVT_FLAT_Y, 0);
-        const luseDrape = options.id === 'luse-2025' && drape?.sampleLocalY;
-        if (luseDrape) {
+        const drapeOffsetM =
+          options.id === 'luse-2025'
+            ? MVT_LUSE_DRAPE_OFFSET_M
+            : options.id === 'use-district-2025'
+              ? MVT_URF_DRAPE_OFFSET_M
+              : null;
+        if (drapeOffsetM != null && drape?.sampleLocalY) {
           drapeBufferGeometryY(
             shapeGeom,
             origin,
             metersPerDegLon,
             metersPerDegLat,
             drape.sampleLocalY,
-            MVT_LUSE_DRAPE_OFFSET_M
+            drapeOffsetM
           );
         }
         const fillOpacity =
@@ -178,6 +184,8 @@ export function buildTileGroup(THREE, features, tileX, tileY, zoom, origin, opti
             ? (options.roadFillOpacity ?? options.opacity)
             : options.opacity;
         const mesh = new THREE.Mesh(shapeGeom, fillMaterialFor(color, fillOpacity).clone());
+        if (options.id === 'luse-2025') mesh.renderOrder = 12;
+        else if (options.id === 'use-district-2025') mesh.renderOrder = 10;
         mesh.userData.mvtPick = {
           datasetId: options.id,
           properties: { ...feature.properties },

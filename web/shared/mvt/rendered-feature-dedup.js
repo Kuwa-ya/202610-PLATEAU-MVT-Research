@@ -1,3 +1,10 @@
+/** B.4 — クリック時は luse を useDistrict より優先 */
+const RENDERED_KIND_PICK_RANK = { luse: 0, useDistrict: 1, road: 2 };
+
+function renderedKindRank(kind) {
+  return RENDERED_KIND_PICK_RANK[kind] ?? 3;
+}
+
 /**
  * MapLibre queryRenderedFeatures 結果の重複排除。
  * 同一 gml_id / mvt_id は **ID のみ**でグループ化し、頂点数が多い（欠落が少ない）方を残す。
@@ -78,7 +85,15 @@ export function pickRenderedFeature(rawFeatures, { dedupe, layerKindFromId }) {
     };
   });
 
-  const pool = dedupe ? dedupeRenderedFeaturesById(list, layerKindFromId) : list;
+  const pool = dedupe ? dedupeRenderedFeaturesById(list, layerKindFromId) : [...list];
+  pool.sort((a, b) => {
+    const ka = layerKindFromId(a.layer?.id ?? '');
+    const kb = layerKindFromId(b.layer?.id ?? '');
+    const ra = renderedKindRank(ka);
+    const rb = renderedKindRank(kb);
+    if (ra !== rb) return ra - rb;
+    return 0;
+  });
   const feature = pool[0] ?? null;
 
   let chosenOrder = null;

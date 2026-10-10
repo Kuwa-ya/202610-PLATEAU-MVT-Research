@@ -86,6 +86,79 @@
 
 #mvt-canvas { width: 100%; height: 100%; display: block; touch-action: none; }
 
+.viewer-map-popup {
+  position: fixed;
+  z-index: 40;
+  max-width: min(320px, calc(100vw - 24px));
+  pointer-events: auto;
+}
+
+.mvt-feature-popup {
+  position: relative;
+  padding: 12px 14px 10px;
+  border: 1px solid var(--viewer-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--viewer-ink);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.mvt-feature-popup-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  border: none;
+  background: transparent;
+  color: var(--viewer-muted);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.mvt-feature-popup-label {
+  color: var(--viewer-accent, #b91c1c);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+  padding-right: 1.25rem;
+}
+
+.mvt-feature-popup-label--section {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--viewer-line);
+}
+
+.mvt-feature-popup-row {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.mvt-feature-popup-row--summary {
+  color: #6b21a8;
+  font-weight: 600;
+}
+
+.mvt-feature-popup-row--muted {
+  margin-top: 8px;
+  color: var(--viewer-muted);
+  font-size: 0.72rem;
+}
+
+.mvt-feature-popup-urf-block {
+  margin-top: 6px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--viewer-line);
+}
+
+.mvt-feature-popup-urf-block:last-child {
+  border-bottom: none;
+}
+
 .mvt-layer-settings .mvt-layer-card {
   margin-top: 8px;
   padding: 8px 10px;
@@ -138,6 +211,20 @@
   margin: 0 0 8px;
   font-size: 0.92rem;
   color: var(--viewer-ink);
+}
+.viewer-inspector-subtitle {
+  margin: 14px 0 8px;
+  font-size: 0.84rem;
+  color: var(--viewer-ink);
+}
+.viewer-inspector-urf-block {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--viewer-line);
+}
+.viewer-inspector-urf-block:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
 }
 .viewer-inspector-summary {
   margin: 0 0 10px;

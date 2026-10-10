@@ -77,11 +77,21 @@ export function pickMvtAt(THREE, root, camera, canvas, clientX, clientY, origin)
   return { pick: chosen.pick, mesh: chosen.mesh };
 }
 
-/** @param {{ datasetId: string, properties: object } | null} selectedPick */
-export function applyMvtSelectionHighlight(root, selectedPick) {
-  const selectedId =
-    selectedPick != null ? mvtFeatureId(selectedPick.properties) : null;
-  const selectedDataset = selectedPick?.datasetId ?? null;
+function pickMatchesHighlight(pick, entry) {
+  if (!entry) return false;
+  if (pick.datasetId !== entry.datasetId) return false;
+  const selectedId = mvtFeatureId(entry.properties);
+  const id = mvtFeatureId(pick.properties);
+  if (selectedId == null) return pick.properties === entry.properties;
+  return id === selectedId;
+}
+
+/**
+ * @param {{ datasetId: string, properties: object } | null} selectedPick
+ * @param {Array<{ datasetId: string, properties: object }>} [relatedPicks]
+ */
+export function applyMvtSelectionHighlight(root, selectedPick, relatedPicks = []) {
+  const related = Array.isArray(relatedPicks) ? relatedPicks : [];
 
   root.traverse(node => {
     if (!node.isMesh || !node.userData?.mvtPick) return;
@@ -92,13 +102,9 @@ export function applyMvtSelectionHighlight(root, selectedPick) {
       material.userData.mvtBaseOpacity = material.opacity;
     }
     const pick = node.userData.mvtPick;
-    const id = mvtFeatureId(pick.properties);
     const isSelected =
-      selectedPick != null
-      && pick.datasetId === selectedDataset
-      && (selectedId == null
-        ? pick.properties === selectedPick.properties
-        : id === selectedId);
+      pickMatchesHighlight(pick, selectedPick)
+      || related.some(entry => pickMatchesHighlight(pick, entry));
 
     if (isSelected) {
       material.color.setHex(HIGHLIGHT_COLOR);

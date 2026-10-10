@@ -67,3 +67,41 @@ export function layerKindFromDatasetId(datasetId) {
   if (String(datasetId ?? '').includes('tran')) return 'road';
   return 'luse';
 }
+
+/** B.4 — インスペクタに重畳用途地域ブロックを追加 */
+export function appendOverlappingUseDistrictsInspector(
+  documentRef,
+  container,
+  districts,
+  { formatUseDistrictSummary, inspectFieldsForLayerKind }
+) {
+  const list = Array.isArray(districts) ? districts : [];
+  if (!list.length) return;
+
+  const heading = documentRef.createElement('h4');
+  heading.className = 'viewer-inspector-subtitle';
+  heading.textContent = `重畳する用途地域（${list.length}）`;
+  container.append(heading);
+
+  for (const props of list) {
+    const block = documentRef.createElement('div');
+    block.className = 'viewer-inspector-urf-block';
+
+    const summary = documentRef.createElement('p');
+    summary.className = 'viewer-inspector-summary';
+    summary.textContent = formatUseDistrictSummary(props);
+    block.append(summary);
+
+    const metrics = documentRef.createElement('dl');
+    metrics.className = 'viewer-inspector-metrics';
+    for (const field of inspectFieldsForLayerKind('useDistrict', props)) {
+      const dt = documentRef.createElement('dt');
+      dt.textContent = field.label;
+      const dd = documentRef.createElement('dd');
+      dd.textContent = field.value;
+      metrics.append(dt, dd);
+    }
+    block.append(metrics);
+    container.append(block);
+  }
+}

@@ -8,7 +8,8 @@
 /** 地形サンプル失敗時（DEM 未読込など）の高さ — 従来のフラット MVT と同系 */
 export const MVT_FLAT_Y = 1.2;
 
-/** luse ドレープ時、サンプル標高からのオフセット（地面より上に浮かせる） */
+/** ドレープ時、サンプル標高からのオフセット（地面より上 — urf は低く、luse を上に） */
+export const MVT_URF_DRAPE_OFFSET_M = 1;
 export const MVT_LUSE_DRAPE_OFFSET_M = 2;
 
 /**

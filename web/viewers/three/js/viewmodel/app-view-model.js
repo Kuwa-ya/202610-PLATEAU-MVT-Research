@@ -86,9 +86,22 @@ export class AppViewModel extends EventTarget {
   setSelectedFeature(feature) {
     const prev = this.state.selectedFeature;
     const next = feature
-      ? { kind: feature.kind, properties: { ...feature.properties } }
+      ? {
+        kind: feature.kind,
+        properties: { ...feature.properties },
+        overlappingUseDistricts: (feature.overlappingUseDistricts ?? []).map(p => ({ ...p })),
+        popupAnchor: feature.popupAnchor
+          ? { clientX: feature.popupAnchor.clientX, clientY: feature.popupAnchor.clientY }
+          : null
+      }
       : null;
-    if (prev?.kind === next?.kind && prev?.properties?.gml_id === next?.properties?.gml_id) return;
+    if (
+      prev?.kind === next?.kind
+      && prev?.properties?.gml_id === next?.properties?.gml_id
+      && JSON.stringify(prev?.overlappingUseDistricts ?? [])
+        === JSON.stringify(next?.overlappingUseDistricts ?? [])
+      && JSON.stringify(prev?.popupAnchor ?? null) === JSON.stringify(next?.popupAnchor ?? null)
+    ) return;
     this.state.selectedFeature = next;
     this.notify();
   }

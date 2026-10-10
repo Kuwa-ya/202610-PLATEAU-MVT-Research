@@ -46,6 +46,8 @@ export function createMvtController(THREE, scene, getCameraState, options = {}) 
   let lastError = '';
   /** @type {{ datasetId: string, properties: object } | null} */
   let selectedPick = null;
+  /** @type {Array<{ datasetId: string, properties: object }>} */
+  let selectedRelatedPicks = [];
 
   function viewBounds(distance, center) {
     const spanDeg = Math.max(0.0015, (distance / 111_320) * 0.85);
@@ -114,6 +116,7 @@ export function createMvtController(THREE, scene, getCameraState, options = {}) 
     activeAbortController?.abort();
     activeAbortController = null;
     selectedPick = null;
+    selectedRelatedPicks = [];
     for (const group of tileGroups.values()) {
       root.remove(group);
       disposeObject3D(group);
@@ -251,6 +254,10 @@ export function createMvtController(THREE, scene, getCameraState, options = {}) 
 
     evictOutside(keepKeys);
 
+    if (selectedPick) {
+      applyMvtSelectionHighlight(root, selectedPick, selectedRelatedPicks);
+    }
+
     if (!getVisibleTileCount() && limited.length && loadErrors) {
       return {
         mode: 'error',
@@ -276,11 +283,17 @@ export function createMvtController(THREE, scene, getCameraState, options = {}) 
     return [...tileGroups.keys()].sort();
   }
 
-  function setSelectedPick(pick) {
+  function setSelectedPick(pick, relatedPicks = []) {
     selectedPick = pick
       ? { datasetId: pick.datasetId, properties: { ...pick.properties } }
       : null;
-    applyMvtSelectionHighlight(root, selectedPick);
+    selectedRelatedPicks = selectedPick
+      ? relatedPicks.map(entry => ({
+        datasetId: entry.datasetId,
+        properties: { ...entry.properties }
+      }))
+      : [];
+    applyMvtSelectionHighlight(root, selectedPick, selectedRelatedPicks);
   }
 
   function getRoot() {

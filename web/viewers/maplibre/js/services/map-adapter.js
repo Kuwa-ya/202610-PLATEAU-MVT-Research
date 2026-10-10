@@ -24,12 +24,17 @@ import { BOUNDARY_LAYERS } from '../../../../shared/mvt/data-region.js';
 import { maplibreLuseFillColorExpression } from '../../../../shared/mvt/feature-style.js';
 import { DEFAULT_BASEMAP } from '../../../../shared/geo/plateau-basemap.js';
 import { USE_DISTRICT_DATASET_ID } from '../../../../shared/mvt/use-district.js';
+import { buildMvtFeaturePopupElement } from '../../../../shared/mvt/mvt-feature-popup.js';
 import { MeshUtils } from '../model/mesh-utils.js';
+import { layerKindFromMapLayerId } from '../../../../shared/mvt/feature-inspect.js';
 import {
-  inspectFieldsForLayerKind,
-  layerKindFromMapLayerId
-} from '../../../../shared/mvt/feature-inspect.js';
-import { pickRenderedFeature } from '../../../../shared/mvt/rendered-feature-dedup.js';
+  geoJsonGeometryOverlapsFootprint,
+  footprintsFromGeoJsonGeometry
+} from '../../../../shared/geo/polygon-overlap-lonlat.js';
+import {
+  dedupeRenderedFeaturesById,
+  pickRenderedFeature
+} from '../../../../shared/mvt/rendered-feature-dedup.js';
 import { Model } from '../model/model.js';
 import { createIndexedMvtProtocol } from './indexed-mvt-protocol.js';
 
@@ -70,7 +75,8 @@ export class MapAdapter {
     this.requestUrls = new Set();
     this.transferredBytes = 0;
     this.sourceErrors = new Set();
-    this.selectedFeatureTarget = null;
+    this.selectedFeatureTargets = [];
+    this.clickPopup = null;
     this.basemap = DEFAULT_BASEMAP;
     this.dedupeFeaturesById = true;
     this.callbacks = {};
@@ -347,8 +353,19 @@ export class MapAdapter {
       console.warn('用途地域 manifest 未生成:', error.message);
     }
 
+    this.reorderMvtLayersForPick();
     this.bringOverlaysToFront();
     return { useDistrictLayerCount };
+  }
+
+  /** 描画・クリック: urf を下、luse を上（道路はその間） */
+  reorderMvtLayersForPick() {
+    const stackOrder = ['useDistrict', 'road', 'luse'];
+    for (const kind of stackOrder) {
+      for (const id of this.layerIds[kind] ?? []) {
+        if (this.map.getLayer(id)) this.map.moveLayer(id);
+      }
+    }
   }
 
   /** @returns {Promise<number>} 追加した fill レイヤ数 */
@@ -620,53 +637,99 @@ export class MapAdapter {
       this.callbacks.onFeatureSelected(null);
       return;
     }
-    this.selectFeatureOnMap(feature);
-    this.callbacks.onFeatureSelected(feature);
-
-    const popup = document.createElement('div');
     const layerId = feature.layer.id;
     const kind = layerKindFromMapLayerId(layerId);
-    const title = document.createElement('div');
-    title.className = 'popup-label';
-    title.textContent =
-      kind === 'luse' ? '土地利用' : kind === 'useDistrict' ? '用途地域' : '道路';
-    popup.append(title);
-    for (const field of inspectFieldsForLayerKind(kind, feature.properties)) {
-      const row = document.createElement('div');
-      row.className = 'popup-id';
-      row.textContent = `${field.label}: ${field.value}`;
-      popup.append(row);
-    }
-    new this.maplibregl.Popup({ closeButton: true, maxWidth: '280px' })
-      .setLngLat(event.lngLat)
+    const overlappingUseDistricts =
+      kind === 'luse' ? this.findUseDistrictFeaturesOverlappingLuse(feature) : [];
+    this.selectFeaturesOnMap(feature, overlappingUseDistricts);
+    this.callbacks.onFeatureSelected({
+      ...feature,
+      overlappingUseDistricts: overlappingUseDistricts.map(entry => ({ ...entry.properties }))
+    });
+
+    this.showClickPopup(event.lngLat, kind, feature.properties, overlappingUseDistricts);
+  }
+
+  showClickPopup(lngLat, kind, properties, overlappingUseDistricts = []) {
+    this.clickPopup?.remove();
+    this.clickPopup = null;
+
+    const popup = buildMvtFeaturePopupElement(document, {
+      kind,
+      properties,
+      overlappingUseDistricts: overlappingUseDistricts.map(entry => ({ ...entry.properties }))
+    }, { showClose: false });
+
+    this.clickPopup = new this.maplibregl.Popup({
+      closeButton: true,
+      maxWidth: '320px',
+      className: 'plateau-mvt-popup'
+    })
+      .setLngLat(lngLat)
       .setDOMContent(popup)
       .addTo(this.map);
+    this.clickPopup.on('close', () => {
+      if (this.clickPopup) this.clickPopup = null;
+    });
   }
 
   visibleRenderedFeatures(features) {
     return features;
   }
 
-  selectFeatureOnMap(feature) {
-    this.clearSelectedFeature();
-    if (feature.id === undefined || feature.id === null) return;
+  findUseDistrictFeaturesOverlappingLuse(luseFeature) {
+    const parts = footprintsFromGeoJsonGeometry(luseFeature?.geometry);
+    if (!parts.length) return [];
+    const layers = this.fillLayerIds.useDistrict.filter(id => this.map.getLayer(id));
+    if (!layers.length) return [];
+    const canvas = this.map.getCanvas();
+    const raw = this.map.queryRenderedFeatures(
+      [[0, 0], [canvas.width, canvas.height]],
+      { layers }
+    );
+    const pool = dedupeRenderedFeaturesById(raw, Model.layerKindFromId);
+    const hits = [];
+    for (const urf of pool) {
+      for (const part of parts) {
+        if (geoJsonGeometryOverlapsFootprint(urf.geometry, part)) {
+          hits.push(urf);
+          break;
+        }
+      }
+    }
+    return hits;
+  }
 
+  featureStateTarget(feature) {
+    if (feature?.id === undefined || feature?.id === null) return null;
     const target = {
       source: feature.source,
       sourceLayer: feature.sourceLayer,
       id: feature.id
     };
-    if (!target.source || !target.sourceLayer || !this.map.getSource(target.source)) return;
+    if (!target.source || !target.sourceLayer || !this.map.getSource(target.source)) return null;
+    return target;
+  }
 
-    this.map.setFeatureState(target, { selected: true });
-    this.selectedFeatureTarget = target;
+  selectFeaturesOnMap(primary, related = []) {
+    this.clearSelectedFeature();
+    const targets = [];
+    for (const feature of [primary, ...related]) {
+      const target = this.featureStateTarget(feature);
+      if (!target) continue;
+      this.map.setFeatureState(target, { selected: true });
+      targets.push(target);
+    }
+    this.selectedFeatureTargets = targets;
   }
 
   clearSelectedFeature() {
-    const target = this.selectedFeatureTarget;
-    this.selectedFeatureTarget = null;
-    if (!target || !this.map?.getSource(target.source)) return;
-    this.map.removeFeatureState(target, 'selected');
+    const targets = this.selectedFeatureTargets ?? [];
+    this.selectedFeatureTargets = [];
+    for (const target of targets) {
+      if (!target || !this.map?.getSource(target.source)) continue;
+      this.map.removeFeatureState(target, 'selected');
+    }
   }
 
   handleMapError(event) {

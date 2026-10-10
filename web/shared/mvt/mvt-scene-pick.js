@@ -6,8 +6,8 @@ import { pointInPolygonLonLat } from '../geo/point-in-ring.js';
 import { layerKindFromDatasetId } from './feature-inspect.js';
 import { mvtFeatureId } from './rendered-feature-dedup.js';
 
-/** 塗り順の近似（上にあるほど先に選ぶ） */
-const KIND_PICK_RANK = { road: 0, useDistrict: 1, luse: 2 };
+/** B.4: 重なり時は土地利用を先に選び、交差 URF をインスペクタへ */
+const KIND_PICK_RANK = { luse: 0, useDistrict: 1, road: 2 };
 
 export function mvtPickKindRank(datasetId) {
   const kind = layerKindFromDatasetId(datasetId);

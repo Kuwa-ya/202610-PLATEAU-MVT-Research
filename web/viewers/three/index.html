@@ -104,7 +104,7 @@
                 <span class="mvt-layer-name"><i class="mvt-swatch usedistrict"></i>用途地域 <code>USE_DISTRICT</code></span>
                 <button id="toggle-mvt-usedistrict" class="layer-switch" type="button" aria-label="用途地域を切り替える" aria-pressed="false"></button>
               </div>
-              <p class="control-note">索引 <code>use-district-2025</code>。クリック照会は 2D LAB。3D はタイル境界クリップ描画。</p>
+              <p class="control-note">索引 <code>use-district-2025</code>。土地利用クリックで重畳 URF を一覧・強調（B.4）。luse/urf は地形ドレープ。</p>
             </div>
           </fieldset>
 
@@ -149,13 +149,14 @@
 
         <div class="viewer-panel-section viewer-readout-section">
           <h2 class="viewer-section-title">選択地物</h2>
-          <div id="inspector" class="inspector-empty">土地利用・用途地域・道路をクリックすると属性を表示します。</div>
+          <div id="inspector" class="inspector-empty">クリックした地物は地図上のポップアップに表示します。</div>
         </div>
       </aside>
 
       <section class="viewer-panel">
         <div id="viewer" class="viewer" aria-label="3D MVT 表示">
           <canvas id="mvt-canvas"></canvas>
+          <div id="viewer-map-popup" class="viewer-map-popup" hidden aria-live="polite"></div>
           <div class="viewer-state" aria-live="polite">
             <div><span>地形</span><strong id="viewer-current-lod">準備中</strong></div>
             <div id="viewer-requested-row" hidden><span>ロード</span><strong id="viewer-requested-lod">—</strong></div>

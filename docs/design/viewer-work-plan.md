@@ -170,7 +170,7 @@ Even G2 を主成果物とし、2D MapLibre を検証基盤、3D Three を条件
 | 2 | **B.1** Three 地面＋底図（既存 PoC 維持） | Even 地面は **スコープ外** |
 | 3 | **B.2** 道路ドレープ（Three 優先、Even は luse ラップのみ） | Three 地形メッシュに依存 |
 | 4 | **B.3** 用途地域 3D | B.1/B.2 のパターン流用 |
-| 5 | **B.4** luse → urf 連動 | 2D/3D 共有ジオメトリ＋索引 |
+| 5 | ~~**B.4**~~ luse → urf 連動 | 2026-10-11 — 2D/3D 交差抽出・一覧・強調 |
 
 ---
 
@@ -202,3 +202,4 @@ Even G2 を主成果物とし、2D MapLibre を検証基盤、3D Three を条件
 | 2026-10-11 | Three **tran**: タイル内 `gml_id` dedupe 省略、`LineSegments` バッチ。表示濃さ **現在地＞道路＞建物**（`VIEWER_VISUAL`） |
 | 2026-10-11 | **Even G2 道路**: luse 3×3 **並列 fetch**、DEM **一括**（900 点 cap）、メッシュ **1 本化**。G2 は tran 非使用 — [g2-display-and-address.md](./g2-display-and-address.md) §1.0 |
 | 2026-10-11 | Three MVT クリック: 2D 同型（`luse_class` 等）— 地面投影 PIP + `gml_id` dedupe、タイル跨ぎ **#ff4d8d** ハイライト |
+| 2026-10-11 | **B.3/B.4** Three: `use-district-2025` を luse 同様ドレープ。B.4: luse クリック → 交差 URF 一覧・**#ff4d8d** 強調（2D 同期） |
