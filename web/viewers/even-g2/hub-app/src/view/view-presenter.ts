@@ -28,6 +28,8 @@ export type PresentDetail = {
   /** 中心タップで用途地域表示 ON のとき */
   useDistrictSummary: string | null;
   useDistrictMiss: boolean;
+  /** 取得失敗時の短い理由（G2 右パネル） */
+  useDistrictHint: string | null;
 };
 
 type LastPresent = {
@@ -48,6 +50,7 @@ export class ViewPresenter {
   private useDistrictVisible = false;
   private useDistrictHighlight: UseDistrictHighlight | null = null;
   private useDistrictMiss = false;
+  private useDistrictHint: string | null = null;
   private useDistrictAbort: AbortController | null = null;
 
   constructor(
@@ -86,6 +89,7 @@ export class ViewPresenter {
       this.useDistrictVisible = false;
       this.useDistrictHighlight = null;
       this.useDistrictMiss = false;
+      this.useDistrictHint = null;
       this.useDistrictAbort?.abort();
       this.useDistrictAbort = null;
       await this.present('tap', true);
@@ -106,12 +110,16 @@ export class ViewPresenter {
         ac.signal
       );
       this.useDistrictMiss = !this.useDistrictHighlight;
+      this.useDistrictHint = null;
     } catch (error) {
       if (!(error instanceof DOMException && error.name === 'AbortError')) {
         console.error('[use-district]', error);
       }
       this.useDistrictHighlight = null;
       this.useDistrictMiss = true;
+      const msg = error instanceof Error ? error.message : String(error);
+      this.useDistrictHint =
+        /HTTP 404/.test(msg) ? '用途地域索引なし（再 pack）' : '用途地域取得失敗';
     } finally {
       if (this.useDistrictAbort === ac) this.useDistrictAbort = null;
     }
@@ -181,7 +189,8 @@ export class ViewPresenter {
           this.useDistrictVisible && this.useDistrictHighlight
             ? this.useDistrictHighlight.summary
             : null,
-        useDistrictMiss: this.useDistrictVisible && this.useDistrictMiss
+        useDistrictMiss: this.useDistrictVisible && this.useDistrictMiss,
+        useDistrictHint: this.useDistrictVisible ? this.useDistrictHint : null
       });
 
       this.last = { lat: latitude, lon: longitude, meshKey };

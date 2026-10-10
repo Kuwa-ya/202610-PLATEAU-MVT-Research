@@ -1,7 +1,7 @@
 const PROTOCOL_NAME = 'plateau-indexed';
 const FETCH_ZOOM = 16;
 const INDEX_ZOOM = 12;
-import { DATA_BASE } from '../../../../shared/mvt/data-region.js';
+import { getMvtDataBase } from '../../../../shared/mvt/data-region.js';
 const EMPTY_TILE = new ArrayBuffer(0);
 
 const manifestCache = new Map();
@@ -59,7 +59,7 @@ export async function loadMvtManifest(datasetId) {
   const manifest = await loadCachedJson(
     manifestCache,
     datasetId,
-    `${DATA_BASE}/manifest/${datasetId}.json`
+    `${getMvtDataBase()}/manifest/${datasetId}.json`
   );
   if (!manifest.byCode) {
     manifest.byCode = new Map(manifest.cities.map(city => [city.cityCode, city]));
@@ -76,7 +76,7 @@ async function loadIndex(datasetId, parentKey) {
   return loadCachedJson(
     indexCache,
     key,
-    `${DATA_BASE}/index/${datasetId}/${parentKey}.json`,
+    `${getMvtDataBase()}/index/${datasetId}/${parentKey}.json`,
     true
   );
 }

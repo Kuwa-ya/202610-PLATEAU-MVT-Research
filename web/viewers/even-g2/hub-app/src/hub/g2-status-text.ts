@@ -18,7 +18,7 @@ export function formatG2StatusMeta(fix: GeoFix, detail: PresentDetail): string {
   if (detail.useDistrictSummary) {
     lines.push(detail.useDistrictSummary);
   } else if (detail.useDistrictMiss) {
-    lines.push('用途地域: 該当なし');
+    lines.push(detail.useDistrictHint ?? '用途地域: 該当なし');
   }
   return lines.join('\n');
 }

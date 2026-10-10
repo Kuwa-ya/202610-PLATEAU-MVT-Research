@@ -18,6 +18,8 @@ HTTP の実機 QR で「プロトタイプ・読み込み中…」が続くの�
 ```bash
 npm run build    # VITE_HUB_MODE=even（vite production）
 npm run pack     # web/data/output/even-g2/plateau-mvt-g2-v{app.json version}.ehpk
+
+`npm run build` / `pack` の前に、リポジトリルートで **`npm run build:mvt-index:use-district`** を実行してください（用途地域 manifest・索引を `.ehpk` に同梱します）。
 ```
 
 Even Hub ポータルへ `.ehpk` をアップロード（Private build）。

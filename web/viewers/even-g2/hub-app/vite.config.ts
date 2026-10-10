@@ -51,6 +51,8 @@ function serveWebDataPlugin(): Plugin {
 }
 
 export default defineConfig({
+  /** .ehpk 内で index.html と同階層の data/ を参照する */
+  base: './',
   define: {
     'import.meta.env.VITE_HUB_MODE': JSON.stringify(hubMode)
   },
