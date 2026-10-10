@@ -117,6 +117,7 @@ waitForPort(PORT)
     console.log(`\n--- Even G2 hub-app (${scheme.toUpperCase()}) ---`);
     console.log(`実機 (Even Hub で QR 読取): ${phoneUrl}`);
     console.log(`シミュレータ: ${localUrl}`);
+    console.log('建物: GPS（または京都駅フォールバック）→ kuwa-ya bldg GeoJSON → 288×144 PNG → G2');
     if (useHttps) {
       console.log(
         'HTTPS: 自己署名のため WebView が「ロード中」で止まる場合は Ctrl+C 後 npm run dev（HTTP）に戻してください'

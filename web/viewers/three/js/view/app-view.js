@@ -50,16 +50,12 @@ export class AppView {
       this.scene.setTerrainVisible(show);
     });
 
+    elements.buildingVisibility?.addEventListener('change', () => {
+      this.scene.refreshBuildingVisibility();
+    });
+
     elements.textureType?.addEventListener('change', () => this.scene.reloadTerrain(false));
     elements.jprcZone?.addEventListener('change', () => this.scene.reloadTerrain(true));
-
-    elements.g2CapturePreview?.addEventListener('click', async () => {
-      try {
-        await this.scene.captureG2Preview();
-      } catch (error) {
-        this.viewModel.setStatus(`プレビュー保存失敗: ${error?.message ?? error}`, true);
-      }
-    });
 
     if (elements.localOrigin) {
       elements.localOrigin.textContent = `${formatCoord(originRef.lat)}, ${formatCoord(originRef.lon)}`;

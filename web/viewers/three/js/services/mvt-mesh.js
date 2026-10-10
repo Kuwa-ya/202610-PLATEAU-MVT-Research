@@ -1,5 +1,5 @@
 import { tileBounds } from './web-tiles.js';
-import { featureColor } from '../../../shared/mvt/feature-style.js';
+import { featureColor } from '../../../../shared/mvt/feature-style.js';
 
 function lonLatToLocal(lon, lat, origin, metersPerDegLon, metersPerDegLat) {
   return {

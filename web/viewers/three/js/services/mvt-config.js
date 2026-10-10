@@ -1,6 +1,6 @@
 /** kuwaya-geo BUILDING_MIN_LOD / TRANSPORT_MIN_LOD（16）に合わせる */
-import { DATA_BASE } from '../../../shared/mvt/data-region.js';
-import { MVT_COLORS } from '../../../shared/mvt/feature-style.js';
+import { DATA_BASE } from '../../../../shared/mvt/data-region.js';
+import { MVT_COLORS } from '../../../../shared/mvt/feature-style.js';
 
 export { DATA_BASE };
 

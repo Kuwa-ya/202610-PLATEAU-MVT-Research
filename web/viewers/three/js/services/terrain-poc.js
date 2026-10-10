@@ -3,6 +3,7 @@ import { createTaskScheduler } from '/kuwaya-geo/js/foundation/cache.js';
 import { settingForDistance } from '/kuwaya-geo/js/foundation/lod.js';
 import { createTileLoader } from '/kuwaya-geo/js/domain/terrain.js';
 import { createTerrainController } from '/kuwaya-geo/js/view/terrain-controller.js';
+import { createPlateauBuildingLayer } from './plateau-building-layer.js';
 
 const noopFeatureLayer = {
   request: async () => {},
@@ -102,6 +103,8 @@ export function createTerrainPoc(THREE, options) {
   });
   loadingStub._hidden = true;
 
+  const buildingLayer = createPlateauBuildingLayer(THREE, scene, ui, loadScheduler);
+
   const terrain = createTerrainController(THREE, {
     loader,
     scene: terrainScene,
@@ -110,7 +113,7 @@ export function createTerrainPoc(THREE, options) {
     target: cameraController.target,
     focusedTarget,
     focusedSpherical,
-    buildingLayer: noopFeatureLayer,
+    buildingLayer,
     transportLayer: noopFeatureLayer,
     initialLocation,
     initialZone: Number(ui.jprcZone?.value ?? 6),
@@ -167,15 +170,26 @@ export function createTerrainPoc(THREE, options) {
     if (visible) terrain.scheduleStream(delay);
   }
 
+  function refreshBuildingVisibility() {
+    const focus = terrain.getFocusLatLon();
+    if (ui.buildingVisibility?.value === 'hide') {
+      buildingLayer.clear('建物表示はオフです。');
+      return;
+    }
+    terrain.requestBuilding(focus.latitude, focus.longitude);
+  }
+
   return {
     terrain,
     loader,
+    buildingLayer,
     applyFocusElevation,
     scheduleLodRefresh,
     scheduleStream,
     setVisible,
     initialRequest,
     reload,
+    refreshBuildingVisibility,
     isVisible: () => visible
   };
 }

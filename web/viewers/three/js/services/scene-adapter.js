@@ -10,7 +10,6 @@ import {
   createCameraController,
   createViewer
 } from '/kuwaya-geo/js/view/camera.js';
-import { downloadCanvasPreview } from '../../../../shared/g2/canvas-capture.js';
 import { DEFAULT_VIEWER_LOCATION } from '../../../../shared/geo/viewer-defaults.js';
 import { MVT_MAX_CAMERA_DISTANCE } from './mvt-config.js';
 import { createMvtController } from './mvt-controller.js';
@@ -253,13 +252,8 @@ export async function createSceneAdapter(viewModel, { canvas, ui, readEnabledDat
       terrainPoc.reload(rebuildOrigin);
     },
 
-    async captureG2Preview() {
-      renderer.render(scene, camera);
-      const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-      const { blob } = await downloadCanvasPreview(canvas, `g2-preview-${stamp}.png`, { maxWidth: 640 });
-      viewModel.setStatus(
-        `G2 プレビュー保存 (${Math.round(blob.size / 1024)} KB)。Even G2 ページで確認できます。`
-      );
+    refreshBuildingVisibility() {
+      terrainPoc.refreshBuildingVisibility();
     }
   };
 }

@@ -40,5 +40,6 @@ export async function downloadCanvasPreview(source, filename = 'g2-preview.png',
   anchor.download = filename;
   anchor.click();
   URL.revokeObjectURL(url);
-  return { blob, width: Math.round(source.width * Math.min(1, (options.maxWidth ?? 640) / source.width)) };
+  const scale = Math.min(1, (options.maxWidth ?? 640) / Math.max(source.width, 1));
+  return { blob, width: Math.max(1, Math.round(source.width * scale)) };
 }

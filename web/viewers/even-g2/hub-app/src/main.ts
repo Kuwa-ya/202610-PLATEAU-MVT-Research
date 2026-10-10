@@ -7,14 +7,14 @@ import {
   TextContainerUpgrade,
   waitForEvenAppBridge
 } from '@evenrealities/even_hub_sdk';
+import { FALLBACK_LOCATION } from './config/defaults.js';
 import { eventTypeOf, isDoubleClick } from './hub-events.js';
-import { loadImageBytes } from './image/bytes.js';
 import { formatFixShort, type GeoFix } from './geo/geo-fix.js';
 import { GpsSession } from './geo/gps-session.js';
 import { FrameMetrics, type FrameSample, type FrameTrigger } from './metrics/frame-metrics.js';
 import { mountPhonePanel } from './phone-panel.js';
-
-const PREVIEW_URL = `${import.meta.env.BASE_URL}preview.png`;
+import { setPhonePreviewPng } from './preview/phone-preview.js';
+import { buildBuildingFrame } from './plateau/building-frame.js';
 
 /** G2 画面は 576×288。画像コンテナは幅・高さそれぞれ半分（288×144）まで。 */
 const IMG_W = 288;
@@ -108,18 +108,35 @@ async function pushFrame(bytes: Uint8Array): Promise<{ sdkMs: number; result: st
   return { sdkMs: performance.now() - sdkStart, result };
 }
 
-async function loadPreviewFrame(
+function fixFromGps(fix?: GeoFix | null): GeoFix {
+  if (fix) return fix;
+  return {
+    latitude: FALLBACK_LOCATION.latitude,
+    longitude: FALLBACK_LOCATION.longitude,
+    accuracyM: null,
+    at: new Date().toISOString()
+  };
+}
+
+async function loadBuildingFrame(
   trigger: FrameTrigger,
   fix?: GeoFix | null
 ): Promise<FrameSample> {
+  const location = fixFromGps(fix);
   const totalStart = performance.now();
   const fetchStart = performance.now();
-  const bytes = await loadImageBytes(PREVIEW_URL);
+  const built = await buildBuildingFrame({
+    latitude: location.latitude,
+    longitude: location.longitude,
+    width: IMG_W,
+    height: IMG_H
+  });
   const fetchMs = performance.now() - fetchStart;
-  const { sdkMs, result } = await pushFrame(bytes);
+  setPhonePreviewPng(built.bytes);
+  const { sdkMs, result } = await pushFrame(built.bytes);
   const sample: FrameSample = {
     at: new Date().toISOString(),
-    bytes: bytes.byteLength,
+    bytes: built.bytes.byteLength,
     fetchMs,
     sdkMs,
     totalMs: performance.now() - totalStart,
@@ -127,12 +144,19 @@ async function loadPreviewFrame(
     trigger
   };
   metrics.record(sample);
-  console.info('[g2-metrics]', sample);
+  console.info('[g2-metrics]', sample, {
+    mesh: built.meshCode,
+    features: built.featureCount,
+    rings: built.ringCount,
+    geoMs: built.geoFetchMs,
+    renderMs: built.renderMs
+  });
   phonePanel.refresh();
   if (pageReady) {
-    const coord = fix ? `${formatFixShort(fix)} ` : '';
+    const coord = `${formatFixShort(location)} `;
     const hint = result === 'success' ? '' : ` · ${result}`;
-    await setStatus(`${coord}${metrics.formatG2Status(sample)}${hint}`);
+    const meta = `bldg ${built.ringCount}面 · ${built.meshCode}`;
+    await setStatus(`${coord}${meta} · ${metrics.formatG2Status(sample)}${hint}`);
   }
   return sample;
 }
@@ -150,16 +174,18 @@ let unsubscribe = () => {};
 
 if (pageReady) {
   try {
-    await loadPreviewFrame('init');
+    await loadBuildingFrame('init');
   } catch (error) {
     console.error(error);
-    await setStatus('preview.png がありません。public/preview.png を配置してください。');
+    await setStatus(
+      `建物描画失敗: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 
   gpsSession.start(
     (fix, reason) => {
       console.info('[gps-push]', reason, fix);
-      loadPreviewFrame('gps', fix).catch(err => console.error(err));
+      loadBuildingFrame('gps', fix).catch(err => console.error(err));
     },
     () => phonePanel.refresh()
   );
@@ -184,7 +210,7 @@ unsubscribe = bridge.onEvenHubEvent(event => {
   const textType = eventTypeOf(event.textEvent);
 
   if (sysType === OsEventTypeList.CLICK_EVENT || textType === OsEventTypeList.CLICK_EVENT) {
-    loadPreviewFrame('tap', gpsSession.getLatestFix()).catch(err => console.error(err));
+    loadBuildingFrame('tap', gpsSession.getLatestFix()).catch(err => console.error(err));
     return;
   }
 

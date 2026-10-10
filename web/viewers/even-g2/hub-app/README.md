@@ -1,80 +1,57 @@
-# Even Hub SDK — 検証 2（画像送信）
+# Even Hub SDK — 建物 GeoJSON → G2 画像
 
-[evenhub-templates/image](https://github.com/even-realities/evenhub-templates/tree/main/image) をベースに、3D Viewer で書き出した PNG を G2 の画像コンテナへ送る最小アプリです。
+[evenhub-templates/image](https://github.com/even-realities/evenhub-templates/tree/main/image) をベースに、**現在地の PLATEAU 建物 GeoJSON**（kuwa-ya 本番 `geojson-gzip`）を取得し、俯図ポリゴンを **288×144 PNG** に描画して G2 へ送ります。
 
-画像コンテナの **最大サイズは 288×144**（画面 576×288 の半分）。SDK がリサイズしますが、定義時もこの上限内にしてください。
+画像コンテナの **最大サイズは 288×144**（画面 576×288 の半分）。
+
+## データフロー（`src/plateau/`）
+
+1. GPS（未取得時は **京都駅** `config/defaults.ts`）
+2. 11 桁地域メッシュ → `https://geo.kuwa-ya.co.jp/geojson-gzip/bldg/.../*.geojson.gz`
+3. gzip 展開 → **南側 45° 俯瞰** の簡易立体（11 桁メッシュにフィット）→ G2 送信
+4. スマホ `#app` 内に **同じ PNG プレビュー**（描画直後・G2 送信の直前に更新。再描画はしない）
+4. PNG 化 → `updateImageRawData`
+
+Three ビューワとは独立です（Three 側に G2 保存機能はありません）。
 
 ## 手順
 
-1. 正本: `web/data/output/previews/preview.png`（Git 外）。`npm run build` / `pack` 時に `public/preview.png` に自動同期
-2. 再生成: リポジトリルートで `npm run generate:g2-preview`。3D Viewer の PNG は `web/data/output/g2-captures/` へ保存し、`preview.png` を上書きしても可
-3. `npm install` → **`npm run dev`**（Vite + シミュレータ + 実機用 QR を同時起動）
+1. `npm install` → **`npm run dev`**（Vite + シミュレータ + QR）
    - Vite だけ: `npm run dev:vite`
-   - GPS 試行用 HTTPS: `npm run dev:https`（下記トレードオフ）
-   - 個別: `npm run simulate` / `npx evenhub qr -u http://<IP>:5173/`
-4. リポジトリルートから: `npm run dev:even-g2`
+   - GPS 試行用 HTTPS: `npm run dev:https`
+2. リポジトリルート: `npm run dev:even-g2`
 
 ## HTTP と HTTPS（プロトタイプ vs GPS）
 
 | コマンド | QR | プロトタイプ | GPS |
 | --- | --- | --- | --- |
 | **`npm run dev`**（既定） | `http://` | 開きやすい | ブラウザ上は **不可**（HTTP） |
-| **`npm run dev:https`** | `https://` | 自己署名で **ロード中で止まる**ことがある | 理論上可能（WebView が TLS を通す場合） |
+| **`npm run dev:https`** | `https://` | 自己署名で **ロード中で止まる**ことがある | 理論上可能 |
 
-**「ロード中…」が続く** → いま `dev:https` なら **`npm run dev`（HTTP）に戻し QR を再スキャン**。以前と同様に同一 LAN・ファイアウォールを確認。
-
-**実機 HTTP で端末 GPS が使えない** → ブラウザ仕様上正常。**シミュレータ**（`https://localhost` / Secure Context）では本物 GPS が動く。実機ではスマホ画面の **「北へ 15m」** 等で移動をシミュレートし、G2 への GPS 再送を確認（10m 閾値を超える）。タップ再送も引き続き利用可。
-
-## 実機が「プロトタイプモード ロード中…」で止まる（HTTP でも）
-
-1. ターミナルの `http://<IP>:5173/` を **スマホのブラウザ**で開く
-2. 同一 Wi‑Fi・ファイアウォール（ポート 5173）— [Network & Firewall Setup](https://hub.evenrealities.com/docs/test/network-firewall)
+実機 HTTP では **「北へ 15m」** 等の手動移動＋タップ再送でメッシュ切替を確認できます。
 
 ## ビルド・パック
 
-| コマンド（hub-app 内） | 出力（リポジトリルートから） |
+| コマンド | 出力 |
 | --- | --- |
 | `npm run build` | `web/data/output/even-g2/dist/` |
 | `npm run pack` | `web/data/output/even-g2/plateau-mvt-g2.ehpk` |
 
-ルートからは `npm run build:even-g2` / `npm run pack:even-g2` でも同じです。いずれも **Git 外**（`web/data/output/`）。ポータルへは **`.ehpk`** をアップロード。
-
-- `app.json` の `name` は **20 文字以内**（Even Hub CLI 制約）
-- `min_app_version` は SDK に合わせて CLI が **2.2.10 などへ自動引き上げ**する場合あり（警告は通常そのままで可）
+`build` 時の `public/preview.png` 同期は CLI 互換用で、**実行時は GeoJSON 描画**が使われます。
 
 ## 検証 3（送信性能）
 
-初回表示とタップ再送のたびに計測します。
-
 | 項目 | 内容 |
 | --- | --- |
-| サイズ | PNG バイト数 |
-| fetch | `preview.png` 読み込み ms |
+| fetch | GeoJSON 取得＋キャンバス描画 ms（ログの `geoMs` / `renderMs` も参照） |
 | SDK | `updateImageRawData` ms |
-| 合計 | 1 フレームあたり end-to-end ms |
-
-スマホ WebView のパネル、G2 下部ステータス、`[g2-metrics]` ログ、開発者コンソールの `window.__g2Metrics` を参照してください。
-
-### 実測（2026-10-10・実機）
-
-| 指標 | おおよその値 |
-| --- | --- |
-| 合計 / SDK / 平均 | **300〜400 ms** |
-
-fetch はほぼ無視できるため、以降の最適化は **PNG サイズ縮小**より **送る回数の抑制**（GPS 間引き・方位のみでは再送しない）が効く。詳細は [`even-g2-3d-summary.md`](../../../../docs/even-g2-3d-summary.md) のベースライン表。
 
 ## 検証 4（GPS）
 
-| 定数 | 値 |
-| --- | --- |
-| `GPS_MIN_MOVE_M` | 10 m |
-| `GPS_MIN_INTERVAL_MS` | 500 ms |
-
-初回 GPS fix は基準点設定のみ（画像は起動時の 1 枚）。移動で `trigger: gps` の再送。メトリクスに `trigger` 列あり。
+`GPS_MIN_MOVE_M` = 10 m、`GPS_MIN_INTERVAL_MS` = 500 ms。移動で `trigger: gps` の再描画・再送。
 
 ## 次の拡張
 
-- 現在地を原点に Three.js / MVT を描画してからキャプチャ
-- 方位（検証 5）— 回転のみでは画像再送しない
+- 複数メッシュの周辺読込、高さ・簡易 3D、方位（検証 5）
 
 公式: [Display API](https://hub.evenrealities.com/docs/build/display)

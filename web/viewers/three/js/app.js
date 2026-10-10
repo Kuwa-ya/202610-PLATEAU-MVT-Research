@@ -1,6 +1,6 @@
 import { createSceneAdapter } from './services/scene-adapter.js';
 import { AppView } from './view/app-view.js';
-import { bindViewUi, readEnabledDatasets } from './view/view-ui.js';
+import { bindViewUi, readEnabledDatasets, setStatus } from './view/view-ui.js';
 import { AppViewModel } from './viewmodel/app-view-model.js';
 
 function reportFailure(error) {
@@ -18,6 +18,7 @@ async function bootstrap() {
 
   const viewModel = new AppViewModel();
   const elements = bindViewUi(document);
+  setStatus(elements, 'Three.js と地形を初期化しています…');
   const scene = await createSceneAdapter(viewModel, {
     canvas,
     ui: elements,

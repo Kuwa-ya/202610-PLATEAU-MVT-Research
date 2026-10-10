@@ -12,5 +12,6 @@
 | `terrain-controller.js` の `moveend` 相当 | カメラ更新後に MVT sync |
 | `selection-controller.js` / エクスポート | 設計書 §10.4: MVT 閾値未満では不可（メッセージ） |
 | 静的データ | リポジトリ `data/manifest` + `data/index` |
+| `features.js` / `feature-layer.js` | Three PoC の建物 LOD2 — [`plateau-building-layer.js`](../../web/viewers/three/js/services/plateau-building-layer.js) が本番 `https://geo.kuwa-ya.co.jp/geojson-gzip/bldg/{4}/{2}/{2}/{11桁}_bldg.geojson.gz` を取得 |
 
 索引ローダーは [`mvt-index.js`](../../web/viewers/three/js/services/mvt-index.js) をES moduleとして再利用できます。
