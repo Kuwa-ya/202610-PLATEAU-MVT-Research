@@ -77,6 +77,18 @@ export function createTerrainPoc(THREE, options) {
   });
 
   let visible = true;
+  // terrain-controller replaces the terrain group progressively while loading.
+  // Apply the current visibility before each replacement enters the scene so a
+  // request that finishes after "hide" cannot make the new group visible again.
+  const terrainScene = {
+    add(object) {
+      object.visible = visible;
+      return scene.add(object);
+    },
+    remove(object) {
+      return scene.remove(object);
+    }
+  };
   Object.defineProperty(loadingStub, 'hidden', {
     configurable: true,
     enumerable: true,
@@ -92,7 +104,7 @@ export function createTerrainPoc(THREE, options) {
 
   const terrain = createTerrainController(THREE, {
     loader,
-    scene,
+    scene: terrainScene,
     elements,
     cameraController,
     target: cameraController.target,
@@ -106,7 +118,11 @@ export function createTerrainPoc(THREE, options) {
     lodDelay: TERRAIN_LOD_DELAY,
     getContourIntervalForLod: contourIntervalForLod,
     onStatus: (message, isError) => onStatus?.(message, isError),
-    onTerrainCommitted: () => options.onTerrainCommitted?.(),
+    onTerrainCommitted: () => {
+      const group = terrain.getGroup();
+      if (group) group.visible = visible;
+      options.onTerrainCommitted?.();
+    },
     onViewChanged: () => {
       if (!visible) return;
       options.onViewChanged?.();
@@ -117,6 +133,7 @@ export function createTerrainPoc(THREE, options) {
     visible = next;
     const group = terrain.getGroup();
     if (group) group.visible = next;
+    if (!next && loadingStub.hidden === false) loadingStub.hidden = true;
   }
 
   function initialRequest(resetFocus = true) {
@@ -138,9 +155,24 @@ export function createTerrainPoc(THREE, options) {
     terrain.reload(resetFocus);
   }
 
+  function applyFocusElevation() {
+    if (visible) terrain.applyFocusElevation();
+  }
+
+  function scheduleLodRefresh() {
+    if (visible) terrain.scheduleLodRefresh();
+  }
+
+  function scheduleStream(delay) {
+    if (visible) terrain.scheduleStream(delay);
+  }
+
   return {
     terrain,
     loader,
+    applyFocusElevation,
+    scheduleLodRefresh,
+    scheduleStream,
     setVisible,
     initialRequest,
     reload,

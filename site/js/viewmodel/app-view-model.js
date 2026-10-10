@@ -17,7 +17,6 @@ export class AppViewModel extends EventTarget {
     const state = this.state;
     return {
       ...state,
-      cityCodes: [...state.cityCodes],
       visibility: { ...state.visibility },
       opacity: { ...state.opacity },
       status: { ...state.status },
@@ -31,24 +30,6 @@ export class AppViewModel extends EventTarget {
 
   notify() {
     this.dispatchEvent(new Event('state'));
-  }
-
-  setCityCodes(value) {
-    const result = Model.validateCityCodes(value);
-    if (!result.valid) {
-      this.setStatus(result.message, 'error');
-      return false;
-    }
-    this.state.cityCodes = result.cityCodes;
-    this.state.datasetRevision += 1;
-    this.state.selectedFeature = null;
-    this.state.status = {
-      message: `${result.cityCodes.join(', ')} / ${Model.CONFIG.dataYear}年度を読み込み中`,
-      mode: 'loading'
-    };
-    this.state.stats = { ...this.state.stats, requests: 0, bytes: 0 };
-    this.notify();
-    return true;
   }
 
   setVisibility(kind, visible) {

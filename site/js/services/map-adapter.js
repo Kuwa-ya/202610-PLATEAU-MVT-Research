@@ -1,8 +1,11 @@
 import { MeshUtils } from '../model/mesh-utils.js';
 import { Model } from '../model/model.js';
+import { createIndexedMvtProtocol } from './indexed-mvt-protocol.js';
 
 const EMPTY_FEATURE_COLLECTION = Object.freeze({ type: 'FeatureCollection', features: [] });
 const OVERLAY_IDS = Object.freeze({
+  cityBoundarySource: 'city-boundary-source',
+  cityBoundaryLine: 'city-boundary-line',
   meshSource: 'regional-mesh-grid',
   meshFill: 'regional-mesh-fill',
   meshLine: 'regional-mesh-line',
@@ -17,13 +20,15 @@ export class MapAdapter {
     this.map = null;
     this.ready = false;
     this.pendingState = null;
-    this.datasetKey = '';
+    this.mvtSourcesReady = false;
+    this.mvtSourcesPromise = null;
+    this.indexedMvt = createIndexedMvtProtocol();
     this.sourceIds = [];
     this.layerIds = { luse: [], road: [] };
     this.fillLayerIds = { luse: [], road: [] };
-    this.duplicateFeatureStates = new Map();
     this.meshMarkers = [];
     this.webTileMarkers = [];
+    this.webTileLabelGeneration = 0;
     this.meshOverlayKey = '';
     this.webTileOverlayKey = '';
     this.requestUrls = new Set();
@@ -41,10 +46,12 @@ export class MapAdapter {
       onStats: callbacks.onStats ?? (() => {})
     };
 
+    this.maplibregl.addProtocol(this.indexedMvt.name, this.indexedMvt.handler);
+
     this.map = new this.maplibregl.Map({
       container: this.containerId,
       center: [139.7670, 35.6834],
-      zoom: 14.3,
+      zoom: 16.2,
       minZoom: 5,
       maxZoom: 19,
       hash: true,
@@ -91,11 +98,10 @@ export class MapAdapter {
       if (this.sourceIds.includes(event.sourceId)) this.callbacks.onStatus('MVTを読み込み中', 'loading');
     });
     this.map.on('idle', () => {
-      this.suppressDuplicateFeatures();
       if (this.sourceErrors.size) {
         this.callbacks.onStatus(`${this.sourceErrors.size}件のMVTを読み込めませんでした`, 'error');
       } else if (this.pendingState) {
-        this.callbacks.onStatus(`${this.pendingState.cityCodes.length}自治体の重ね合わせ完了`, 'ready');
+        this.callbacks.onStatus('タイル索引によるMVT表示完了', 'ready');
       }
     });
     this.map.on('error', event => this.handleMapError(event));
@@ -107,12 +113,17 @@ export class MapAdapter {
     this.pendingState = state;
     if (!this.ready) return;
 
-    const nextDatasetKey = `${state.datasetRevision}:${state.cityCodes.join(',')}`;
-    if (nextDatasetKey !== this.datasetKey) {
-      this.datasetKey = nextDatasetKey;
-      this.syncMvtSources(state.cityCodes);
+    if (!this.mvtSourcesReady) {
+      if (!this.mvtSourcesPromise) {
+        this.mvtSourcesPromise = this.syncMvtSources().then(() => {
+          this.mvtSourcesReady = true;
+          this.sync(this.pendingState);
+        }).catch(error => this.callbacks.onStatus(error.message, 'error'));
+      }
+    } else {
+      this.syncMvtStyle(state);
     }
-    this.syncMvtStyle(state);
+    this.syncCityBoundaryStyle(state.visibility.cityBoundary);
     const meshKey = [
       state.visibility.mesh,
       state.viewport.mesh.digits,
@@ -162,6 +173,21 @@ export class MapAdapter {
 
   ensureOverlayLayers() {
     const map = this.map;
+    map.addSource(OVERLAY_IDS.cityBoundarySource, {
+      type: 'geojson',
+      data: '/data/city_geojson/r2ka13_city.geojson'
+    });
+    map.addLayer({
+      id: OVERLAY_IDS.cityBoundaryLine,
+      type: 'line',
+      source: OVERLAY_IDS.cityBoundarySource,
+      paint: {
+        'line-color': '#f43f5e',
+        'line-width': ['interpolate', ['linear'], ['zoom'], 8, 1, 14, 1.8, 18, 3],
+        'line-opacity': 0.92,
+        'line-dasharray': [3, 1.5]
+      }
+    });
     map.addSource(OVERLAY_IDS.meshSource, { type: 'geojson', data: EMPTY_FEATURE_COLLECTION });
     map.addLayer({
       id: OVERLAY_IDS.meshFill,
@@ -184,92 +210,71 @@ export class MapAdapter {
     });
   }
 
-  syncMvtSources(cityCodes) {
+  async syncMvtSources() {
     this.clearMvtSources();
     this.requestUrls.clear();
     this.transferredBytes = 0;
     this.sourceErrors.clear();
     this.callbacks.onStats({ requests: 0, bytes: 0 });
 
-    for (const cityCode of cityCodes) {
-      const luseSource = Model.sourceId('luse', cityCode);
-      const roadSource = Model.sourceId('road', cityCode);
-      const luseFill = Model.layerId('luse', 'fill', cityCode);
-      const luseLine = Model.layerId('luse', 'line', cityCode);
-      const roadFill = Model.layerId('road', 'fill', cityCode);
-      const roadLine = Model.layerId('road', 'line', cityCode);
+    const definitions = [
+      { kind: 'luse', datasetId: 'luse-2025', sourceLayer: 'luse' },
+      { kind: 'road', datasetId: 'tran-lod1-2025', sourceLayer: 'Road' }
+    ];
+    for (const definition of definitions) {
+      const manifest = await this.indexedMvt.loadManifest(definition.datasetId);
+      for (const city of manifest.cities) this.addMvtCity(definition, city.cityCode);
+    }
+    this.bringOverlaysToFront();
+  }
 
-      this.map.addSource(luseSource, {
-        type: 'vector',
-        url: Model.tileJsonUrl('luse', cityCode),
-        promoteId: 'gml_id'
-      });
-      this.map.addSource(roadSource, {
-        type: 'vector',
-        url: Model.tileJsonUrl('road', cityCode),
-        promoteId: 'gml_id'
-      });
+  addMvtCity({ kind, datasetId, sourceLayer }, cityCode) {
+    const source = Model.sourceId(kind, cityCode);
+    const fill = Model.layerId(kind, 'fill', cityCode);
+    const line = Model.layerId(kind, 'line', cityCode);
+    this.map.addSource(source, {
+      type: 'vector',
+      tiles: [this.indexedMvt.tileTemplate(datasetId, cityCode)],
+      minzoom: Model.CONFIG.mvtMinZoom,
+      maxzoom: Model.CONFIG.mvtMinZoom,
+      promoteId: 'gml_id',
+      attribution: '国土交通省 PLATEAU'
+    });
 
-      this.map.addLayer({
-        id: luseFill,
+    const isLuse = kind === 'luse';
+    this.map.addLayer({
+        id: fill,
         type: 'fill',
-        source: luseSource,
-        'source-layer': 'luse',
+        source,
+        'source-layer': sourceLayer,
         minzoom: Model.CONFIG.mvtMinZoom,
         paint: {
-          'fill-color': this.selectedAwareValue('#ff4d8d', [
+          'fill-color': this.selectedAwareValue('#ff4d8d', isLuse ? [
             'match', ['get', 'uro_orgLandUse'],
             '道路', '#f59e48',
             '公園', '#40c98a',
             '河川', '#4ca9df',
+            '水面・河川・水路', '#4ca9df',
             '#47e6b1'
-          ]),
-          'fill-opacity': this.featureOpacity(0.46, 0.78)
+          ] : '#ffc85a'),
+          'fill-opacity': this.featureOpacity(isLuse ? 0.46 : 0.58, 0.78)
         }
-      });
-      this.map.addLayer({
-        id: luseLine,
+    });
+    this.map.addLayer({
+        id: line,
         type: 'line',
-        source: luseSource,
-        'source-layer': 'luse',
+        source,
+        'source-layer': sourceLayer,
         minzoom: Model.CONFIG.mvtMinZoom,
         paint: {
-          'line-color': this.selectedAwareValue('#ffffff', '#116d54'),
-          'line-width': this.selectedAwareValue(3.2, ['interpolate', ['linear'], ['zoom'], 14, 0.5, 17, 1.4]),
-          'line-opacity': this.featureOpacity(0.84, 1)
+          'line-color': this.selectedAwareValue('#ffffff', isLuse ? '#116d54' : '#7f5c12'),
+          'line-width': this.selectedAwareValue(3.2, ['interpolate', ['linear'], ['zoom'], 14, isLuse ? 0.5 : 0.6, 17, isLuse ? 1.4 : 1.6]),
+          'line-opacity': this.featureOpacity(isLuse ? 0.84 : 0.9, 1)
         }
-      });
-      this.map.addLayer({
-        id: roadFill,
-        type: 'fill',
-        source: roadSource,
-        'source-layer': 'Road',
-        minzoom: Model.CONFIG.mvtMinZoom,
-        paint: {
-          'fill-color': this.selectedAwareValue('#ff4d8d', '#ffc85a'),
-          'fill-opacity': this.featureOpacity(0.58, 0.78)
-        }
-      });
-      this.map.addLayer({
-        id: roadLine,
-        type: 'line',
-        source: roadSource,
-        'source-layer': 'Road',
-        minzoom: Model.CONFIG.mvtMinZoom,
-        paint: {
-          'line-color': this.selectedAwareValue('#ffffff', '#7f5c12'),
-          'line-width': this.selectedAwareValue(3.2, ['interpolate', ['linear'], ['zoom'], 14, 0.6, 17, 1.6]),
-          'line-opacity': this.featureOpacity(0.9, 1)
-        }
-      });
-
-      this.sourceIds.push(luseSource, roadSource);
-      this.layerIds.luse.push(luseFill, luseLine);
-      this.layerIds.road.push(roadFill, roadLine);
-      this.fillLayerIds.luse.push(luseFill);
-      this.fillLayerIds.road.push(roadFill);
-    }
-    this.bringOverlaysToFront();
+    });
+    this.sourceIds.push(source);
+    this.layerIds[kind].push(fill, line);
+    this.fillLayerIds[kind].push(fill);
   }
 
   clearMvtSources() {
@@ -283,7 +288,6 @@ export class MapAdapter {
     this.sourceIds = [];
     this.layerIds = { luse: [], road: [] };
     this.fillLayerIds = { luse: [], road: [] };
-    this.duplicateFeatureStates.clear();
   }
 
   syncMvtStyle(state) {
@@ -299,6 +303,15 @@ export class MapAdapter {
     }
   }
 
+  syncCityBoundaryStyle(visible) {
+    if (!this.map.getLayer(OVERLAY_IDS.cityBoundaryLine)) return;
+    this.map.setLayoutProperty(
+      OVERLAY_IDS.cityBoundaryLine,
+      'visibility',
+      visible ? 'visible' : 'none'
+    );
+  }
+
   selectedAwareValue(selectedValue, defaultValue) {
     return [
       'case',
@@ -311,7 +324,6 @@ export class MapAdapter {
     return [
       'case',
       ['boolean', ['feature-state', 'selected'], false], selectedValue,
-      ['boolean', ['feature-state', 'duplicate'], false], 0,
       defaultValue
     ];
   }
@@ -345,6 +357,7 @@ export class MapAdapter {
   }
 
   syncWebTileOverlay(enabled, tileState) {
+    const generation = ++this.webTileLabelGeneration;
     const source = this.map.getSource(OVERLAY_IDS.webTileSource);
     if (!source) return;
     this.clearMarkers(this.webTileMarkers);
@@ -361,14 +374,30 @@ export class MapAdapter {
     source.setData({ type: 'FeatureCollection', features });
 
     const stride = Math.max(1, Math.ceil(tileState.tiles.length / 120));
-    tileState.tiles.forEach((tile, index) => {
-      if (index % stride !== 0) return;
-      const bounds = MeshUtils.tileBounds(tile.x, tile.y, tile.z);
-      this.webTileMarkers.push(this.addLabel(
-        `${tile.z}/${tile.x}/${tile.y}`,
-        [(bounds.west + bounds.east) / 2, (bounds.south + bounds.north) / 2],
-        'grid-label grid-label--web-tile'
-      ));
+    const labelTiles = tileState.tiles.filter((tile, index) => index % stride === 0);
+    Promise.all(labelTiles.map(async tile => {
+      const [luse, road] = await Promise.all([
+        this.indexedMvt.resolveCityCodes('luse-2025', tile.z, tile.x, tile.y),
+        this.indexedMvt.resolveCityCodes('tran-lod1-2025', tile.z, tile.x, tile.y)
+      ]);
+      return { tile, luse, road };
+    })).then(labels => {
+      if (generation !== this.webTileLabelGeneration) return;
+      for (const { tile, luse, road } of labels) {
+        const luseLabel = luse.length ? luse.join(',') : '—';
+        const roadLabel = road.length ? road.join(',') : '—';
+        const cityLabel = luseLabel === roadLabel
+          ? `自治体 ${luseLabel}`
+          : `L:${luseLabel}  R:${roadLabel}`;
+        const bounds = MeshUtils.tileBounds(tile.x, tile.y, tile.z);
+        this.webTileMarkers.push(this.addLabel(
+          `${tile.z}/${tile.x}/${tile.y}\n${cityLabel}`,
+          [(bounds.west + bounds.east) / 2, (bounds.south + bounds.north) / 2],
+          'grid-label grid-label--web-tile'
+        ));
+      }
+    }).catch(error => {
+      if (generation === this.webTileLabelGeneration) console.warn('自治体コード表示', error);
     });
   }
 
@@ -402,57 +431,14 @@ export class MapAdapter {
   }
 
   bringOverlaysToFront() {
-    [OVERLAY_IDS.meshFill, OVERLAY_IDS.meshLine, OVERLAY_IDS.webTileLine].forEach(id => {
+    [
+      OVERLAY_IDS.meshFill,
+      OVERLAY_IDS.meshLine,
+      OVERLAY_IDS.webTileLine,
+      OVERLAY_IDS.cityBoundaryLine
+    ].forEach(id => {
       if (this.map.getLayer(id)) this.map.moveLayer(id);
     });
-  }
-
-  suppressDuplicateFeatures() {
-    const idOwners = new Map();
-    const geometryOwners = new Map();
-    const cityCodes = this.pendingState?.cityCodes ?? [];
-
-    for (const cityCode of cityCodes) {
-      for (const kind of ['luse', 'road']) {
-        const currentSourceId = Model.sourceId(kind, cityCode);
-        if (!this.map.getSource(currentSourceId)) continue;
-        let features;
-        try {
-          features = this.map.querySourceFeatures(currentSourceId, {
-            sourceLayer: kind === 'luse' ? 'luse' : 'Road'
-          });
-        } catch {
-          continue;
-        }
-
-        const duplicatesById = new Map();
-        for (const feature of features) {
-          if (feature.id === undefined || feature.id === null) continue;
-          const featureId = feature.id;
-          const idKey = `${kind}:${String(featureId)}`;
-          const signature = Model.geometrySignature(feature);
-          const geometryKey = signature ? `${kind}:${signature}` : '';
-          const duplicateById = idOwners.has(idKey) && idOwners.get(idKey) !== currentSourceId;
-          const duplicateByGeometry = geometryKey
-            && geometryOwners.has(geometryKey)
-            && geometryOwners.get(geometryKey) !== currentSourceId;
-          const duplicate = Boolean(duplicateById || duplicateByGeometry);
-          if (!idOwners.has(idKey)) idOwners.set(idKey, currentSourceId);
-          if (geometryKey && !geometryOwners.has(geometryKey)) geometryOwners.set(geometryKey, currentSourceId);
-          duplicatesById.set(featureId, duplicatesById.get(featureId) === true || duplicate);
-        }
-
-        for (const [featureId, duplicate] of duplicatesById) {
-          const stateKey = `${currentSourceId}:${kind}:${String(featureId)}`;
-          if (this.duplicateFeatureStates.get(stateKey) === duplicate) continue;
-          this.map.setFeatureState(
-            { source: currentSourceId, sourceLayer: kind === 'luse' ? 'luse' : 'Road', id: featureId },
-            { duplicate }
-          );
-          this.duplicateFeatureStates.set(stateKey, duplicate);
-        }
-      }
-    }
   }
 
   interactiveLayerIds() {
@@ -497,7 +483,7 @@ export class MapAdapter {
   }
 
   visibleRenderedFeatures(features) {
-    return features.filter(feature => feature.state?.duplicate !== true);
+    return features;
   }
 
   selectFeatureOnMap(feature) {
@@ -527,6 +513,8 @@ export class MapAdapter {
     const message = event?.error?.message || 'データを読み込めませんでした';
     if (sourceId === 'gsi-base') {
       this.callbacks.onStatus('背景地図を読み込めませんでした', 'error');
+    } else if (sourceId === OVERLAY_IDS.cityBoundarySource) {
+      this.callbacks.onStatus('市区町村境界を読み込めませんでした', 'error');
     } else if (sourceId && this.sourceIds.includes(sourceId)) {
       this.sourceErrors.add(sourceId);
       this.callbacks.onStatus('対象データなし、または読込エラー', 'error');

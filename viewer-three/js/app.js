@@ -22,18 +22,14 @@ import {
   updateMetadata
 } from './view-ui.js';
 
-let THREE;
-try {
-  THREE = await import('https://unpkg.com/three@0.185.1/build/three.module.js');
-} catch {
-  THREE = await import('https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js');
-}
+const THREE = await import('/vendor/three/build/three.module.min.js');
 
 const ui = bindViewUi(document);
 setStatus(ui, 'Three.js を読み込み中…');
 
 const canvas = document.getElementById('mvt-canvas');
 const { renderer, scene } = createViewer(THREE, canvas, window.devicePixelRatio);
+renderer.localClippingEnabled = true;
 const cameraState = createCameraController(THREE);
 const { camera, focusedTarget, focusedSpherical } = cameraState;
 
@@ -43,18 +39,6 @@ focusedSpherical.theta = 0;
 cameraState.spherical.copy(focusedSpherical);
 cameraState.update();
 
-const grid = new THREE.GridHelper(12_000, 60, 0x3d4f47, 0x243029);
-grid.position.y = 0.02;
-grid.material.transparent = true;
-grid.material.opacity = 0.55;
-if (Array.isArray(grid.material)) {
-  grid.material.forEach(m => {
-    m.transparent = true;
-    m.opacity = 0.55;
-  });
-}
-scene.add(grid);
-
 const originRef = {
   lat: INITIAL_LOCATION.latitude,
   lon: INITIAL_LOCATION.longitude
@@ -62,6 +46,7 @@ const originRef = {
 
 let mvtLoading = false;
 let terrainLoading = false;
+let initialMvtLoadPending = true;
 
 function refreshLoadingOverlay() {
   if (terrainLoading && mvtLoading) {
@@ -86,14 +71,8 @@ const terrainPoc = createTerrainPoc(THREE, {
     terrainLoading = active;
     refreshLoadingOverlay();
   },
-  onStatus: (message, isError) => setStatus(ui, message, isError),
-  onTerrainCommitted: () => syncGridVisibility()
+  onStatus: (message, isError) => setStatus(ui, message, isError)
 });
-
-function syncGridVisibility() {
-  const terrainOn = ui.terrainVisibility?.value !== 'hide';
-  grid.visible = !terrainOn || !terrainPoc.terrain.getGroup();
-}
 
 const mvt = createMvtController(THREE, scene, () => ({
   origin: originRef,
@@ -103,16 +82,22 @@ const mvt = createMvtController(THREE, scene, () => ({
 }));
 
 let syncTimer = null;
-let syncInflight = 0;
+let syncRequestId = 0;
+let lastMvtResult = null;
 
 function applyMvtResult(result) {
+  lastMvtResult = result;
   const view = result.viewCenter ?? { lat: originRef.lat, lon: originRef.lon };
   let mvtMode = '待機';
   let statusLine = `MVT 待機 — ${Math.round(result.distance)} m（${MVT_MAX_CAMERA_DISTANCE} m 以内で z16）`;
   let hintLine = 'ホイールで寄るか「MVT 表示距離まで寄る」を押してください。';
   let isError = false;
 
-  if (result.mode === 'on') {
+  if (!readEnabledDatasets(ui).length) {
+    mvtMode = 'オフ';
+    statusLine = '表示レイヤーがすべて非表示です。';
+    hintLine = '左パネルで土地利用または道路を「表示」にしてください。';
+  } else if (result.mode === 'on') {
     mvtMode = '表示中';
     statusLine = `MVT 表示 — ${result.count} / ${result.planned} タイル`;
     hintLine = result.error || '左ドラッグで移動、ホイールでズーム。';
@@ -122,10 +107,6 @@ function applyMvtResult(result) {
     statusLine = result.error;
     hintLine = 'F12 コンソールと /data/ /vendor/ の応答を確認してください。';
     isError = true;
-  } else if (!readEnabledDatasets(ui).length) {
-    mvtMode = 'オフ';
-    statusLine = '表示レイヤーがすべて非表示です。';
-    hintLine = '左パネルで土地利用または道路を「表示」にしてください。';
   }
 
   updateMetadata(ui, {
@@ -145,28 +126,31 @@ function applyMvtResult(result) {
 
 function scheduleSync() {
   if (syncTimer) clearTimeout(syncTimer);
+  const requestId = ++syncRequestId;
   syncTimer = setTimeout(async () => {
-    syncInflight += 1;
-    const showMvtLoading = !mvt.hasTiles();
+    const showMvtLoading = initialMvtLoadPending;
     if (showMvtLoading) {
       mvtLoading = true;
       refreshLoadingOverlay();
     }
     try {
-      applyMvtResult(await mvt.sync());
+      const result = await mvt.sync();
+      if (requestId === syncRequestId && !result.stale) applyMvtResult(result);
     } catch (error) {
-      applyMvtResult({
-        mode: 'error',
-        distance: focusedSpherical.radius,
-        count: 0,
-        planned: 0,
-        error: error?.message ?? String(error),
-        viewCenter: { lat: originRef.lat, lon: originRef.lon }
-      });
+      if (requestId === syncRequestId) {
+        applyMvtResult({
+          mode: 'error',
+          distance: focusedSpherical.radius,
+          count: 0,
+          planned: 0,
+          error: error?.message ?? String(error),
+          viewCenter: { lat: originRef.lat, lon: originRef.lon }
+        });
+      }
     } finally {
-      syncInflight = Math.max(0, syncInflight - 1);
-      if (!syncInflight) {
-        if (showMvtLoading) mvtLoading = false;
+      if (requestId === syncRequestId && showMvtLoading) {
+        initialMvtLoadPending = false;
+        mvtLoading = false;
         refreshLoadingOverlay();
       }
     }
@@ -177,16 +161,16 @@ const { terrain } = terrainPoc;
 
 bindCameraInteractions(THREE, canvas, cameraState, {
   onZoom: () => {
-    terrain.scheduleLodRefresh();
+    terrainPoc.scheduleLodRefresh();
     scheduleSync();
   },
   onPan: () => {
-    terrain.applyFocusElevation();
-    terrain.scheduleStream(TERRAIN_STREAM_ACTIVE_DELAY);
+    terrainPoc.applyFocusElevation();
+    terrainPoc.scheduleStream(TERRAIN_STREAM_ACTIVE_DELAY);
     scheduleSync();
   },
   onPanEnd: () => {
-    terrain.scheduleStream(TERRAIN_STREAM_DELAY);
+    terrainPoc.scheduleStream(TERRAIN_STREAM_DELAY);
     scheduleSync();
   }
 });
@@ -233,21 +217,33 @@ ui.viewReset?.addEventListener('click', () => {
   focusedSpherical.theta = 0;
   cameraState.spherical.copy(focusedSpherical);
   cameraState.update();
-  terrain.applyFocusElevation();
+  terrainPoc.applyFocusElevation();
   scheduleSync();
 });
 
 ui.viewZoomMvt?.addEventListener('click', () => {
   focusedSpherical.radius = Math.max(CAMERA_MIN_DISTANCE, MVT_MAX_CAMERA_DISTANCE * 0.75);
   cameraState.update();
-  terrain.scheduleLodRefresh();
+  terrainPoc.scheduleLodRefresh();
   scheduleSync();
 });
 
-for (const select of [ui.luseVisibility, ui.tranVisibility]) {
+for (const [select, datasetId] of [
+  [ui.luseVisibility, 'luse-2025'],
+  [ui.tranVisibility, 'tran-lod1-2025']
+]) {
   select?.addEventListener('change', () => {
-    mvt.clearTiles();
-    scheduleSync();
+    const visible = select.value !== 'hide';
+    const hasCachedTiles = mvt.setDatasetVisible(datasetId, visible);
+    if (lastMvtResult) {
+      applyMvtResult({
+        ...lastMvtResult,
+        count: mvt.getVisibleTileCount()
+      });
+    }
+    // Showing an already loaded layer is a render-only operation. Fetch only if
+    // its cache was invalidated while the layer was hidden or it has not loaded yet.
+    if (visible && !hasCachedTiles) scheduleSync();
   });
 }
 
@@ -260,7 +256,6 @@ ui.terrainVisibility?.addEventListener('change', () => {
     const group = terrain.getGroup();
     if (group) group.visible = false;
   }
-  syncGridVisibility();
 });
 
 ui.textureType?.addEventListener('change', () => terrainPoc.reload(false));
@@ -269,7 +264,6 @@ ui.jprcZone?.addEventListener('change', () => terrainPoc.reload(true));
 ui.localOrigin.textContent = `${originRef.lat.toFixed(8)}, ${originRef.lon.toFixed(8)}`;
 terrainPoc.setVisible(ui.terrainVisibility?.value !== 'hide');
 terrainPoc.initialRequest(true);
-syncGridVisibility();
 
 setStatus(ui, '起動完了。地形の読み込み後、カメラを操作するか「MVT 表示距離まで寄る」を試してください。');
 scheduleSync();

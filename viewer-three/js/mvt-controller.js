@@ -12,8 +12,9 @@ export function createMvtController(THREE, scene, getCameraState) {
   root.name = 'plateau-mvt-root';
   scene.add(root);
   const tileGroups = new Map();
-  let inflight = 0;
+  const datasetVisibility = new Map(DATASETS.map(dataset => [dataset.id, true]));
   let generation = 0;
+  let activeAbortController = null;
   let lastError = '';
 
   function viewBounds(distance, center) {
@@ -26,8 +27,8 @@ export function createMvtController(THREE, scene, getCameraState) {
     };
   }
 
-  async function fetchTile(plan, origin, datasetStyle) {
-    const response = await fetch(plan.url);
+  async function fetchTile(plan, origin, datasetStyle, signal) {
+    const response = await fetch(plan.url, { signal });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const buffer = await response.arrayBuffer();
     const { features, extent } = await decodeMvt(buffer, plan.sourceLayer);
@@ -36,6 +37,9 @@ export function createMvtController(THREE, scene, getCameraState) {
       THREE, features, plan.x, plan.y, plan.z, origin, datasetStyle, extent
     );
     group.userData.featureCount = features.length;
+    group.userData.datasetId = plan.datasetId;
+    group.userData.cityCode = plan.cityCode;
+    group.visible = datasetVisibility.get(plan.datasetId) !== false;
     let drawable = 0;
     group.traverse(node => {
       if (node.isMesh || node.isLine) drawable += 1;
@@ -45,6 +49,9 @@ export function createMvtController(THREE, scene, getCameraState) {
   }
 
   function clearTiles() {
+    generation += 1;
+    activeAbortController?.abort();
+    activeAbortController = null;
     for (const group of tileGroups.values()) {
       root.remove(group);
       disposeObject3D(group);
@@ -65,11 +72,38 @@ export function createMvtController(THREE, scene, getCameraState) {
     return tileGroups.size > 0;
   }
 
+  function hasDatasetTiles(datasetId) {
+    for (const group of tileGroups.values()) {
+      if (group.userData.datasetId === datasetId) return true;
+    }
+    return false;
+  }
+
+  function getVisibleTileCount() {
+    let count = 0;
+    for (const group of tileGroups.values()) {
+      if (group.visible) count += 1;
+    }
+    return count;
+  }
+
+  function setDatasetVisible(datasetId, visible) {
+    datasetVisibility.set(datasetId, visible);
+    for (const group of tileGroups.values()) {
+      if (group.userData.datasetId === datasetId) group.visible = visible;
+    }
+    return hasDatasetTiles(datasetId);
+  }
+
   async function sync() {
     const { origin, distance, target, datasetIds } = getCameraState();
     const viewCenter = viewCenterFromTarget(origin, target);
+    const gen = ++generation;
+    activeAbortController?.abort();
+    const abortController = new AbortController();
+    activeAbortController = abortController;
     if (distance > MVT_MAX_CAMERA_DISTANCE || !datasetIds?.length) {
-      clearTiles();
+      evictOutside(new Set());
       return {
         mode: 'off',
         distance,
@@ -80,7 +114,6 @@ export function createMvtController(THREE, scene, getCameraState) {
       };
     }
 
-    const gen = ++generation;
     lastError = '';
     let plans;
     try {
@@ -93,25 +126,26 @@ export function createMvtController(THREE, scene, getCameraState) {
 
     const limited = plans.slice(0, MAX_TILES);
     const styleById = Object.fromEntries(DATASETS.map(d => [d.id, d]));
-    const keepKeys = new Set(limited.map(p => `${p.datasetId}:${p.z}/${p.x}/${p.y}`));
+    const keepKeys = new Set(limited.map(p => `${p.datasetId}:${p.z}/${p.x}/${p.y}:${p.cityCode}`));
 
     const queue = limited.filter(plan => {
-      const key = `${plan.datasetId}:${plan.z}/${plan.x}/${plan.y}`;
+      const key = `${plan.datasetId}:${plan.z}/${plan.x}/${plan.y}:${plan.cityCode}`;
       return !tileGroups.has(key);
     });
     let loadErrors = 0;
+    let activeFetches = 0;
 
     await new Promise(resolve => {
       const pump = () => {
-        if (gen !== generation) return resolve();
-        while (inflight < MAX_CONCURRENT && queue.length) {
+        if (gen !== generation || abortController.signal.aborted) return resolve();
+        while (activeFetches < MAX_CONCURRENT && queue.length) {
           const plan = queue.shift();
-          const key = `${plan.datasetId}:${plan.z}/${plan.x}/${plan.y}`;
+          const key = `${plan.datasetId}:${plan.z}/${plan.x}/${plan.y}:${plan.cityCode}`;
           if (tileGroups.has(key)) continue;
-          inflight += 1;
-          fetchTile(plan, origin, styleById[plan.datasetId])
+          activeFetches += 1;
+          fetchTile(plan, origin, styleById[plan.datasetId], abortController.signal)
             .then(group => {
-              if (gen !== generation) {
+              if (gen !== generation || abortController.signal.aborted) {
                 disposeObject3D(group);
                 return;
               }
@@ -119,16 +153,17 @@ export function createMvtController(THREE, scene, getCameraState) {
               root.add(group);
             })
             .catch(error => {
+              if (error?.name === 'AbortError') return;
               loadErrors += 1;
               lastError = error?.message ?? String(error);
               console.warn('MVT tile', plan.url, error);
             })
             .finally(() => {
-              inflight -= 1;
+              activeFetches -= 1;
               pump();
             });
         }
-        if (inflight === 0 && queue.length === 0) resolve();
+        if (activeFetches === 0 && queue.length === 0) resolve();
       };
       pump();
     });
@@ -137,7 +172,7 @@ export function createMvtController(THREE, scene, getCameraState) {
       return {
         mode: 'on',
         distance,
-        count: tileGroups.size,
+        count: getVisibleTileCount(),
         planned: limited.length,
         error: '',
         viewCenter,
@@ -147,7 +182,7 @@ export function createMvtController(THREE, scene, getCameraState) {
 
     evictOutside(keepKeys);
 
-    if (!tileGroups.size && limited.length && loadErrors) {
+    if (!getVisibleTileCount() && limited.length && loadErrors) {
       return {
         mode: 'error',
         distance,
@@ -161,12 +196,20 @@ export function createMvtController(THREE, scene, getCameraState) {
     return {
       mode: 'on',
       distance,
-      count: tileGroups.size,
+      count: getVisibleTileCount(),
       planned: limited.length,
       error: loadErrors ? `${loadErrors} タイル失敗: ${lastError}` : '',
       viewCenter
     };
   }
 
-  return { sync, clearTiles, hasTiles, root };
+  return {
+    sync,
+    clearTiles,
+    hasTiles,
+    hasDatasetTiles,
+    getVisibleTileCount,
+    setDatasetVisible,
+    root
+  };
 }

@@ -17,6 +17,8 @@
   Vanilla JSによるMVVMの責務分担、地図オーバーレイ、参照実装との関係をまとめています。
 - [MVT 静的タイル索引と Three.js 統合](design/mvt-static-tile-index.md)  
   kuwaya-geo ベースでの z16 MVT 取得、z12 親 JSON 索引、東京都・埼玉県 PoC（154 ファイル）の設計です。実装は `tools/build-mvt-index/` と `viewer-three/`。
+- [MVTデコード・結合・重複排除設計](design/mvt-decode-merge-dedup.md)
+  2D・3D共通のデコード方針、同一IDの結合、重複排除、利用ライブラリ、データフローを整理しています。
 
 ### 参照
 

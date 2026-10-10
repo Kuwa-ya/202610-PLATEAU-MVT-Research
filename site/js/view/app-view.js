@@ -5,12 +5,9 @@ export class AppView {
     this.document = documentRef;
     this.viewModel = viewModel;
     this.map = mapAdapter;
-    this.lastDatasetRevision = -1;
     this.lastSelectedFeature = undefined;
 
     this.elements = {
-      cityForm: this.must('city-form'),
-      cityCode: this.must('city-code'),
       status: this.must('status'),
       statusText: this.must('status-text'),
       zoomGate: this.must('zoom-gate'),
@@ -23,6 +20,7 @@ export class AppView {
       inspector: this.must('inspector'),
       toggleLuse: this.must('toggle-luse'),
       toggleRoad: this.must('toggle-road'),
+      toggleCityBoundary: this.must('toggle-city-boundary'),
       toggleMesh: this.must('toggle-mesh'),
       toggleWebTile: this.must('toggle-web-tile'),
       opacityLuse: this.must('opacity-luse'),
@@ -43,15 +41,10 @@ export class AppView {
 
   bindEvents() {
     const elements = this.elements;
-    elements.cityForm.addEventListener('submit', event => {
-      event.preventDefault();
-      const valid = this.viewModel.setCityCodes(elements.cityCode.value);
-      if (!valid) elements.cityCode.focus();
-    });
-
     const toggles = [
       [elements.toggleLuse, 'luse'],
       [elements.toggleRoad, 'road'],
+      [elements.toggleCityBoundary, 'cityBoundary'],
       [elements.toggleMesh, 'mesh'],
       [elements.toggleWebTile, 'webTile']
     ];
@@ -74,13 +67,9 @@ export class AppView {
   }
 
   render(state) {
-    if (state.datasetRevision !== this.lastDatasetRevision) {
-      this.elements.cityCode.value = state.cityCodes.join(', ');
-      this.lastDatasetRevision = state.datasetRevision;
-    }
-
     this.setToggle(this.elements.toggleLuse, state.visibility.luse);
     this.setToggle(this.elements.toggleRoad, state.visibility.road);
+    this.setToggle(this.elements.toggleCityBoundary, state.visibility.cityBoundary);
     this.setToggle(this.elements.toggleMesh, state.visibility.mesh);
     this.setToggle(this.elements.toggleWebTile, state.visibility.webTile);
 

@@ -28,6 +28,7 @@ if (!existsSync(siteRoot) || !statSync(siteRoot).isDirectory()) {
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
+  ".geojson": "application/geo+json; charset=utf-8",
   ".ico": "image/x-icon",
   ".jpeg": "image/jpeg",
   ".jpg": "image/jpeg",

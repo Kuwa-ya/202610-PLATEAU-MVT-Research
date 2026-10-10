@@ -15,6 +15,7 @@
 .mvt-legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--caption); }
 .mvt-swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid rgba(255,255,255,.15); }
 .mvt-swatch.luse { background: rgba(71, 230, 177, .75); }
+.mvt-swatch.luse-road { background: rgba(245, 158, 72, .88); }
 .mvt-swatch.tran { background: rgba(255, 200, 90, .85); }
 
 #mvt-canvas { width: 100%; height: 100%; display: block; touch-action: none; }

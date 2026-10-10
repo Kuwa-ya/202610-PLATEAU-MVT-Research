@@ -1,4 +1,5 @@
 import { tileBounds } from './web-tiles.js';
+import { featureColor } from './mvt-style.js';
 
 function lonLatToLocal(lon, lat, origin, metersPerDegLon, metersPerDegLat) {
   return {
@@ -14,6 +15,19 @@ function tileCoordToLonLat(p, tileX, tileY, zoom, extent, bounds) {
   return { lon, lat };
 }
 
+function tileClippingPlanes(THREE, bounds, origin, metersPerDegLon, metersPerDegLat) {
+  const west = (bounds.west - origin.lon) * metersPerDegLon;
+  const east = (bounds.east - origin.lon) * metersPerDegLon;
+  const north = -(bounds.north - origin.lat) * metersPerDegLat;
+  const south = -(bounds.south - origin.lat) * metersPerDegLat;
+  return [
+    new THREE.Plane(new THREE.Vector3(1, 0, 0), -west),
+    new THREE.Plane(new THREE.Vector3(-1, 0, 0), east),
+    new THREE.Plane(new THREE.Vector3(0, 0, 1), -north),
+    new THREE.Plane(new THREE.Vector3(0, 0, -1), south)
+  ];
+}
+
 export function buildTileGroup(THREE, features, tileX, tileY, zoom, origin, options, extent) {
   const group = new THREE.Group();
   group.name = `mvt-${zoom}-${tileX}-${tileY}`;
@@ -21,19 +35,40 @@ export function buildTileGroup(THREE, features, tileX, tileY, zoom, origin, opti
   const latRad = (origin.lat * Math.PI) / 180;
   const metersPerDegLat = 111_320;
   const metersPerDegLon = 111_320 * Math.cos(latRad);
-  const material = new THREE.MeshBasicMaterial({
-    color: options.color,
-    transparent: true,
-    opacity: options.opacity,
-    depthWrite: false,
-    depthTest: true,
-    polygonOffset: true,
-    polygonOffsetFactor: 1,
-    polygonOffsetUnits: 1,
-    side: THREE.DoubleSide
-  });
+  // MVT geometry normally includes a buffer outside the tile extent. Map renderers
+  // clip that buffer at the tile boundary; without clipping, translucent polygons
+  // from adjacent tiles overlap and make the seam look darker.
+  const clippingPlanes = tileClippingPlanes(
+    THREE, bounds, origin, metersPerDegLon, metersPerDegLat
+  );
+  const fillMaterials = new Map();
+  const lineMaterials = new Map();
+  const fillMaterialFor = color => {
+    if (!fillMaterials.has(color)) {
+      fillMaterials.set(color, new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: options.opacity,
+        depthWrite: false,
+        depthTest: true,
+        polygonOffset: true,
+        polygonOffsetFactor: 1,
+        polygonOffsetUnits: 1,
+        clippingPlanes,
+        side: THREE.DoubleSide
+      }));
+    }
+    return fillMaterials.get(color);
+  };
+  const lineMaterialFor = color => {
+    if (!lineMaterials.has(color)) {
+      lineMaterials.set(color, new THREE.LineBasicMaterial({ color, clippingPlanes }));
+    }
+    return lineMaterials.get(color);
+  };
 
   for (const feature of features) {
+    const color = featureColor(options.id, feature.properties, options.color);
     const geom = feature.geometry;
     if (!geom?.length) continue;
     if (feature.type === 1) continue;
@@ -48,7 +83,7 @@ export function buildTileGroup(THREE, features, tileX, tileY, zoom, origin, opti
         }
         const lineGeom = new THREE.BufferGeometry();
         lineGeom.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-        group.add(new THREE.Line(lineGeom, new THREE.LineBasicMaterial({ color: options.color })));
+        group.add(new THREE.Line(lineGeom, lineMaterialFor(color)));
       }
       continue;
     }
@@ -74,9 +109,11 @@ export function buildTileGroup(THREE, features, tileX, tileY, zoom, origin, opti
         shape.holes.push(hole);
       }
       const shapeGeom = new THREE.ShapeGeometry(shape);
-      shapeGeom.rotateX(-Math.PI / 2);
+      // Shape の Y にローカル Z を入れているため、+90°で XZ 平面へ倒す。
+      // -90°では Z が反転し、地形（X=東、Z=南）と鏡像になってしまう。
+      shapeGeom.rotateX(Math.PI / 2);
       shapeGeom.translate(0, 1.2, 0);
-      group.add(new THREE.Mesh(shapeGeom, material));
+      group.add(new THREE.Mesh(shapeGeom, fillMaterialFor(color)));
     }
   }
   return group;

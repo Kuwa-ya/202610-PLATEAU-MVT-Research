@@ -8,11 +8,12 @@
 
 | ファイル | 区分 | 責務 |
 |---|---|---|
-| `model/model.js` | Model | 年度・自治体設定、入力検証、MVT URL、地物識別 |
+| `model/model.js` | Model | 年度・表示閾値、レイヤーID、地物識別 |
 | `model/mesh-utils.js` | Model | 地域メッシュと Web Mercator タイルの純粋計算 |
 | `viewmodel/app-view-model.js` | ViewModel | 画面状態の唯一の保持元、操作による状態更新、変更通知 |
 | `view/app-view.js` | View | DOMイベントを ViewModel に渡し、状態をDOMへ反映 |
 | `services/map-adapter.js` | View Adapter | MapLibreの初期化、MVT・グリッド・ラベル描画、地図イベント通知 |
+| `services/indexed-mvt-protocol.js` | Service | z16タイルを静的索引から自治体別MVT URLへ解決 |
 | `app.js` | Composition Root | 各要素の生成とコールバック接続。`site/js/` 直下に配置 |
 
 ## データフロー
@@ -37,6 +38,17 @@ AppView ──操作──→ AppViewModel ──状態通知──→ AppView
 - 両者とも GeoJSON の線・面を MapLibre で描き、番号は外部フォント配信に依存しないDOMマーカーで表示します。
 - 広域時は描画量を抑えるため番号ラベルを間引きます。中心地点の地域メッシュコードは常にサイドバーへ表示します。
 - 表示範囲または表示切替が変わったときだけグリッドを更新し、通信統計など別の状態変更では再生成しません。
+- 東京都の市区町村境界は `data/city_geojson/r2ka13_city.geojson` をGeoJSON sourceとして読み込み、MVTより前面の独立したline layerで表示します。
+
+## MVT取得
+
+取得ズームをz16とする設計理由、およびz12索引との役割分担は、[MVT 静的タイル索引と Three.js 統合](design/mvt-static-tile-index.md#41-z16を自治体判定mvt取得単位にする理由)を参照してください。z12は索引JSONの格納単位、z16は自治体判定とMVT取得の単位です。
+
+- MapLibreのカスタムプロトコル `plateau-indexed://` を使用します。
+- z16タイルごとにz12親索引を参照し、候補自治体コードが複数ある場合は全自治体のMVTを取得します。
+- 土地利用と道路は自治体別のMapLibre vector sourceとして読み込み、索引で該当する複数自治体を重ねて表示します。
+- 土地利用の `uro_orgLandUse` が「道路」の地物は、通常の土地利用と区別して橙色で表示します。3D Viewerも同じ属性規則をメッシュ生成時に適用します。
+- z16未満ではMVTを要求せず、z16より拡大した場合はMapLibreのオーバーズームを利用します。
 
 ## 参照実装との関係
 

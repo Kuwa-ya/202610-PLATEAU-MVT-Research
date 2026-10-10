@@ -6,13 +6,18 @@
   "description": "PLATEAU MVT を MapLibre GL JS で検証する静的サイト",
   "dependencies": {
     "@mapbox/vector-tile": "^3.0.0",
-    "pbf": "^5.1.2"
+    "pbf": "^5.1.2",
+    "three": "0.185.1"
   },
   "scripts": {
     "dev": "node scripts/dev.js",
     "dev:clean": "node scripts/dev.js",
     "build:mvt-index": "node tools/build-mvt-index/build.js",
-    "check": "node --check scripts/serve.js && node --check scripts/dev.js && node --check scripts/free-port.js && node --check scripts/check-mesh.js && node --check tools/build-mvt-index/build.js && node --check site/js/model/mesh-utils.js && node --check site/js/model/model.js && node --check site/js/services/map-adapter.js && node --check site/js/viewmodel/app-view-model.js && node --check site/js/view/app-view.js && node --check site/js/app.js && node scripts/check-mesh.js"
+    "build:mvt-index:offline": "set SKIP_CATALOG_FETCH=1&& set REUSE_MANIFESTS=1&& node tools/build-mvt-index/build.js",
+    "check:boundaries": "node --check tools/build-mvt-index/admin-boundaries.js && node scripts/check-admin-boundaries.js",
+    "check:mvt-style": "node --check viewer-three/js/mvt-style.js && node scripts/check-mvt-style.js",
+    "precheck": "npm run check:boundaries && npm run check:mvt-style",
+    "check": "node --check scripts/serve.js && node --check scripts/dev.js && node --check scripts/free-port.js && node --check scripts/check-mesh.js && node --check scripts/check-indexed-mvt.js && node --check tools/build-mvt-index/build.js && node --check site/js/model/mesh-utils.js && node --check site/js/model/model.js && node --check site/js/services/indexed-mvt-protocol.js && node --check site/js/services/map-adapter.js && node --check site/js/viewmodel/app-view-model.js && node --check site/js/view/app-view.js && node --check site/js/app.js && node scripts/check-mesh.js && node scripts/check-indexed-mvt.js"
   },
   "engines": {
     "node": ">=20"

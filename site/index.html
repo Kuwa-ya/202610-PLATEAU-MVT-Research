@@ -94,32 +94,7 @@
       text-transform: uppercase;
     }
 
-    .city-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
-    .text-input {
-      min-width: 0;
-      height: 42px;
-      padding: 0 12px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      outline: none;
-      background: #0a1417;
-      color: var(--ink);
-      font-size: 0.92rem;
-    }
-    .text-input:focus { border-color: rgba(71, 230, 177, 0.68); box-shadow: 0 0 0 3px rgba(71, 230, 177, 0.1); }
-
-    .button {
-      height: 42px;
-      padding: 0 14px;
-      border: 1px solid rgba(71, 230, 177, 0.3);
-      border-radius: 10px;
-      background: rgba(71, 230, 177, 0.13);
-      color: #a8f8dd;
-      cursor: pointer;
-      font-weight: 800;
-    }
-    .button:hover { background: rgba(71, 230, 177, 0.2); }
-    .button:focus-visible, .chip:focus-visible, .toggle:focus-visible { outline: 3px solid rgba(71, 230, 177, 0.34); outline-offset: 2px; }
+    .chip:focus-visible, .toggle:focus-visible { outline: 3px solid rgba(71, 230, 177, 0.34); outline-offset: 2px; }
 
     .hint { margin: 8px 0 0; color: var(--muted); font-size: 0.76rem; line-height: 1.45; }
 
@@ -197,7 +172,7 @@
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.24);
     }
     .grid-label--mesh { border: 1px solid rgba(37, 99, 235, 0.62); background: rgba(239, 246, 255, 0.88); color: #1e40af; }
-    .grid-label--web-tile { border: 1px solid rgba(220, 38, 38, 0.62); background: rgba(254, 242, 242, 0.9); color: #991b1b; }
+    .grid-label--web-tile { border: 1px solid rgba(220, 38, 38, 0.62); background: rgba(254, 242, 242, 0.9); color: #991b1b; text-align: center; white-space: pre; }
     .grid-label--mesh-4, .grid-label--mesh-6 { font-size: 11px; }
     .grid-label--mesh-10, .grid-label--mesh-11 { font-size: 9px; }
 
@@ -279,17 +254,13 @@
       <header class="brand">
         <div class="eyebrow"><span class="pulse"></span>LIVE TILE INSPECTOR</div>
         <h1>PLATEAU MVT LAB</h1>
-        <p class="sub">複数自治体の公式MVTを重ね、表示・密度・属性を確認します。</p>
+        <p class="sub">タイル索引から公式MVTを自動選択し、自治体境界をまたいで表示します。</p>
       </header>
 
       <div class="scroll">
         <section class="section">
-          <h2 class="section-title">対象自治体</h2>
-          <form id="city-form" class="city-form">
-            <input id="city-code" class="text-input" value="13101" autocomplete="off" spellcheck="false" aria-label="5桁の自治体コード（複数指定可）" />
-            <button class="button" type="submit">読み込む</button>
-          </form>
-          <p class="hint">5桁のコードをカンマまたは空白で区切ります。2025年度固定、最大8自治体。初期値は千代田区（13101）のみです。</p>
+          <h2 class="section-title">自動タイル選択</h2>
+          <p class="hint">東京都・埼玉県の静的索引を使い、z16タイルごとに取得先の自治体を自動決定します。自治体コードの指定は不要です。</p>
           <div class="chips" aria-label="表示地点">
             <button class="chip" type="button" data-place="otemachi">大手町</button>
             <button class="chip" type="button" data-place="kanda">神田</button>
@@ -317,6 +288,14 @@
 
           <div class="layer-card">
             <div class="layer-head">
+              <div class="layer-name"><span class="swatch" style="background:#f43f5e"></span>市区町村境界（東京都）</div>
+              <button id="toggle-city-boundary" class="toggle" type="button" aria-label="市区町村境界表示を切り替える" aria-pressed="true"></button>
+            </div>
+            <p class="hint"><code>data/city_geojson/r2ka13_city.geojson</code> の63市区町村を表示します。</p>
+          </div>
+
+          <div class="layer-card">
+            <div class="layer-head">
               <div class="layer-name"><span class="swatch" style="background:#2563eb"></span>地域メッシュコード</div>
               <button id="toggle-mesh" class="toggle" type="button" aria-label="地域メッシュ表示を切り替える" aria-pressed="true"></button>
             </div>
@@ -328,7 +307,7 @@
               <div class="layer-name"><span class="swatch" style="background:#dc2626"></span>Web Mercator <code>z/x/y</code></div>
               <button id="toggle-web-tile" class="toggle" type="button" aria-label="Web Mercatorタイル表示を切り替える" aria-pressed="false"></button>
             </div>
-            <p class="hint">現在の整数ズームに対応するXYZタイル境界と番号を表示します。</p>
+            <p class="hint">現在の整数ズームに対応するXYZタイル番号と、MVT取得に使う土地利用（L）・道路（R）の全自治体コードを表示します。</p>
           </div>
 
           <div class="overlay-readout" aria-label="中心位置のメッシュ番号">
@@ -344,7 +323,7 @@
             <div class="stat"><span class="stat-label">MVT要求</span><strong id="stat-requests" class="stat-value">0</strong></div>
             <div class="stat"><span class="stat-label">転送量</span><strong id="stat-bytes" class="stat-value">—</strong></div>
           </div>
-          <div id="zoom-note" class="zoom-note">ズーム14以上でMVTを表示します。</div>
+          <div id="zoom-note" class="zoom-note">ズーム16以上でMVTを表示します。</div>
         </section>
 
         <section class="section">
@@ -355,7 +334,7 @@
     </aside>
 
     <div id="status" class="status loading" role="status" aria-live="polite"><span class="status-dot"></span><span id="status-text">地図を準備中</span></div>
-    <div id="zoom-gate" class="zoom-gate">ズーム14まで拡大するとPLATEAU MVTを表示します</div>
+    <div id="zoom-gate" class="zoom-gate">ズーム16まで拡大するとPLATEAU MVTを表示します</div>
   </main>
 
   <script src="./vendor/maplibre-gl/maplibre-gl.js"></script>

@@ -26,9 +26,9 @@ export async function loadParentIndex(datasetId, parentKey) {
   return doc;
 }
 
-export function pickFetchCityCode(codes) {
-  if (!codes?.length) return null;
-  return [...codes].sort((a, b) => Number(a) - Number(b))[0];
+export function pickFetchCityCodes(codes) {
+  if (!Array.isArray(codes)) return [];
+  return [...new Set(codes)].sort((a, b) => Number(a) - Number(b));
 }
 
 function mvtUrlFor(manifest, cityCode, z, x, y) {
@@ -73,19 +73,20 @@ export async function planFetches(bounds, datasetIds) {
       const tileKey = `${child.x}/${child.y}`;
       const codes = indexDoc.tiles?.[tileKey];
       if (!Array.isArray(codes) || codes.length === 0) continue;
-      const cityCode = pickFetchCityCode(codes);
-      const dedupe = `${datasetId}:${MVT_FETCH_ZOOM}/${child.x}/${child.y}:${cityCode}`;
-      if (seen.has(dedupe)) continue;
-      seen.add(dedupe);
-      plans.push({
-        datasetId,
-        z: MVT_FETCH_ZOOM,
-        x: child.x,
-        y: child.y,
-        cityCode,
-        sourceLayer: sourceLayerFor(manifest, cityCode),
-        url: mvtUrlFor(manifest, cityCode, MVT_FETCH_ZOOM, child.x, child.y)
-      });
+      for (const cityCode of pickFetchCityCodes(codes)) {
+        const dedupe = `${datasetId}:${MVT_FETCH_ZOOM}/${child.x}/${child.y}:${cityCode}`;
+        if (seen.has(dedupe)) continue;
+        seen.add(dedupe);
+        plans.push({
+          datasetId,
+          z: MVT_FETCH_ZOOM,
+          x: child.x,
+          y: child.y,
+          cityCode,
+          sourceLayer: sourceLayerFor(manifest, cityCode),
+          url: mvtUrlFor(manifest, cityCode, MVT_FETCH_ZOOM, child.x, child.y)
+        });
+      }
     }
   }
   return plans.filter(p => p.url && p.sourceLayer);
