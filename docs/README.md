@@ -4,6 +4,11 @@
 
 ## 文書一覧
 
+### 計画・現状
+
+- [リポジトリ現状概要（ドキュメントベース）](repository-state-overview.md)  
+  最終ゴール議論のたたき台。調査・設計・README から現在地と未決論点を整理したスナップショットです。
+
 ### 調査
 
 - [PLATEAU 取得可能データ整理（Cesium 非採用）](research/plateau-data-availability.md)  
