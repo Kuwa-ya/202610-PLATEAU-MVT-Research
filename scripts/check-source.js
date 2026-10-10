@@ -1,0 +1,29 @@
+import { spawnSync } from 'node:child_process';
+
+const files = [
+  'scripts/serve.js',
+  'scripts/dev.js',
+  'scripts/free-port.js',
+  'scripts/check-mesh.js',
+  'scripts/check-indexed-mvt.js',
+  'tools/build-mvt-index/build.js',
+  'web/shared/mvt/feature-style.js',
+  'web/viewers/maplibre/js/model/mesh-utils.js',
+  'web/viewers/maplibre/js/model/model.js',
+  'web/viewers/maplibre/js/services/indexed-mvt-protocol.js',
+  'web/viewers/maplibre/js/services/map-adapter.js',
+  'web/viewers/maplibre/js/viewmodel/app-view-model.js',
+  'web/viewers/maplibre/js/view/app-view.js',
+  'web/viewers/maplibre/js/app.js',
+  'web/viewers/three/js/app.js',
+  'web/viewers/three/js/mvt-controller.js',
+  'web/viewers/three/js/mvt-index.js',
+  'web/viewers/three/js/mvt-mesh.js'
+];
+
+for (const file of files) {
+  const result = spawnSync(process.execPath, ['--check', file], { stdio: 'inherit' });
+  if (result.status !== 0) process.exit(result.status ?? 1);
+}
+
+console.log(`JavaScript構文: OK (${files.length}ファイル)`);

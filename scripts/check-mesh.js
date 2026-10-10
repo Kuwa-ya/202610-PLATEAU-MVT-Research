@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { MeshUtils as utils } from '../site/js/model/mesh-utils.js';
+import { MeshUtils as utils } from '../web/viewers/maplibre/js/model/mesh-utils.js';
 const latitude = 35.681236;
 const longitude = 139.767125;
 
