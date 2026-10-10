@@ -46,7 +46,7 @@ npm run generate:g2-preview
 
 ```bash
 npm run build:even-g2   # → web/data/output/even-g2/dist/
-npm run pack:even-g2    # 上記のあと → web/data/output/even-g2/plateau-mvt-g2.ehpk
+npm run pack:even-g2    # → web/data/output/even-g2/plateau-mvt-g2-v{version}.ehpk
 ```
 
 ソースは `web/viewers/even-g2/hub-app/`。成果物だけ `output/even-g2/` に集約します。

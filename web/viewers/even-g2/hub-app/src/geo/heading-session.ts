@@ -1,4 +1,4 @@
-/** 向き（手動 ±15° ＋ GPS 進行方位があれば合成）。0=北、時計回り（度） */
+/** 向き（GPS 進行方位。0=北、時計回り・度） */
 export class HeadingSession {
   private courseHeadingDeg: number | null = null;
   private manualOffsetDeg = 0;
@@ -12,11 +12,10 @@ export class HeadingSession {
   }
 
   formatHeadingStatus(): string {
-    const parts = [`手動オフセット: ${this.manualOffsetDeg.toFixed(0)}°`];
     if (this.courseHeadingDeg != null) {
-      parts.push(`GPS 進行方位: ${this.courseHeadingDeg.toFixed(0)}°`);
+      return `向き: GPS 進行方位 ${this.courseHeadingDeg.toFixed(0)}°`;
     }
-    return `向き: ${parts.join(' · ')}`;
+    return '向き: GPS 進行方位 —（静止時は北=0°）';
   }
 
   onHeadingChange(listener: () => void) {

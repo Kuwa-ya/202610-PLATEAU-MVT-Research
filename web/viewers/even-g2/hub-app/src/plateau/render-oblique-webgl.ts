@@ -2,9 +2,9 @@ import * as THREE from 'three';
 import type { BuildingVolume } from './geojson-buildings.js';
 import type { RegionalMeshBounds } from './mesh-code.js';
 import type { ObliqueRenderOptions } from './render-oblique.js';
+import { getViewCameraSpherical } from '../view/view-camera-state.js';
 
 const DEG_TO_RAD = Math.PI / 180;
-const VIEW_ELEVATION_RAD = Math.PI / 4;
 const METERS_PER_DEG_LAT = 111_320;
 
 function lonLatToEn(
@@ -21,14 +21,15 @@ function lonLatToEn(
   };
 }
 
+/** ワールド: X=東, Y=上, Z=北。Extrude+rotateX(-π/2) では Shape の Y を反転して Z+ を北にする */
 function buildingMesh(building: BuildingVolume, pivotLat: number, userLon: number, userLat: number): THREE.Mesh {
   const shape = new THREE.Shape();
   const ring = building.outer;
   for (let i = 0; i < ring.length; i += 1) {
     const [lon, lat] = ring[i];
     const { east, north } = lonLatToEn(lon, lat, userLon, userLat, pivotLat);
-    if (i === 0) shape.moveTo(east, north);
-    else shape.lineTo(east, north);
+    if (i === 0) shape.moveTo(east, -north);
+    else shape.lineTo(east, -north);
   }
   shape.closePath();
 
@@ -43,25 +44,6 @@ function buildingMesh(building: BuildingVolume, pivotLat: number, userLon: numbe
     flatShading: true
   });
   return new THREE.Mesh(geom, material);
-}
-
-function expandBoundsPoints(
-  box: THREE.Box3,
-  bounds: RegionalMeshBounds,
-  userLon: number,
-  userLat: number,
-  pivotLat: number,
-  maxHeightM: number
-) {
-  const lons = [bounds.west, bounds.east];
-  const lats = [bounds.south, bounds.north];
-  for (const lat of lats) {
-    for (const lon of lons) {
-      const { east, north } = lonLatToEn(lon, lat, userLon, userLat, pivotLat);
-      box.expandByPoint(new THREE.Vector3(east, 0, north));
-      box.expandByPoint(new THREE.Vector3(east, maxHeightM, north));
-    }
-  }
 }
 
 function disposeObject3D(root: THREE.Object3D) {
@@ -97,79 +79,78 @@ function getRenderer(width: number, height: number): THREE.WebGLRenderer {
   return sharedRenderer;
 }
 
+function addUserMarker(world: THREE.Group, headingDeg: number) {
+  const hRad = headingDeg * DEG_TO_RAD;
+  const tip = { east: Math.sin(hRad) * 16, north: Math.cos(hRad) * 16 };
+
+  const ringGeom = new THREE.RingGeometry(2.2, 3.4, 24);
+  const ring = new THREE.Mesh(
+    ringGeom,
+    new THREE.MeshBasicMaterial({ color: 0x44aaff, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
+  );
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = 0.15;
+  world.add(ring);
+
+  const poleGeom = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0.15, 0),
+    new THREE.Vector3(0, 6, 0)
+  ]);
+  world.add(new THREE.Line(poleGeom, new THREE.LineBasicMaterial({ color: 0x66ccff })));
+
+  const dot = new THREE.Mesh(
+    new THREE.SphereGeometry(1.8, 12, 12),
+    new THREE.MeshBasicMaterial({ color: 0x4afaff })
+  );
+  dot.position.y = 0.8;
+  world.add(dot);
+
+  const arrowGeom = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0.5, 0),
+    new THREE.Vector3(tip.east, 0.5, tip.north)
+  ]);
+  world.add(new THREE.Line(arrowGeom, new THREE.LineBasicMaterial({ color: 0x4afaff, linewidth: 2 })));
+}
+
 /**
- * Three.js WebGL — 南側 45° 付近から見た簡易立体。結果は canvas（PNG 化可能）。
+ * Three.js WebGL — kuwaya 型球面カメラ（南固定・ユーザー注視）。地図回転は heading で world の Y 回転のみ。
  */
 export function renderBuildingsObliqueWebGL(
   buildings: BuildingVolume[],
   options: ObliqueRenderOptions
 ): HTMLCanvasElement {
-  const { width, height, bounds, userLat, userLon, headingDeg } = options;
-  const padding = options.paddingPx ?? 6;
-  const pivotLat = userLat;
+  const { width, height, userLat, userLon, headingDeg } = options;
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x1a1f24);
 
   const ambient = new THREE.AmbientLight(0xffffff, 0.55);
   const sun = new THREE.DirectionalLight(0xffffff, 0.85);
-  sun.position.set(0, 80, 120);
+  sun.position.set(-40, 120, -60);
   scene.add(ambient, sun);
 
   const world = new THREE.Group();
   world.rotation.y = -headingDeg * DEG_TO_RAD;
   scene.add(world);
 
-  let maxH = 12;
+  const pivotLat = userLat;
   for (const building of buildings) {
-    maxH = Math.max(maxH, building.heightM);
     world.add(buildingMesh(building, pivotLat, userLon, userLat));
   }
 
-  const fitBox = new THREE.Box3();
-  expandBoundsPoints(fitBox, bounds, userLon, userLat, pivotLat, maxH);
-  if (fitBox.isEmpty()) fitBox.setFromCenterAndSize(new THREE.Vector3(), new THREE.Vector3(40, 20, 40));
+  addUserMarker(world, headingDeg);
 
-  const center = fitBox.getCenter(new THREE.Vector3());
-  const size = fitBox.getSize(new THREE.Vector3());
-  const span = Math.max(size.x, size.z, 8);
-  const spanY = Math.max(size.y, 8);
-  const fitRadius = Math.hypot(span, spanY) * 0.55 * (1 + padding / Math.min(width, height));
+  const target = new THREE.Vector3(0, 0, 0);
+  const spherical = new THREE.Spherical();
+  const cam = getViewCameraSpherical();
+  spherical.radius = cam.radius;
+  spherical.phi = cam.phi;
+  spherical.theta = cam.theta;
 
-  const camera = new THREE.PerspectiveCamera(42, width / height, 0.5, fitRadius * 40);
-  const horiz = fitRadius * Math.cos(VIEW_ELEVATION_RAD);
-  const elev = fitRadius * Math.sin(VIEW_ELEVATION_RAD);
-  camera.position.set(center.x, center.y + elev, center.z + horiz);
-  camera.lookAt(center);
+  const camera = new THREE.PerspectiveCamera(42, width / height, 0.5, cam.radius * 12);
+  camera.position.setFromSpherical(spherical).add(target);
+  camera.lookAt(target);
   camera.updateProjectionMatrix();
-
-  if (
-    userLon >= bounds.west
-    && userLon <= bounds.east
-    && userLat >= bounds.south
-    && userLat <= bounds.north
-  ) {
-    const userEn = lonLatToEn(userLon, userLat, userLon, userLat, pivotLat);
-    const hRad = headingDeg * DEG_TO_RAD;
-    const tipEn = {
-      east: Math.sin(hRad) * 14,
-      north: Math.cos(hRad) * 14
-    };
-    const lineGeom = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(userEn.east, 0.4, userEn.north),
-      new THREE.Vector3(tipEn.east, 0.4, tipEn.north)
-    ]);
-    const line = new THREE.Line(
-      lineGeom,
-      new THREE.LineBasicMaterial({ color: 0x4afaff, linewidth: 2 })
-    );
-    world.add(line);
-
-    const dotGeom = new THREE.SphereGeometry(1.2, 8, 8);
-    const dot = new THREE.Mesh(dotGeom, new THREE.MeshBasicMaterial({ color: 0x44aaff }));
-    dot.position.set(userEn.east, 0.5, userEn.north);
-    world.add(dot);
-  }
 
   const renderer = getRenderer(width, height);
   renderer.render(scene, camera);

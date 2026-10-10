@@ -6,7 +6,7 @@ export const FALLBACK_LOCATION = Object.freeze({
 });
 
 /** 画面更新ポーリング（描画のみ。GeoJSON はメッシュ切替時のみ） */
-export const VIEW_REFRESH_MS = 750;
+export const VIEW_REFRESH_MS = 500;
 
 /** G2 建物フレーム: `webgl`（Three.js）| `canvas2d`（従来の Canvas 2D） */
 export const VIEW_RENDER_BACKEND: 'webgl' | 'canvas2d' = 'webgl';

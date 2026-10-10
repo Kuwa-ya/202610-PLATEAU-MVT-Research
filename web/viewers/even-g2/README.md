@@ -19,7 +19,7 @@
 | 成果物 | パス |
 | --- | --- |
 | Web バンドル | `web/data/output/even-g2/dist/` |
-| 配布用パッケージ | `web/data/output/even-g2/plateau-mvt-g2.ehpk` |
+| 配布用パッケージ | `web/data/output/even-g2/plateau-mvt-g2-v{version}.ehpk`（`app.json` の version） |
 
 ```bash
 npm run pack:even-g2

@@ -10,7 +10,7 @@
     "dev:even": "node scripts/dev-vite-even.js",
     "build": "node ../../../../scripts/ensure-g2-preview.js && tsc --noEmit && vite build",
     "preview": "vite preview",
-    "pack": "npm run build && evenhub pack app.json ../../../data/output/even-g2/dist -o ../../../data/output/even-g2/plateau-mvt-g2.ehpk",
+    "pack": "node scripts/pack-ehpk.js",
     "simulate": "evenhub-simulator http://localhost:5173"
   },
   "dependencies": {

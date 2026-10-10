@@ -7,8 +7,16 @@ import {
   TextContainerUpgrade
 } from '@evenrealities/even_hub_sdk';
 import { FALLBACK_LOCATION } from './config/defaults.js';
-import { eventTypeOf, isDoubleClick } from './hub-events.js';
-import { formatFixShort, type GeoFix } from './geo/geo-fix.js';
+import { eventTypeOf, isDoubleClick, isScrollBottom, isScrollTop } from './hub-events.js';
+import {
+  G2_EVENT_LAYER,
+  G2_IMAGE,
+  G2_STATUS_META,
+  G2_STATUS_PERF
+} from './hub/g2-page-layout.js';
+import { formatG2StatusMeta, formatG2StatusPerf } from './hub/g2-status-text.js';
+import { nudgeCameraElevationDownDeg, nudgeCameraElevationUpDeg } from './view/view-camera-state.js';
+import type { GeoFix } from './geo/geo-fix.js';
 import { GpsSession } from './geo/gps-session.js';
 import { HeadingSession } from './geo/heading-session.js';
 import type { EvenHubBridge } from './hub/hub-runtime.js';
@@ -27,8 +35,8 @@ declare global {
   }
 }
 
-const IMG_W = 288;
-const IMG_H = 144;
+const IMG_W = G2_IMAGE.width;
+const IMG_H = G2_IMAGE.height;
 
 const metrics = new FrameMetrics();
 const gpsSession = new GpsSession();
@@ -58,46 +66,60 @@ async function bootstrap() {
   if (runtime.mode === 'even') {
     evenBridge = runtime.bridge;
     const eventLayer = new TextContainerProperty({
-      xPosition: 0,
-      yPosition: 0,
-      width: 576,
-      height: 288,
+      xPosition: G2_EVENT_LAYER.x,
+      yPosition: G2_EVENT_LAYER.y,
+      width: G2_EVENT_LAYER.width,
+      height: G2_EVENT_LAYER.height,
       borderWidth: 0,
       borderColor: 0,
       paddingLength: 0,
-      containerID: 1,
-      containerName: 'eventLayer',
+      containerID: G2_EVENT_LAYER.containerID,
+      containerName: G2_EVENT_LAYER.containerName,
       content: ' ',
       isEventCapture: 1
     });
 
-    const statusLine = new TextContainerProperty({
-      xPosition: 0,
-      yPosition: 220,
-      width: 576,
-      height: 40,
+    const statusMeta = new TextContainerProperty({
+      xPosition: G2_STATUS_META.x,
+      yPosition: G2_STATUS_META.y,
+      width: G2_STATUS_META.width,
+      height: G2_STATUS_META.height,
       borderWidth: 0,
       borderColor: 5,
-      paddingLength: 4,
-      containerID: 2,
-      containerName: 'status',
+      paddingLength: 2,
+      containerID: G2_STATUS_META.containerID,
+      containerName: G2_STATUS_META.containerName,
       content: '読み込み中…',
       isEventCapture: 0
     });
 
+    const statusPerf = new TextContainerProperty({
+      xPosition: G2_STATUS_PERF.x,
+      yPosition: G2_STATUS_PERF.y,
+      width: G2_STATUS_PERF.width,
+      height: G2_STATUS_PERF.height,
+      borderWidth: 0,
+      borderColor: 5,
+      paddingLength: 2,
+      containerID: G2_STATUS_PERF.containerID,
+      containerName: G2_STATUS_PERF.containerName,
+      content: ' ',
+      isEventCapture: 0
+    });
+
     const image = new ImageContainerProperty({
-      xPosition: Math.floor((576 - IMG_W) / 2),
-      yPosition: 24,
-      width: IMG_W,
-      height: IMG_H,
-      containerID: 3,
-      containerName: 'plateauFrame'
+      xPosition: G2_IMAGE.x,
+      yPosition: G2_IMAGE.y,
+      width: G2_IMAGE.width,
+      height: G2_IMAGE.height,
+      containerID: G2_IMAGE.containerID,
+      containerName: G2_IMAGE.containerName
     });
 
     const created = await evenBridge.createStartUpPageContainer(
       new CreateStartUpPageContainer({
-        containerTotalNum: 3,
-        textObject: [eventLayer, statusLine],
+        containerTotalNum: 4,
+        textObject: [eventLayer, statusMeta, statusPerf],
         imageObject: [image]
       })
     );
@@ -127,13 +149,20 @@ async function bootstrap() {
     return { sdkMs: performance.now() - sdkStart, result };
   }
 
-  async function setG2Status(text: string) {
+  async function setG2StatusPanels(meta: string, perf: string) {
     if (!pageReady || !evenBridge) return;
     await evenBridge.textContainerUpgrade(
       new TextContainerUpgrade({
-        containerID: 2,
-        containerName: 'status',
-        content: text
+        containerID: G2_STATUS_META.containerID,
+        containerName: G2_STATUS_META.containerName,
+        content: meta
+      })
+    );
+    await evenBridge.textContainerUpgrade(
+      new TextContainerUpgrade({
+        containerID: G2_STATUS_PERF.containerID,
+        containerName: G2_STATUS_PERF.containerName,
+        content: perf
       })
     );
   }
@@ -165,11 +194,10 @@ async function bootstrap() {
         phonePanel.refresh();
         if (runtime.mode === 'even' && pageReady) {
           const fix = resolveFix();
-          const coord = `${formatFixShort(fix)} `;
-          const hint = sdkResult === 'success' ? '' : ` · ${sdkResult}`;
-          const fetchTag = detail.dataFetched ? 'DL' : '描画';
-          const meta = `${fetchTag} · ${detail.ringCount}面 · ${Math.round(detail.headingDeg)}° · ${detail.meshCode}`;
-          await setG2Status(`${coord}${meta} · ${metrics.formatG2Status(complete)}${hint}`);
+          await setG2StatusPanels(
+            formatG2StatusMeta(fix, detail),
+            formatG2StatusPerf(complete, sdkResult)
+          );
         }
       }
     }
@@ -198,8 +226,9 @@ async function bootstrap() {
   } catch (error) {
     console.error(error);
     if (runtime.mode === 'even' && pageReady) {
-      await setG2Status(
-        `建物描画失敗: ${error instanceof Error ? error.message : String(error)}`
+      await setG2StatusPanels(
+        `建物描画失敗`,
+        error instanceof Error ? error.message : String(error)
       );
     }
   }
@@ -222,11 +251,30 @@ async function bootstrap() {
   }
 
   let unsubscribe = () => {};
+  let lastScrollAdjustMs = 0;
   if (runtime.mode === 'even' && evenBridge) {
     unsubscribe = evenBridge.onEvenHubEvent(event => {
       if (!pageReady) return;
       if (isDoubleClick(event)) {
         evenBridge.shutDownPageContainer(1);
+        return;
+      }
+
+      const now = performance.now();
+      if (isScrollTop(event)) {
+        if (now - lastScrollAdjustMs >= 280) {
+          lastScrollAdjustMs = now;
+          nudgeCameraElevationUpDeg();
+          viewPresenter.present('tick', true).catch(console.error);
+        }
+        return;
+      }
+      if (isScrollBottom(event)) {
+        if (now - lastScrollAdjustMs >= 280) {
+          lastScrollAdjustMs = now;
+          nudgeCameraElevationDownDeg();
+          viewPresenter.present('tick', true).catch(console.error);
+        }
         return;
       }
 

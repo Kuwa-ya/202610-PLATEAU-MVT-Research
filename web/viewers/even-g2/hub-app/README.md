@@ -17,7 +17,7 @@ HTTP の実機 QR で「プロトタイプ・読み込み中…」が続くの�
 
 ```bash
 npm run build    # VITE_HUB_MODE=even（vite production）
-npm run pack     # plateau-mvt-g2.ehpk
+npm run pack     # plateau-mvt-g2-v{app.jsonのversion}.ehpk（上書きしない）
 ```
 
 Even Hub ポータルへ `.ehpk` をアップロード（Private build）。
@@ -25,9 +25,12 @@ Even Hub ポータルへ `.ehpk` をアップロード（Private build）。
 ## データ・描画
 
 - GeoJSON DL: **11 桁メッシュが変わったときだけ**（`mesh-data-key.ts`）
-- 描画: 約 **750ms** ＋ 位置/方位の微小変化
+- 描画: 約 **500ms** ＋ 位置/方位の微小変化
+- G2 レイアウト: **左 288×144 地図**、**右半分をテキスト 2 段**（位置・メッシュ / カメラ・送信）
 - 既定は **Three.js WebGL** → 288×144 canvas → PNG → G2（`defaults.ts` の `VIEW_RENDER_BACKEND`。`canvas2d` で従来の `render-oblique.ts`）
-- 方位: **手動 ±15°**（歩行中は GPS 進行方位を加味）
+- 方位: **GPS 進行方位**（静止時は 0°＝北）
+- カメラ: kuwaya Three 同型の球面（南固定・ユーザー注視）。G2 **上/下スワイプ**で仰角。距離既定約 280 m
+- 建物: 現在地 11 桁メッシュの **3×3 タイル**（最大 9 本の GeoJSON）をマージ
 
 ## HTTP / HTTPS
 
