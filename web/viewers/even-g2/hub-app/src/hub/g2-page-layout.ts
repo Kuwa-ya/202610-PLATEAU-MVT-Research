@@ -17,7 +17,7 @@
  * WITHOUT WARRANTY OF ANY KIND. SEE /legal/SOURCE-CODE-LICENSE.txt.
  */
 
-/** Even 眼キャンバス 576×288 — 左: 地図、右: テキスト 2 段 */
+/** Even 眼キャンバス 576×288 — 左: 地図、右: メイン情報（perf コンテナはプレースホルダ） */
 
 export const G2_CANVAS_W = 576;
 export const G2_CANVAS_H = 288;
@@ -41,16 +41,17 @@ export const G2_STATUS_META = {
   x: TEXT_X,
   y: 0,
   width: TEXT_W,
-  height: Math.floor(G2_CANVAS_H / 2) - 2,
+  height: G2_CANVAS_H - 4,
   containerID: 2,
   containerName: 'statusMeta'
 } as const;
 
+/** SDK 4 コンテナ要件のため残す（内容は空） */
 export const G2_STATUS_PERF = {
   x: TEXT_X,
-  y: Math.floor(G2_CANVAS_H / 2) + 2,
+  y: G2_CANVAS_H - 2,
   width: TEXT_W,
-  height: Math.floor(G2_CANVAS_H / 2) - 2,
+  height: 2,
   containerID: 4,
   containerName: 'statusPerf'
 } as const;

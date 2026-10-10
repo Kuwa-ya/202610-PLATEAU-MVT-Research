@@ -14,6 +14,7 @@
     "dev:clean": "node scripts/dev.js",
     "build:mvt-index": "node tools/build-mvt-index/build.js",
     "build:mvt-index:use-district": "node scripts/build-use-district-index.js",
+    "build:address-pack": "node scripts/build-address-pack.js",
     "build:mvt-index:offline": "set SKIP_CATALOG_FETCH=1&& set REUSE_MANIFESTS=1&& node tools/build-mvt-index/build.js",
     "check:boundaries": "node --check tools/build-mvt-index/admin-boundaries.js && node scripts/check-admin-boundaries.js",
     "check:mvt-style": "node --check web/shared/mvt/feature-style.js && node scripts/check-mvt-style.js",

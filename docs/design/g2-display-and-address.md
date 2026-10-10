@@ -11,6 +11,8 @@
 | パス | 扱い |
 | --- | --- |
 | **`presentation/`** | **編集しない。** 別途、他メンバーが調整中の全体説明資料。本設計・実装は `docs/design/` と `web/viewers/even-g2/` で進める。 |
+| **`docs/ref/r2ka*.geojson`** | 住所の **正本**（Git に含める）。京都 `r2ka26` / 東京 `r2ka13` — [address-data.md](../ref/address-data.md) |
+| **`web/data/address/`** | **Git ignore**。`npm run build:address-pack` の生成物（`cities.geojson` + `chome/` + `manifest.json`） |
 
 ---
 
@@ -70,17 +72,16 @@ G2 右下にあった perf 用コンテナは、メイン情報定義に合わ�
 
 ### 4.1 参照データ（`docs/ref/` 直下）
 
-国土地理院 **行政区域** 系 GeoJSON（N03 / 住基町丁目等）を **市区町村レベル**と **町丁目レベル**に分けたファイルが置かれている。
+国土地理院 **住基町丁目・字等（r2ka）** GeoJSON を **市区町村**（`*_city`）と **町丁目**（`*_convert`）に分けて置く。京都・東京 **同一スキーマ**。
 
-| ファイル（例） | 規模感（2026-10 時点） | レベル |
+| ファイル | 規模感（2026-10 時点） | 地域 |
 | --- | --- | --- |
-| `N03-21_26_210101_city.geojson` | 36 feature | 京都府・市区町村（区含む） |
-| `N03-21_26_210101_convert.geojson` | 約 16 MB / 999 feature | 京都府・町丁目 |
-| `r2ka13_city.geojson` | 約 6.5 MB / 63 feature | 東京都・市区町村 |
-| `r2ka13_convert.geojson` | 約 60 MB / 6000+ feature | 東京都・町丁目 |
+| `r2ka26_city.geojson` | 36 feature | 京都府・市区町村 |
+| `r2ka26_convert.geojson` | 約 9500+ feature | 京都府・町丁目（`S_NAME`） |
+| `r2ka13_city.geojson` | 63 feature | 東京都・市区町村 |
+| `r2ka13_convert.geojson` | 6000+ feature | 東京都・町丁目 |
 
-属性例（市区町村）: `PREF_NAME`, `CITY_NAME`, `N03_007`（市区町村コード）  
-属性例（町丁目）: 上記に加え `S_NAME` 等（ファイルによりキー名要統一）
+属性: `PREF`, `CITY`, `PREF_NAME`, `CITY_NAME`, `S_NAME`。市区町村コード（pack 分割キー）= **`PREF` + `CITY`（3 桁）** 例: `26106`, `13101`。
 
 **全ファイル一括 fetch は避ける。** 事前分割＋段階読み込みとする。
 
@@ -96,10 +97,11 @@ flowchart TD
   HitChome --> Label[表示用文字列を組み立て]
 ```
 
-1. **ビルド時（または手動スクリプト）**  
-   - `*_city.geojson` はそのまま、または **都道府県 1 ファイル**程度に軽量化して `web/data/address/` 等へ配置（Git 方針は別途。巨大 convert は ignore 可）。  
-   - `*_convert.geojson` を **`N03_007`（市区町村コード）単位**で分割（例: `chome/26101.geojson`）。  
-   - 必要なら **bbox 索引**（市区町村コード → bbox）を JSON で持ち、読込前に粗判定。
+1. **ビルド時** — `scripts/build-address-pack.js`（ルート `npm run build:address-pack`）  
+   - 入力: `docs/ref/` の city + convert（正本は Git、生成物は **ignore** — §0）。  
+   - 出力: `web/data/address/cities.geojson`、**`PREF+CITY` 単位**の `chome/{cityCode}.geojson`、`manifest.json`。  
+   - Even: `hub-app` の `build` が上記生成 → `public/data/address` 同期（`.ehpk` 同梱必須）。  
+   - ref 更新時は [address-data.md](../ref/address-data.md) の手順で再生成（`DATASETS` はファイル名変更時のみ更新）。
 
 2. **ランタイム（G2 hub-app）**  
    - 常時: **全国または対象 2 都府県分の city インデックス**のみ保持（メモリ許容範囲）。  
@@ -116,13 +118,14 @@ G2 現在地ラベルは **本節のローカル GeoJSON 逆引き**を優先し
 
 ### 4.4 実装タスク（チェックリスト）
 
-- [ ] `docs/ref/*.geojson` から **`web/data/address/` 向け分割スクリプト**（city 維持 + chome を cityCode 別）
-- [ ] 共有 `resolveAddressAtLonLat(lat, lon)`（city → lazy chome）
-- [ ] G2 `formatG2StatusMeta` を §1 の 5 項目に再構成
-- [ ] 16 方位ラベル util
+- [x] `docs/ref/*.geojson` から **`web/data/address/` 向け分割スクリプト**（city 維持 + chome を cityCode 別）
+- [x] 共有 `resolveAddressAtLonLat(lat, lon)`（city → lazy chome）
+- [x] G2 `formatG2StatusMeta` を §1 の 5 項目に再構成
+- [x] 16 方位ラベル util
 - [ ] 標高パイプライン接続（別タスク）
-- [ ] `phone-panel` レイアウト §3
-- [ ] `.ehpk` 同梱: city 索引 + 利用都府県の chome パック方針（全同梱は非現実的 → **オンライン `/data/address/`** または pack 地域限定）
+- [x] `phone-panel` レイアウト §3
+- [x] `.ehpk` 同梱: **京都・東京 2 都府県**の city + chome を pack 同期（`sync-pack-data.js`）
+- [x] **京都府 ref の差し替え**（`r2ka26`、東京都と同スキーマ）
 
 ---
 
@@ -131,3 +134,4 @@ G2 現在地ラベルは **本節のローカル GeoJSON 逆引き**を優先し
 | 日付 | 内容 |
 | --- | --- |
 | 2026-10-10 | 初版（G2 メイン情報、モバイル UI、住所 2 段階読込、presentation 非触） |
+| 2026-10-11 | 住所 pack Git ignore、`docs/ref/address-data.md`、京都 `r2ka26` へ差し替え（N03 廃止） |

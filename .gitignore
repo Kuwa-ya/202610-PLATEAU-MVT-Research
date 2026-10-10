@@ -8,6 +8,10 @@ web/data/mvt/manifest/
 web/data/mvt/index/
 web/data/snapshot/
 
+# address pack (npm run build:address-pack → web/data/address/)
+web/data/address/**
+!web/data/address/.gitkeep
+
 # 生成・キャプチャ（正本は web/data/output/、再生成可能）
 web/data/output/**
 !web/data/output/**/

@@ -8,7 +8,7 @@
     "dev:https": "node scripts/dev-all.js --https",
     "dev:vite": "vite",
     "dev:even": "node scripts/dev-vite-even.js",
-    "build": "node scripts/sync-pack-mvt-data.js && node ../../../../scripts/ensure-g2-preview.js && tsc --noEmit && vite build",
+    "build": "node ../../../../scripts/build-address-pack.js && node scripts/sync-pack-data.js && node ../../../../scripts/ensure-g2-preview.js && tsc --noEmit && vite build",
     "preview": "vite preview",
     "pack": "node scripts/pack-ehpk.js",
     "simulate": "evenhub-simulator http://localhost:5173"

@@ -19,7 +19,8 @@ HTTP の実機 QR で「プロトタイプ・読み込み中…」が続くの�
 npm run build    # VITE_HUB_MODE=even（vite production）
 npm run pack     # web/data/output/even-g2/plateau-mvt-g2-v{app.json version}.ehpk
 
-`npm run build` / `pack` の前に、リポジトリルートで **`npm run build:mvt-index:use-district`** を実行してください（用途地域 manifest・索引を `.ehpk` に同梱します）。
+`npm run build` / `pack` の前に、リポジトリルートで **`npm run build:mvt-index:use-district`** を実行してください（用途地域 manifest・索引を `.ehpk` に同梱します）。  
+住所は **`npm run build` 内で `build-address-pack` → `public/data/address` 同期**（正本 `docs/ref/`、生成物は Git ignore — [address-data.md](../../../../docs/ref/address-data.md)）。開発前に `npm run build:address-pack`（ルート）が必要な場合あり。Vite は `web/data/address` を `/data/` で配信。
 ```
 
 Even Hub ポータルへ `.ehpk` をアップロード（Private build）。

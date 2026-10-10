@@ -39,6 +39,8 @@
 
 ### 参照
 
+- [住所 GeoJSON 正本・差し替え手順（ref/address-data）](ref/address-data.md)  
+  G2 逆引き用 `docs/ref/r2ka*.geojson` と `web/data/address/`（生成物・Git ignore）の運用。
 - `ref/geojson/`  
   地域メッシュとWeb Mercatorタイル計算を移植する際に参照した既存ビューアです。サイトの実行時依存には含めません。
 

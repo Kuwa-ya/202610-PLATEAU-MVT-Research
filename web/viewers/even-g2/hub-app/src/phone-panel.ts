@@ -3,22 +3,9 @@
  *
  * Copyright © 2026 Kuwa-ya, Ltd. All Rights Reserved.
  * Full license text: /legal/SOURCE-CODE-LICENSE.txt
- *
- * ALL RIGHTS RESERVED. NO LICENSE IS GRANTED BY ACCESSING, VIEWING, OR COPYING THIS FILE.
- * THIS SOFTWARE AND ALL ASSOCIATED MATERIALS ARE PROPRIETARY TO KUWA-YA, LTD.
- * SOURCE CODE IS MADE PUBLICLY VIEWABLE ONLY FOR TRANSPARENCY AND INFORMATIONAL
- * PURPOSES. WITHOUT PRIOR WRITTEN PERMISSION FROM KUWA-YA, LTD., YOU MAY NOT USE,
- * COPY, REPRODUCE, MODIFY, ADAPT, TRANSLATE, CREATE DERIVATIVE WORKS FROM,
- * DISTRIBUTE, REDISTRIBUTE, PUBLISH, SUBLICENSE, SELL, RENT, LEASE, OR OTHERWISE
- * MAKE AVAILABLE ANY PART OF THIS SOFTWARE, OR USE IT FOR COMMERCIAL PURPOSES OR
- * TO DEVELOP OR PROVIDE ANY PRODUCT OR SERVICE. VIEWING DOES NOT GRANT ANY RIGHTS.
- * USE OF THE PUBLIC WEB APPLICATION IS GOVERNED BY ITS TERMS OF SERVICE ONLY AND
- * DOES NOT GRANT ANY RIGHT TO THIS SOURCE CODE. THE SOFTWARE IS PROVIDED "AS IS"
- * WITHOUT WARRANTY OF ANY KIND. SEE /legal/SOURCE-CODE-LICENSE.txt.
  */
 
 import { VIEW_REFRESH_MS } from './config/defaults.js';
-import { getViewCameraStatusLine } from './view/view-camera-state.js';
 import type { GpsSession } from './geo/gps-session.js';
 import { getManualGeoControls } from './geo/manual-geo-dev.js';
 import type { FrameMetrics } from './metrics/frame-metrics.js';
@@ -32,6 +19,7 @@ export type PhonePanelHubInfo = {
 export function mountPhonePanel(
   metrics: FrameMetrics,
   gps: GpsSession,
+  getDebugBlock: () => string,
   onViewRefresh: () => void,
   hub: PhonePanelHubInfo = { hubMode: 'simulation' },
   onPreviewTap?: () => void
@@ -42,21 +30,15 @@ export function mountPhonePanel(
   const showManual = !window.isSecureContext;
 
   root.innerHTML = `
-    <div style="font-family:system-ui,sans-serif;padding:16px;line-height:1.5;max-width:36rem">
-      <h1 style="font-size:1.1rem;margin:0 0 8px">PLATEAU MVT — G2 hub</h1>
-      <p id="hub-mode-banner" style="margin:0 0 8px;padding:8px 10px;border-radius:8px;font-size:13px;line-height:1.4"></p>
-      <p style="margin:0 0 12px;color:#555">
-        約 ${VIEW_REFRESH_MS}ms ごとに再描画（GeoJSON は 11 桁メッシュが変わったときだけ DL）。
-        地図は<strong>北上固定</strong>。黄矢印＝直前位置からの移動方向。<strong>プレビュー／G2 タップ</strong>で現在地の用途地域を表示（再タップで OFF）。G2 実機では<strong>上/下スワイプ</strong>でカメラ仰角。
-      </p>
-      <figure style="margin:0 0 12px">
-        <img id="g2-phone-preview" alt="G2 プレビュー" width="288" height="144"
-          style="display:block;max-width:100%;height:auto;border-radius:8px;border:1px solid #ccc;background:#1a1f24" />
-        <figcaption style="font-size:11px;color:#777;margin-top:4px">モバイルプレビュー（南側・仰角 60°）</figcaption>
+    <div class="g2-phone-root">
+      <figure class="g2-phone-preview-wrap">
+        <img id="g2-phone-preview" class="g2-phone-preview" alt="G2 プレビュー" width="576" height="288" />
+        <figcaption class="g2-phone-preview-cap">G2 プレビュー（タップで用途地域 ON/OFF）</figcaption>
       </figure>
+      <p id="hub-mode-banner" class="g2-phone-banner"></p>
       ${
         showManual
-          ? `<div id="manual-geo" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+          ? `<div id="manual-geo" class="g2-phone-manual">
         <button type="button" data-nudge="15,0">北へ 15m</button>
         <button type="button" data-nudge="0,15">東へ 15m</button>
         <button type="button" data-nudge="-15,0">南へ 15m</button>
@@ -65,19 +47,73 @@ export function mountPhonePanel(
       </div>`
           : ''
       }
-      <pre id="g2-metrics" style="font-size:12px;background:#f4f4f4;padding:12px;border-radius:8px;overflow:auto"></pre>
+      <pre id="g2-metrics" class="g2-phone-metrics"></pre>
     </div>
+    <style>
+      .g2-phone-root {
+        font-family: system-ui, sans-serif;
+        line-height: 1.5;
+        max-width: 40rem;
+        margin: 0 auto;
+        padding: 12px 16px 24px;
+        box-sizing: border-box;
+      }
+      .g2-phone-preview-wrap {
+        margin: 0 0 12px;
+        background: #0a0c0e;
+        border-radius: 10px;
+        padding: 10px;
+        border: 1px solid #1e3a2f;
+      }
+      .g2-phone-preview {
+        display: block;
+        width: 100%;
+        max-width: 576px;
+        height: auto;
+        image-rendering: pixelated;
+        border-radius: 4px;
+        background: #000;
+      }
+      .g2-phone-preview-cap {
+        font-size: 11px;
+        color: #6b9b7a;
+        margin: 8px 0 0;
+        text-align: center;
+      }
+      .g2-phone-banner {
+        margin: 0 0 10px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-size: 13px;
+        line-height: 1.4;
+      }
+      .g2-phone-manual {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .g2-phone-metrics {
+        font-size: 12px;
+        background: #f4f4f4;
+        padding: 12px;
+        border-radius: 8px;
+        overflow: auto;
+        white-space: pre-wrap;
+        margin: 0;
+      }
+    </style>
   `;
 
   const banner = root.querySelector<HTMLElement>('#hub-mode-banner');
   if (banner) {
     if (hub.hubMode === 'simulation') {
-      banner.style.background = '#fff8e6';
-      banner.style.color = '#664d00';
+      banner.style.background = '#1a2420';
+      banner.style.color = '#8fd4a8';
       banner.textContent =
-        'シミュレーションモード: 下のプレビューだけ更新します（G2 は送りません）。'
-        + ' 実機 G2 は .ehpk または HTTPS 配布で検証してください。'
-        + (hub.hubDetail ? ` (${hub.hubDetail})` : '');
+        `シミュレーション（約 ${VIEW_REFRESH_MS}ms 更新・北上固定）。`
+        + ' 実機は .ehpk / HTTPS。'
+        + (hub.hubDetail ? ` ${hub.hubDetail}` : '');
     } else {
       banner.style.background = '#e8f5e9';
       banner.style.color = '#1b5e20';
@@ -124,8 +160,9 @@ export function mountPhonePanel(
   const refresh = () => {
     syncPreviewImage();
     if (!pre) return;
+    const debug = getDebugBlock();
     pre.textContent =
-      `${gps.formatReport()}\n地図: 北上固定（黄矢印=移動方向）\n${getViewCameraStatusLine()}\n\n${metrics.formatPhoneReport()}`;
+      `${gps.formatReport()}\n\n${debug}\n\n${metrics.formatPhoneReport()}`;
   };
   refresh();
   return { refresh };

@@ -33,7 +33,8 @@ import {
   G2_STATUS_META,
   G2_STATUS_PERF
 } from './hub/g2-page-layout.js';
-import { formatG2StatusMeta, formatG2StatusPerf } from './hub/g2-status-text.js';
+import { AddressSession } from './geo/address-session.js';
+import { formatG2StatusMeta, formatG2StatusPerf, formatPhoneDebugBlock } from './hub/g2-status-text.js';
 import { nudgeCameraElevationDownDeg, nudgeCameraElevationUpDeg } from './view/view-camera-state.js';
 import type { GeoFix } from './geo/geo-fix.js';
 import { GpsSession } from './geo/gps-session.js';
@@ -42,7 +43,7 @@ import { resolveHubRuntime } from './hub/hub-runtime.js';
 import { FrameMetrics } from './metrics/frame-metrics.js';
 import { mountPhonePanel } from './phone-panel.js';
 import { setPhonePreviewPng } from './preview/phone-preview.js';
-import { ViewPresenter } from './view/view-presenter.js';
+import { ViewPresenter, type PresentDetail } from './view/view-presenter.js';
 
 declare global {
   interface Window {
@@ -57,6 +58,7 @@ const IMG_H = G2_IMAGE.height;
 
 const metrics = new FrameMetrics();
 const gpsSession = new GpsSession();
+const addressSession = new AddressSession();
 function fallbackFix(): GeoFix {
   return {
     latitude: FALLBACK_LOCATION.latitude,
@@ -183,6 +185,32 @@ async function bootstrap() {
   }
 
   let phonePanel = { refresh: () => {} };
+  let lastPhoneDebug = '';
+
+  let lastPresentDetail: PresentDetail = {
+    bytes: new Uint8Array(),
+    meshCode: '—',
+    featureCount: 0,
+    ringCount: 0,
+    geoFetchMs: 0,
+    renderMs: 0,
+    movementBearingDeg: null,
+    dataFetched: false,
+    useDistrictSummary: null,
+    useDistrictMiss: false,
+    useDistrictHint: null
+  };
+
+  const refreshG2MetaIfEven = async () => {
+    if (runtime.mode !== 'even' || !pageReady) return;
+    const fix = resolveFix();
+    await setG2StatusPanels(formatG2StatusMeta(fix, addressSession.getState(), lastPresentDetail), ' ');
+  };
+
+  addressSession.setOnChange(() => {
+    phonePanel.refresh();
+    void refreshG2MetaIfEven();
+  });
 
   const viewPresenter = new ViewPresenter(
     resolveFix,
@@ -205,11 +233,13 @@ async function bootstrap() {
           movementBearingDeg: detail.movementBearingDeg,
           dataFetched: detail.dataFetched
         });
+        lastPresentDetail = detail;
+        lastPhoneDebug = formatPhoneDebugBlock(complete, detail, sdkResult);
         phonePanel.refresh();
         if (runtime.mode === 'even' && pageReady) {
           const fix = resolveFix();
           await setG2StatusPanels(
-            formatG2StatusMeta(fix, detail),
+            formatG2StatusMeta(fix, addressSession.getState(), detail),
             formatG2StatusPerf(complete, sdkResult)
           );
         }
@@ -220,6 +250,7 @@ async function bootstrap() {
   phonePanel = mountPhonePanel(
     metrics,
     gpsSession,
+    () => lastPhoneDebug,
     () => {
       viewPresenter.present('tick', true).catch(console.error);
     },
@@ -236,6 +267,8 @@ async function bootstrap() {
   window.__g2Gps = gpsSession;
   window.__g2HubMode = runtime.mode;
 
+  addressSession.noteFix(resolveFix());
+
   try {
     await viewPresenter.present('init', true);
     viewPresenter.start();
@@ -251,6 +284,7 @@ async function bootstrap() {
 
   gpsSession.start(
     fix => {
+      addressSession.noteFix(fix);
       viewPresenter.noteFix(fix);
     },
     () => phonePanel.refresh()
