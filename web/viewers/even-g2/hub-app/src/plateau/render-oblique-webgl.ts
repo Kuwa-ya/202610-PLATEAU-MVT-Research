@@ -21,15 +21,18 @@ function lonLatToEn(
   };
 }
 
-/** ワールド: X=東, Y=上, Z=北。Extrude+rotateX(-π/2) では Shape の Y を反転して Z+ を北にする */
+/**
+ * kuwaya `toLocalPosition`: X=東, Y=高さ, Z=-北。
+ * Shape は XY、+Z へ押し出し後 rotateX(+π/2) で Y=高さ・Z=-shapeY。
+ */
 function buildingMesh(building: BuildingVolume, pivotLat: number, userLon: number, userLat: number): THREE.Mesh {
   const shape = new THREE.Shape();
   const ring = building.outer;
   for (let i = 0; i < ring.length; i += 1) {
     const [lon, lat] = ring[i];
     const { east, north } = lonLatToEn(lon, lat, userLon, userLat, pivotLat);
-    if (i === 0) shape.moveTo(east, -north);
-    else shape.lineTo(east, -north);
+    if (i === 0) shape.moveTo(east, north);
+    else shape.lineTo(east, north);
   }
   shape.closePath();
 
@@ -37,11 +40,15 @@ function buildingMesh(building: BuildingVolume, pivotLat: number, userLon: numbe
     depth: building.heightM,
     bevelEnabled: false
   });
-  geom.rotateX(-Math.PI / 2);
+  geom.rotateX(Math.PI / 2);
 
   const material = new THREE.MeshLambertMaterial({
-    color: 0x9aa09c,
-    flatShading: true
+    color: 0xa8b0ac,
+    flatShading: true,
+    transparent: true,
+    opacity: 0.38,
+    depthWrite: false,
+    side: THREE.DoubleSide
   });
   return new THREE.Mesh(geom, material);
 }
@@ -76,50 +83,54 @@ function getRenderer(width: number, height: number): THREE.WebGLRenderer {
   }
   sharedRenderer.setSize(width, height, false);
   sharedRenderer.setPixelRatio(1);
+  sharedRenderer.sortObjects = true;
   return sharedRenderer;
 }
 
-function addUserMarker(world: THREE.Group, headingDeg: number) {
-  const hRad = headingDeg * DEG_TO_RAD;
-  const tip = { east: Math.sin(hRad) * 16, north: Math.cos(hRad) * 16 };
-
-  const ringGeom = new THREE.RingGeometry(2.2, 3.4, 24);
+function addUserMarker(world: THREE.Group, movementBearingDeg: number | null) {
+  const ringGeom = new THREE.RingGeometry(2.8, 4.6, 28);
   const ring = new THREE.Mesh(
     ringGeom,
-    new THREE.MeshBasicMaterial({ color: 0x44aaff, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
+    new THREE.MeshBasicMaterial({ color: 0x88ddff, side: THREE.DoubleSide, transparent: true, opacity: 0.9 })
   );
   ring.rotation.x = -Math.PI / 2;
-  ring.position.y = 0.15;
+  ring.position.y = 0.2;
   world.add(ring);
 
   const poleGeom = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0, 0.15, 0),
-    new THREE.Vector3(0, 6, 0)
+    new THREE.Vector3(0, 0.2, 0),
+    new THREE.Vector3(0, 8, 0)
   ]);
-  world.add(new THREE.Line(poleGeom, new THREE.LineBasicMaterial({ color: 0x66ccff })));
+  world.add(new THREE.Line(poleGeom, new THREE.LineBasicMaterial({ color: 0xb8ecff })));
 
   const dot = new THREE.Mesh(
-    new THREE.SphereGeometry(1.8, 12, 12),
-    new THREE.MeshBasicMaterial({ color: 0x4afaff })
+    new THREE.SphereGeometry(2.4, 14, 14),
+    new THREE.MeshBasicMaterial({ color: 0xe8f8ff })
   );
-  dot.position.y = 0.8;
+  dot.position.y = 1;
   world.add(dot);
 
-  const arrowGeom = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0, 0.5, 0),
-    new THREE.Vector3(tip.east, 0.5, tip.north)
-  ]);
-  world.add(new THREE.Line(arrowGeom, new THREE.LineBasicMaterial({ color: 0x4afaff, linewidth: 2 })));
+  if (movementBearingDeg != null && Number.isFinite(movementBearingDeg)) {
+    const hRad = movementBearingDeg * DEG_TO_RAD;
+    const tipEast = Math.sin(hRad) * 18;
+    const tipNorth = Math.cos(hRad) * 18;
+    // 建物は Z=-北。グループ scale.x=-1 は東西のみ反転するため、矢印の北成分は +Z に置く
+    const arrowGeom = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0.6, 0),
+      new THREE.Vector3(tipEast, 0.6, tipNorth)
+    ]);
+    world.add(new THREE.Line(arrowGeom, new THREE.LineBasicMaterial({ color: 0xfff078 })));
+  }
 }
 
 /**
- * Three.js WebGL — kuwaya 型球面カメラ（南固定・ユーザー注視）。地図回転は heading で world の Y 回転のみ。
+ * Three.js WebGL — kuwaya 型球面カメラ（南固定・ユーザー注視）。地図は北上固定（world 回転なし）。
  */
 export function renderBuildingsObliqueWebGL(
   buildings: BuildingVolume[],
   options: ObliqueRenderOptions
 ): HTMLCanvasElement {
-  const { width, height, userLat, userLon, headingDeg } = options;
+  const { width, height, userLat, userLon, movementBearingDeg } = options;
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x1a1f24);
@@ -130,7 +141,7 @@ export function renderBuildingsObliqueWebGL(
   scene.add(ambient, sun);
 
   const world = new THREE.Group();
-  world.rotation.y = -headingDeg * DEG_TO_RAD;
+  world.scale.x = -1;
   scene.add(world);
 
   const pivotLat = userLat;
@@ -138,7 +149,7 @@ export function renderBuildingsObliqueWebGL(
     world.add(buildingMesh(building, pivotLat, userLon, userLat));
   }
 
-  addUserMarker(world, headingDeg);
+  addUserMarker(world, movementBearingDeg);
 
   const target = new THREE.Vector3(0, 0, 0);
   const spherical = new THREE.Spherical();

@@ -3,8 +3,8 @@ import type { RegionalMeshBounds } from './mesh-code.js';
 import { canvasToPngBytes } from './render-topdown.js';
 
 const DEG_TO_RAD = Math.PI / 180;
-/** 水平面からの下向き視線角（南側カメラ・地上を見下ろす＝下からの見上げではない） */
-const VIEW_ELEVATION_RAD = Math.PI / 4;
+/** 水平面からの下向き視線角（WebGL 既定仰角 60° と揃える） */
+const VIEW_ELEVATION_RAD = (60 * Math.PI) / 180;
 
 type Point2 = { x: number; y: number };
 
@@ -162,8 +162,8 @@ export type ObliqueRenderOptions = {
   bounds: RegionalMeshBounds;
   userLat: number;
   userLon: number;
-  /** 0=北が画面上、時計回り（進行方向が上向き） */
-  headingDeg: number;
+  /** 直前位置からの移動方位（0=北）。null なら矢印なし */
+  movementBearingDeg: number | null;
   paddingPx?: number;
 };
 
@@ -177,7 +177,7 @@ export function renderBuildingsOblique(
     userLat,
     userLon,
     pivotLat: userLat,
-    headingDeg: options.headingDeg
+    headingDeg: 0
   };
 
   const projected = collectProjectedPoints(buildings, bounds, frame);
@@ -209,7 +209,7 @@ export function renderBuildingsOblique(
     for (let i = 0; i < n; i += 1) {
       const j = (i + 1) % n;
       const shade = wallShadeFactor(enRing, i, ccw);
-      ctx.fillStyle = `rgba(${Math.round(120 * shade)}, ${Math.round(128 * shade)}, ${Math.round(124 * shade)}, 0.95)`;
+      ctx.fillStyle = `rgba(${Math.round(120 * shade)}, ${Math.round(128 * shade)}, ${Math.round(124 * shade)}, 0.4)`;
       ctx.beginPath();
       ctx.moveTo(ground[i].x, ground[i].y);
       ctx.lineTo(ground[j].x, ground[j].y);
@@ -219,8 +219,8 @@ export function renderBuildingsOblique(
       ctx.fill();
     }
 
-    ctx.fillStyle = 'rgba(210, 216, 212, 0.95)';
-    ctx.strokeStyle = 'rgba(70, 78, 84, 0.85)';
+    ctx.fillStyle = 'rgba(210, 216, 212, 0.42)';
+    ctx.strokeStyle = 'rgba(70, 78, 84, 0.55)';
     ctx.lineWidth = 0.75;
     ctx.beginPath();
     for (let i = 0; i < n; i += 1) {
@@ -240,21 +240,26 @@ export function renderBuildingsOblique(
     && userLat <= bounds.north
   ) {
     const userPt = toScreen(projectLonLat(userLon, userLat, 0, frame));
-    const hRad = frame.headingDeg * DEG_TO_RAD;
-    const tipGeo = offsetMeters(userLat, userLon, Math.cos(hRad) * 14, Math.sin(hRad) * 14);
-    const tipPt = toScreen(projectLonLat(tipGeo.lon, tipGeo.lat, 0, frame));
+    const moveDeg = options.movementBearingDeg;
+    if (moveDeg != null && Number.isFinite(moveDeg)) {
+      const hRad = moveDeg * DEG_TO_RAD;
+      const tipGeo = offsetMeters(userLat, userLon, Math.cos(hRad) * 14, Math.sin(hRad) * 14);
+      const tipPt = toScreen(projectLonLat(tipGeo.lon, tipGeo.lat, 0, frame));
+      ctx.strokeStyle = 'rgba(255, 240, 120, 0.95)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(userPt.x, userPt.y);
+      ctx.lineTo(tipPt.x, tipPt.y);
+      ctx.stroke();
+    }
 
+    ctx.fillStyle = '#e8f4ff';
     ctx.strokeStyle = 'rgba(74, 175, 255, 0.95)';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(userPt.x, userPt.y);
-    ctx.lineTo(tipPt.x, tipPt.y);
-    ctx.stroke();
-
-    ctx.fillStyle = '#4af';
-    ctx.beginPath();
-    ctx.arc(userPt.x, userPt.y, 3, 0, Math.PI * 2);
+    ctx.arc(userPt.x, userPt.y, 4, 0, Math.PI * 2);
     ctx.fill();
+    ctx.stroke();
   }
 
   return canvas;

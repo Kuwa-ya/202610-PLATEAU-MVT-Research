@@ -14,8 +14,8 @@ export const VIEW_RENDER_BACKEND: 'webgl' | 'canvas2d' = 'webgl';
 /** 再描画をスキップする最小移動（m） */
 export const VIEW_MIN_MOVE_M = 0.5;
 
-/** 再描画をスキップする最小方位変化（度） */
-export const VIEW_MIN_HEADING_DEG = 2;
+/** 移動方向矢印を出す最小移動（m） */
+export const VIEW_MOVE_ARROW_MIN_M = 0.35;
 
 /** メトリクス用: G2 フル更新の最小間隔 */
 export const GPS_MIN_INTERVAL_MS = 500;

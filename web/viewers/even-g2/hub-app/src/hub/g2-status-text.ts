@@ -6,10 +6,13 @@ import { getViewCameraStatusLine } from '../view/view-camera-state.js';
 
 export function formatG2StatusMeta(fix: GeoFix, detail: PresentDetail): string {
   const fetchTag = detail.dataFetched ? 'DL' : '描画';
-  const head = Math.round(detail.headingDeg);
+  const move =
+    detail.movementBearingDeg != null
+      ? `移動 ${Math.round(detail.movementBearingDeg)}°`
+      : '北上固定';
   return [
     formatFixShort(fix),
-    `向き ${head}° · ${fetchTag}`,
+    `${move} · ${fetchTag}`,
     `面 ${detail.ringCount} · ${detail.meshCode}`
   ].join('\n');
 }

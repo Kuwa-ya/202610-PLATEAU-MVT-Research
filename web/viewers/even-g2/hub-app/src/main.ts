@@ -18,7 +18,6 @@ import { formatG2StatusMeta, formatG2StatusPerf } from './hub/g2-status-text.js'
 import { nudgeCameraElevationDownDeg, nudgeCameraElevationUpDeg } from './view/view-camera-state.js';
 import type { GeoFix } from './geo/geo-fix.js';
 import { GpsSession } from './geo/gps-session.js';
-import { HeadingSession } from './geo/heading-session.js';
 import type { EvenHubBridge } from './hub/hub-runtime.js';
 import { resolveHubRuntime } from './hub/hub-runtime.js';
 import { FrameMetrics } from './metrics/frame-metrics.js';
@@ -30,7 +29,6 @@ declare global {
   interface Window {
     __g2Metrics?: FrameMetrics;
     __g2Gps?: GpsSession;
-    __g2Heading?: HeadingSession;
     __g2HubMode?: string;
   }
 }
@@ -40,8 +38,6 @@ const IMG_H = G2_IMAGE.height;
 
 const metrics = new FrameMetrics();
 const gpsSession = new GpsSession();
-const headingSession = new HeadingSession();
-
 function fallbackFix(): GeoFix {
   return {
     latitude: FALLBACK_LOCATION.latitude,
@@ -170,7 +166,6 @@ async function bootstrap() {
   let phonePanel = { refresh: () => {} };
 
   const viewPresenter = new ViewPresenter(
-    headingSession,
     resolveFix,
     { width: IMG_W, height: IMG_H },
     {
@@ -188,7 +183,7 @@ async function bootstrap() {
         console.info('[g2-metrics]', complete, {
           hub: runtime.mode,
           mesh: detail.meshCode,
-          heading: detail.headingDeg,
+          movementBearingDeg: detail.movementBearingDeg,
           dataFetched: detail.dataFetched
         });
         phonePanel.refresh();
@@ -203,21 +198,15 @@ async function bootstrap() {
     }
   );
 
-  phonePanel = mountPhonePanel(metrics, gpsSession, headingSession, () => {
+  phonePanel = mountPhonePanel(metrics, gpsSession, () => {
     viewPresenter.present('tick', true).catch(console.error);
   }, {
     hubMode: runtime.mode,
     hubDetail: runtime.mode === 'simulation' ? runtime.reason : 'Even Hub'
   });
 
-  headingSession.onHeadingChange(() => {
-    viewPresenter.present('heading', true).catch(console.error);
-    phonePanel.refresh();
-  });
-
   window.__g2Metrics = metrics;
   window.__g2Gps = gpsSession;
-  window.__g2Heading = headingSession;
   window.__g2HubMode = runtime.mode;
 
   try {
@@ -245,7 +234,6 @@ async function bootstrap() {
     if (cleanedUp) return;
     cleanedUp = true;
     viewPresenter.stop();
-    headingSession.stop();
     gpsSession.stop();
     unsubscribe();
   }

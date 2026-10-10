@@ -20,7 +20,7 @@ export type RenderCachedBldgRequest = {
   bounds: RegionalMeshBounds;
   latitude: number;
   longitude: number;
-  headingDeg: number;
+  movementBearingDeg: number | null;
   width: number;
   height: number;
 };
@@ -32,7 +32,7 @@ export async function renderCachedBldgFrame(request: RenderCachedBldgRequest): P
     bounds,
     latitude,
     longitude,
-    headingDeg,
+    movementBearingDeg,
     width,
     height
   } = request;
@@ -45,7 +45,7 @@ export async function renderCachedBldgFrame(request: RenderCachedBldgRequest): P
     bounds,
     userLat: latitude,
     userLon: longitude,
-    headingDeg
+    movementBearingDeg
   };
   const canvas =
     VIEW_RENDER_BACKEND === 'webgl'

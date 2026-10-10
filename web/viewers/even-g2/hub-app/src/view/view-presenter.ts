@@ -1,10 +1,6 @@
-import {
-  VIEW_MIN_HEADING_DEG,
-  VIEW_MIN_MOVE_M,
-  VIEW_REFRESH_MS
-} from '../config/defaults.js';
+import { VIEW_MIN_MOVE_M, VIEW_MOVE_ARROW_MIN_M, VIEW_REFRESH_MS } from '../config/defaults.js';
 import type { GeoFix } from '../geo/geo-fix.js';
-import type { HeadingSession } from '../geo/heading-session.js';
+import { initialBearingDeg } from '../geo/bearing.js';
 import { haversineMeters } from '../geo/haversine.js';
 import type { FrameSample, FrameTrigger } from '../metrics/frame-metrics.js';
 import { BldgMeshCache } from '../plateau/bldg-mesh-cache.js';
@@ -22,21 +18,20 @@ export type PresentDetail = {
   ringCount: number;
   geoFetchMs: number;
   renderMs: number;
-  headingDeg: number;
+  /** 直前フレームからの移動方位（null=静止） */
+  movementBearingDeg: number | null;
   dataFetched: boolean;
 };
 
 type LastPresent = {
   lat: number;
   lon: number;
-  headingDeg: number;
   meshKey: string;
 };
 
 export class ViewPresenter {
   private readonly cache = new BldgMeshCache();
   private readonly hooks: PresentHooks;
-  private readonly heading: HeadingSession;
   private readonly getFix: () => GeoFix | null;
   private readonly width: number;
   private readonly height: number;
@@ -45,12 +40,10 @@ export class ViewPresenter {
   private timer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
-    heading: HeadingSession,
     getFix: () => GeoFix | null,
     size: { width: number; height: number },
     hooks: PresentHooks
   ) {
-    this.heading = heading;
     this.getFix = getFix;
     this.width = size.width;
     this.height = size.height;
@@ -58,9 +51,6 @@ export class ViewPresenter {
   }
 
   noteFix(fix: GeoFix) {
-    if (fix.headingDeg != null && Number.isFinite(fix.headingDeg)) {
-      this.heading.applyFromGeolocation(fix.headingDeg);
-    }
     if (this.cache.needsFetch(fix.latitude, fix.longitude)) {
       this.present('gps', true).catch(console.error);
     }
@@ -82,20 +72,17 @@ export class ViewPresenter {
     const fix = this.getFix();
     if (!fix) return null;
 
-    const latitude = fix?.latitude ?? 0;
-    const longitude = fix?.longitude ?? 0;
-    const headingDeg = this.heading.getHeadingDeg();
+    const latitude = fix.latitude;
+    const longitude = fix.longitude;
     const meshKey = regionalBldgMeshKey(latitude, longitude);
 
-    if (!force && this.last) {
+    let movementBearingDeg: number | null = null;
+    if (this.last) {
       const moveM = haversineMeters(this.last.lat, this.last.lon, latitude, longitude);
-      const headDelta = Math.abs(headingDeg - this.last.headingDeg);
-      const headWrap = Math.min(headDelta, 360 - headDelta);
-      if (
-        meshKey === this.last.meshKey
-        && moveM < VIEW_MIN_MOVE_M
-        && headWrap < VIEW_MIN_HEADING_DEG
-      ) {
+      if (moveM >= VIEW_MOVE_ARROW_MIN_M) {
+        movementBearingDeg = initialBearingDeg(this.last.lat, this.last.lon, latitude, longitude);
+      }
+      if (!force && meshKey === this.last.meshKey && moveM < VIEW_MIN_MOVE_M) {
         return null;
       }
     }
@@ -114,7 +101,7 @@ export class ViewPresenter {
         bounds: snap.bounds,
         latitude,
         longitude,
-        headingDeg,
+        movementBearingDeg,
         width: this.width,
         height: this.height
       });
@@ -136,11 +123,11 @@ export class ViewPresenter {
         ringCount: built.ringCount,
         geoFetchMs: fetched ? geoFetchMs : 0,
         renderMs: built.renderMs,
-        headingDeg,
+        movementBearingDeg,
         dataFetched: fetched
       });
 
-      this.last = { lat: latitude, lon: longitude, headingDeg, meshKey };
+      this.last = { lat: latitude, lon: longitude, meshKey };
       return sample;
     } finally {
       this.inFlight = false;
