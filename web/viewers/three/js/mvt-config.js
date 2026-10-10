@@ -1,5 +1,5 @@
 /** kuwaya-geo BUILDING_MIN_LOD / TRANSPORT_MIN_LOD（16）に合わせる */
-import { MVT_COLORS } from './mvt-style.js';
+import { MVT_COLORS } from '../../../shared/mvt/feature-style.js';
 
 export const MVT_MIN_DETAIL_LEVEL = 16;
 export const MVT_FETCH_ZOOM = 16;

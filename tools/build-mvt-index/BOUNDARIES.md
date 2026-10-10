@@ -7,7 +7,7 @@
 - 索引生成: `build.js`
 - 単体確認: `scripts/check-admin-boundaries.js`
 
-大容量GeoJSONを`site/`と`tools/`へ二重配置しない。開発サーバーは`data/`を`/data`へマウントするため、Viewer表示とビルド入力で同じ原本を利用できる。
+大容量GeoJSONを`web/`と`tools/`へ二重配置しない。開発サーバーは`data/`を`/data`へマウントするため、Viewer表示とビルド入力で同じ原本を利用できる。
 
 ## 採用するタイル
 

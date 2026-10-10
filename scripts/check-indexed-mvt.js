@@ -4,7 +4,7 @@ import {
   parentKeyForTile,
   parseIndexedTileUrl,
   pickFetchCityCodes
-} from '../site/js/services/indexed-mvt-protocol.js';
+} from '../web/viewers/maplibre/js/services/indexed-mvt-protocol.js';
 
 assert.deepEqual(
   parseIndexedTileUrl('plateau-indexed://luse-2025/13101/16/58211/25806'),

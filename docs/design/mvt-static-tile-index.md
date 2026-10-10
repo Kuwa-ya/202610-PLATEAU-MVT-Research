@@ -235,7 +235,7 @@ fetchCodes = unique(codes).sort(numeric cityCode)
    - manifest の全市区で少なくとも 1 つの z16 タイルに出現するか（出現しない市区は警告）。  
    - 県境タイルで候補が 2 件以上の件数をレポート。
 
-ビルドスクリプト: [`tools/build-mvt-index/`](../../tools/build-mvt-index/README.md)（`npm run build:mvt-index`）。Three PoC: [`viewer-three/`](../../viewer-three/index.html)。
+ビルドスクリプト: [`tools/build-mvt-index/`](../../tools/build-mvt-index/README.md)（`npm run build:mvt-index`）。Three Viewer: [`web/viewers/three/`](../../web/viewers/three/index.html)。
 
 ## 10. ランタイム手順（Three.js／MapLibre共通）
 

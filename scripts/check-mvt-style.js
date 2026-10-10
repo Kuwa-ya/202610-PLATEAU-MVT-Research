@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { MVT_COLORS, featureColor, landUseColor } from '../viewer-three/js/mvt-style.js';
+import { MVT_COLORS, featureColor, landUseColor } from '../web/shared/mvt/feature-style.js';
 
 assert.equal(landUseColor({ uro_orgLandUse: '道路' }), MVT_COLORS.luseRoad);
 assert.equal(landUseColor({ uro_orgLandUse: '都市公園' }), MVT_COLORS.lusePark);

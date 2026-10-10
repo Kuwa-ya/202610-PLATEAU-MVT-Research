@@ -1,6 +1,6 @@
 # ドキュメント
 
-このディレクトリには、調査結果、設計上の判断、検証手順を保存します。実行可能なサイト本体は `site/` に分けます。
+このディレクトリには、調査結果、設計上の判断、検証手順を保存します。実行可能なWebアプリ本体は `web/` に分けます。
 
 ## 文書一覧
 
@@ -16,7 +16,9 @@
 - [サイト構成](architecture.md)  
   Vanilla JSによるMVVMの責務分担、地図オーバーレイ、参照実装との関係をまとめています。
 - [MVT 静的タイル索引と Three.js 統合](design/mvt-static-tile-index.md)  
-  kuwaya-geo ベースでの z16 MVT 取得、z12 親 JSON 索引、東京都・埼玉県 PoC（154 ファイル）の設計です。実装は `tools/build-mvt-index/` と `viewer-three/`。
+  kuwaya-geo ベースでの z16 MVT 取得、z12 親 JSON 索引、東京都・埼玉県 PoC（154 ファイル）の設計です。実装は `tools/build-mvt-index/` と `web/viewers/three/`。
+- [kuwaya-geo統合メモ](integration/kuwaya-geo.md)
+  参照実装へMVT機能を統合する場合の接続点を整理しています。
 - [MVTデコード・結合・重複排除設計](design/mvt-decode-merge-dedup.md)
   2D・3D共通のデコード方針、同一IDの結合、重複排除、利用ライブラリ、データフローを整理しています。
 

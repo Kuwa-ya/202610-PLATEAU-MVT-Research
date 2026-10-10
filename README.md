@@ -16,7 +16,7 @@ Windows PowerShell の実行ポリシーで `npm` を実行できない場合は
 npm.cmd run dev
 ```
 
-ブラウザで <http://127.0.0.1:4173/> を開きます。Three.js MVT PoC は <http://127.0.0.1:4173/viewer-three/> です。終了は `Ctrl+C` です。ポートは環境変数 `PORT`、待受アドレスは `HOST` で変更できます。
+ブラウザで <http://127.0.0.1:4173/> を開き、2D／3D Viewerを選択します。2Dは `/viewers/maplibre/`、3Dは `/viewers/three/` です。終了は `Ctrl+C` です。ポートは環境変数 `PORT`、待受アドレスは `HOST` で変更できます。
 
 静的索引（東京都＋埼玉県）を生成する場合:
 
@@ -57,19 +57,16 @@ MVTのデコード、自治体・タイル境界での同一ID結合、重複排
 │  ├─ ref/geojson/           メッシュ計算の参照元（実行時には未使用）
 │  └─ research/              調査結果
 ├─ scripts/serve.js          開発用の小さな静的HTTPサーバー
-├─ site/                     配信対象
-│  ├─ index.html             画面構造とスタイル
-│  ├─ js/                    Vanilla JS（配下は1階層まで）
-│  │  ├─ app.js              起動処理（直下に置く唯一のJS）
-│  │  ├─ model/              設定、入力検証、メッシュ計算
-│  │  ├─ viewmodel/          画面状態と操作
-│  │  ├─ view/               DOMイベントと状態描画
-│  │  └─ services/           MapLibreとの境界
-│  └─ vendor/maplibre-gl/    ローカル同梱ライブラリ
+├─ web/                      Web配信ルート
+│  ├─ index.html             2D／3D Viewer選択
+│  ├─ viewers/maplibre/      2D Viewer
+│  ├─ viewers/three/         3D Viewer
+│  ├─ shared/mvt/            Viewer共通のMVT処理
+│  └─ vendor/                MapLibre・Three.js同梱物
 └─ package.json              開発コマンド
 ```
 
-JavaScript は `.js` のままブラウザ標準の ES Modules（`import` / `export`）を使う Vanilla JS です。`.mjs`、バンドラー、ビルド処理は使いません。`app.js` だけを `site/js/` 直下に置き、役割別フォルダはその下の1階層までに限定しています。詳しくは [設計文書](docs/architecture.md) を参照してください。
+JavaScriptは `.js` のままブラウザ標準のES Modulesを使います。Viewer固有処理は `web/viewers/`、共有処理は `web/shared/` に配置します。詳しくは[設計文書](docs/architecture.md)を参照してください。
 
 ## 確認
 
@@ -83,9 +80,9 @@ npm run check
 
 `data/manifest/` と `data/index/` に東京都・埼玉県の静的索引を配置しています。背景地図と索引が選択したMVT本体は表示時に外部配信元から取得するため、地図表示にはインターネット接続が必要です。
 
-MapLibre GL JS 5.24.0（BSD-3-Clause）は `site/vendor/maplibre-gl/` に同梱しています。ライセンス表示と更新方法は [vendor README](site/vendor/maplibre-gl/README.md) を参照してください。
+MapLibre GL JS 5.24.0（BSD-3-Clause）は `web/vendor/maplibre-gl/`、Three.jsは `web/vendor/three/` に同梱しています。MapLibreの詳細は[vendor README](web/vendor/maplibre-gl/README.md)を参照してください。
 
-地域メッシュと Web Mercator の計算は `docs/ref/geojson/js/geometric/` の実装を参照し、サイト用に `site/js/model/mesh-utils.js` へ必要部分を移植しています。参照実装そのものをサイトから読み込む依存関係はありません。
+地域メッシュとWeb Mercatorの計算は `docs/ref/geojson/js/geometric/` の実装を参照し、2D Viewer用に `web/viewers/maplibre/js/model/mesh-utils.js` へ必要部分を移植しています。
 
 ## Git運用
 
@@ -93,7 +90,7 @@ MapLibre GL JS 5.24.0（BSD-3-Clause）は `site/vendor/maplibre-gl/` に同梱�
 
 ```console
 git switch -c feature/short-description
-git add README.md docs site scripts package.json
+git add README.md docs data scripts tools web package.json package-lock.json
 git status
 git commit -m "feat: add map overlay"
 ```

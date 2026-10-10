@@ -5,15 +5,14 @@ import { fileURLToPath } from "node:url";
 
 const scriptDirectory = fileURLToPath(new URL(".", import.meta.url));
 const repositoryRoot = resolve(scriptDirectory, "..");
-const siteRoot = resolve(repositoryRoot, process.env.SITE_ROOT ?? "site");
+const siteRoot = resolve(repositoryRoot, process.env.SITE_ROOT ?? "web");
 const host = process.env.HOST ?? "127.0.0.1";
 const port = Number.parseInt(process.env.PORT ?? "4173", 10);
 
 const mounts = [
-  { prefix: "/vendor", root: resolve(repositoryRoot, "node_modules") },
+  { prefix: "/modules", root: resolve(repositoryRoot, "node_modules") },
   { prefix: "/data", root: resolve(repositoryRoot, "data") },
   { prefix: "/kuwaya-geo", root: resolve(repositoryRoot, "docs/ref/kuwaya-geo") },
-  { prefix: "/viewer-three", root: resolve(repositoryRoot, "viewer-three") },
   { prefix: "", root: siteRoot }
 ];
 
@@ -54,9 +53,14 @@ function resolveMountedFile(pathname) {
     if (mount.prefix && !decodedPath.startsWith(mount.prefix)) continue;
     const rest = mount.prefix ? decodedPath.slice(mount.prefix.length) : decodedPath;
     const requestPath = rest === "" || rest === "/" ? "index.html" : rest.replace(/^[/\\]+/, "");
-    const candidate = normalize(resolve(mount.root, requestPath));
-    const relativePath = relative(mount.root, candidate);
+    let candidate = normalize(resolve(mount.root, requestPath));
+    let relativePath = relative(mount.root, candidate);
     if (relativePath.startsWith("..") || isAbsolute(relativePath)) continue;
+    if (existsSync(candidate) && statSync(candidate).isDirectory()) {
+      candidate = normalize(resolve(candidate, "index.html"));
+      relativePath = relative(mount.root, candidate);
+      if (relativePath.startsWith("..") || isAbsolute(relativePath)) continue;
+    }
     if (existsSync(candidate) && statSync(candidate).isFile()) return candidate;
   }
   return null;
@@ -93,7 +97,8 @@ server.on("error", (error) => {
 
 server.listen(port, host, () => {
   console.log(`PLATEAU MVT LAB:     http://${host}:${port}/`);
-  console.log(`Three MVT PoC:       http://${host}:${port}/viewer-three/`);
+  console.log(`MapLibre Viewer:     http://${host}:${port}/viewers/maplibre/`);
+  console.log(`Three Viewer:        http://${host}:${port}/viewers/three/`);
   console.log(`kuwaya-geo 参照:     http://${host}:${port}/kuwaya-geo/`);
   console.log(`静的索引 data/:      http://${host}:${port}/data/manifest/`);
 });

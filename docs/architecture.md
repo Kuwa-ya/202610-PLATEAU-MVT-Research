@@ -2,7 +2,7 @@
 
 ## 方針
 
-サイトはビルド不要の Vanilla JS とし、拡張子 `.js` のブラウザ標準 ES Modulesでファイルを接続します。MVVM の責務ごとに `site/js/` 配下を1階層だけ分け、起動処理の `app.js` だけを直下に置きます。画面、地図ライブラリ、計算ロジックが互いの詳細を直接参照しない構成です。
+Webアプリはビルド不要のVanilla JSとし、ブラウザ標準ES Modulesで接続します。`web/viewers/maplibre/`と`web/viewers/three/`にViewer固有処理、`web/shared/`に共通MVT処理、`web/vendor/`に同梱ライブラリを配置します。
 
 ## 責務
 
@@ -14,7 +14,7 @@
 | `view/app-view.js` | View | DOMイベントを ViewModel に渡し、状態をDOMへ反映 |
 | `services/map-adapter.js` | View Adapter | MapLibreの初期化、MVT・グリッド・ラベル描画、地図イベント通知 |
 | `services/indexed-mvt-protocol.js` | Service | z16タイルを静的索引から自治体別MVT URLへ解決 |
-| `app.js` | Composition Root | 各要素の生成とコールバック接続。`site/js/` 直下に配置 |
+| `app.js` | Composition Root | 各要素の生成とコールバック接続。`web/viewers/maplibre/js/` 直下に配置 |
 
 ## データフロー
 
@@ -52,4 +52,4 @@ AppView ──操作──→ AppViewModel ──状態通知──→ AppView
 
 ## 参照実装との関係
 
-`docs/ref/geojson/js/geometric/japan-mesh-code.js` と `web-mesh-code.js` の計算方法を参照し、必要な処理だけを `site/js/model/mesh-utils.js` に移植しています。実行時に `docs/ref/` を参照しないため、`site/` 単独で静的配信できます。
+`docs/ref/geojson/js/geometric/japan-mesh-code.js` と `web-mesh-code.js` の計算方法を参照し、必要な処理だけを `web/viewers/maplibre/js/model/mesh-utils.js` に移植しています。実行時に `docs/ref/` は参照しません。

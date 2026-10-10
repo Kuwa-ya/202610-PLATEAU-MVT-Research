@@ -22,7 +22,7 @@ import {
   updateMetadata
 } from './view-ui.js';
 
-const THREE = await import('/vendor/three/build/three.module.min.js');
+const THREE = await import('/vendor/three/three.module.min.js');
 
 const ui = bindViewUi(document);
 setStatus(ui, 'Three.js を読み込み中…');
