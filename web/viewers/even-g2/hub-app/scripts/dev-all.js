@@ -1,5 +1,8 @@
 /**
  * Vite dev + evenhub-simulator + LAN URL の QR をまとめて起動する。
+ *
+ * 既定は HTTP（Even Hub プロトタイプが確実に開く）。
+ * GPS 用 HTTPS は npm run dev:https（自己署名で WebView が開けない場合あり）。
  */
 import { spawn } from 'node:child_process';
 import net from 'node:net';
@@ -8,6 +11,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const PORT = Number.parseInt(process.env.PORT ?? '5173', 10);
+const useHttps =
+  process.argv.includes('--https')
+  || process.env.HUB_DEV_HTTPS === '1';
 const hubAppRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = join(hubAppRoot, '..', '..', '..', '..');
 const children = [];
@@ -33,7 +39,10 @@ function pickLanIPv4() {
 function npmRun(script, options = {}) {
   const child = spawn('npm', ['run', script], {
     cwd: hubAppRoot,
-    env: process.env,
+    env: {
+      ...process.env,
+      HUB_DEV_HTTPS: useHttps ? '1' : '0'
+    },
     shell: process.platform === 'win32',
     ...options
   });
@@ -64,7 +73,7 @@ function waitForPort(port, host = '127.0.0.1', timeoutMs = 90_000) {
       socket.once('error', () => {
         socket.destroy();
         if (Date.now() - started > timeoutMs) {
-          reject(new Error(`http://${host}:${port} が ${timeoutMs}ms 以内に応答しませんでした`));
+          reject(new Error(`${host}:${port} が ${timeoutMs}ms 以内に応答しませんでした`));
           return;
         }
         setTimeout(attempt, 300);
@@ -101,12 +110,20 @@ vite.on('exit', code => shutdown(code ?? 0));
 waitForPort(PORT)
   .then(() => {
     const ip = pickLanIPv4();
-    const phoneUrl = `http://${ip}:${PORT}/`;
-    const localUrl = `http://127.0.0.1:${PORT}/`;
+    const scheme = useHttps ? 'https' : 'http';
+    const phoneUrl = `${scheme}://${ip}:${PORT}/`;
+    const localUrl = `${scheme}://127.0.0.1:${PORT}/`;
 
-    console.log('\n--- Even G2 hub-app ---');
+    console.log(`\n--- Even G2 hub-app (${scheme.toUpperCase()}) ---`);
     console.log(`実機 (Even Hub で QR 読取): ${phoneUrl}`);
     console.log(`シミュレータ: ${localUrl}`);
+    if (useHttps) {
+      console.log(
+        'HTTPS: 自己署名のため WebView が「ロード中」で止まる場合は Ctrl+C 後 npm run dev（HTTP）に戻してください'
+      );
+    } else {
+      console.log('HTTP: プロトタイプは開きやすいが GPS は拒否されがちです。屋外 GPS は dev:https を試すかタップで再送を確認');
+    }
     console.log('-----------------------\n');
 
     npmRun('simulate', {

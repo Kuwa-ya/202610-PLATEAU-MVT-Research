@@ -10,16 +10,25 @@
 2. サンプル再生成: リポジトリルートで `npm run generate:g2-preview`
 3. `npm install` → **`npm run dev`**（Vite + シミュレータ + 実機用 QR を同時起動）
    - Vite だけ: `npm run dev:vite`
+   - GPS 試行用 HTTPS: `npm run dev:https`（下記トレードオフ）
    - 個別: `npm run simulate` / `npx evenhub qr -u http://<IP>:5173/`
 4. リポジトリルートから: `npm run dev:even-g2`
 
-## 実機が「プロトタイプモード ロード中…」で止まる
+## HTTP と HTTPS（プロトタイプ vs GPS）
 
-多くは **PC とスマホが同じ LAN にない**（別 Wi‑Fi・VPN・テザリングのみ片方）か、**Windows ファイアウォールが 5173 を遮断**している場合です。
+| コマンド | QR | プロトタイプ | GPS |
+| --- | --- | --- | --- |
+| **`npm run dev`**（既定） | `http://` | 開きやすい | ブラウザ上は **不可**（HTTP） |
+| **`npm run dev:https`** | `https://` | 自己署名で **ロード中で止まる**ことがある | 理論上可能（WebView が TLS を通す場合） |
 
-1. ターミナルに出た `http://<IP>:5173/` を **スマホのブラウザ**で開く → 表示できれば QR も通るはず
-2. 表示できない → PC とスマホを同一 Wi‑Fi に揃える（ルーターの AP 隔離オフ、または PC をスマホのテザリングに接続）
-3. まだ不可 → 受信規則で Node / ポート **5173** を許可（[Network & Firewall Setup](https://hub.evenrealities.com/docs/test/network-firewall)）
+**「ロード中…」が続く** → いま `dev:https` なら **`npm run dev`（HTTP）に戻し QR を再スキャン**。以前と同様に同一 LAN・ファイアウォールを確認。
+
+**実機 HTTP で端末 GPS が使えない** → ブラウザ仕様上正常。**シミュレータ**（`https://localhost` / Secure Context）では本物 GPS が動く。実機ではスマホ画面の **「北へ 15m」** 等で移動をシミュレートし、G2 への GPS 再送を確認（10m 閾値を超える）。タップ再送も引き続き利用可。
+
+## 実機が「プロトタイプモード ロード中…」で止まる（HTTP でも）
+
+1. ターミナルの `http://<IP>:5173/` を **スマホのブラウザ**で開く
+2. 同一 Wi‑Fi・ファイアウォール（ポート 5173）— [Network & Firewall Setup](https://hub.evenrealities.com/docs/test/network-firewall)
 
 ## パック
 
@@ -50,9 +59,18 @@ npm run pack
 
 fetch はほぼ無視できるため、以降の最適化は **PNG サイズ縮小**より **送る回数の抑制**（GPS 間引き・方位のみでは再送しない）が効く。詳細は [`even-g2-3d-summary.md`](../../../../docs/even-g2-3d-summary.md) のベースライン表。
 
+## 検証 4（GPS）
+
+| 定数 | 値 |
+| --- | --- |
+| `GPS_MIN_MOVE_M` | 10 m |
+| `GPS_MIN_INTERVAL_MS` | 500 ms |
+
+初回 GPS fix は基準点設定のみ（画像は起動時の 1 枚）。移動で `trigger: gps` の再送。メトリクスに `trigger` 列あり。
+
 ## 次の拡張
 
-- WebView 内で Three.js を動かし、キャプチャ → `updateImageRawData` をイベント駆動で呼ぶ
-- GPS・方位は Hub / ブラウザ API から取得し、再描画のみ（データ再取得は分離）
+- 現在地を原点に Three.js / MVT を描画してからキャプチャ
+- 方位（検証 5）— 回転のみでは画像再送しない
 
 公式: [Display API](https://hub.evenrealities.com/docs/build/display)

@@ -1,3 +1,5 @@
+export type FrameTrigger = 'init' | 'tap' | 'gps';
+
 export type FrameSample = {
   at: string;
   bytes: number;
@@ -5,6 +7,7 @@ export type FrameSample = {
   sdkMs: number;
   totalMs: number;
   sdkResult: string;
+  trigger: FrameTrigger;
 };
 
 const MAX_SAMPLES = 24;
@@ -51,6 +54,7 @@ export class FrameMetrics {
       `時刻: ${last.at}`,
       `サイズ: ${this.formatBytes(last.bytes)}`,
       `fetch: ${last.fetchMs.toFixed(0)} ms`,
+      `trigger: ${last.trigger}`,
       `updateImageRawData: ${last.sdkMs.toFixed(0)} ms (${last.sdkResult})`,
       `合計: ${last.totalMs.toFixed(0)} ms`,
       '',

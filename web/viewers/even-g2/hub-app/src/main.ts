@@ -9,7 +9,9 @@ import {
 } from '@evenrealities/even_hub_sdk';
 import { eventTypeOf, isDoubleClick } from './hub-events.js';
 import { loadImageBytes } from './image/bytes.js';
-import { FrameMetrics, type FrameSample } from './metrics/frame-metrics.js';
+import { formatFixShort, type GeoFix } from './geo/geo-fix.js';
+import { GpsSession } from './geo/gps-session.js';
+import { FrameMetrics, type FrameSample, type FrameTrigger } from './metrics/frame-metrics.js';
 import { mountPhonePanel } from './phone-panel.js';
 
 const PREVIEW_URL = `${import.meta.env.BASE_URL}preview.png`;
@@ -19,7 +21,8 @@ const IMG_W = 288;
 const IMG_H = 144;
 
 const metrics = new FrameMetrics();
-const phonePanel = mountPhonePanel(metrics);
+const gpsSession = new GpsSession();
+const phonePanel = mountPhonePanel(metrics, gpsSession);
 
 const bridge = await waitForEvenAppBridge();
 
@@ -105,7 +108,10 @@ async function pushFrame(bytes: Uint8Array): Promise<{ sdkMs: number; result: st
   return { sdkMs: performance.now() - sdkStart, result };
 }
 
-async function loadPreviewFrame(): Promise<FrameSample> {
+async function loadPreviewFrame(
+  trigger: FrameTrigger,
+  fix?: GeoFix | null
+): Promise<FrameSample> {
   const totalStart = performance.now();
   const fetchStart = performance.now();
   const bytes = await loadImageBytes(PREVIEW_URL);
@@ -117,14 +123,16 @@ async function loadPreviewFrame(): Promise<FrameSample> {
     fetchMs,
     sdkMs,
     totalMs: performance.now() - totalStart,
-    sdkResult: result
+    sdkResult: result,
+    trigger
   };
   metrics.record(sample);
   console.info('[g2-metrics]', sample);
   phonePanel.refresh();
   if (pageReady) {
-    const hint = result === 'success' ? ' · タップ再送' : ` · ${result}`;
-    await setStatus(`${metrics.formatG2Status(sample)}${hint}`);
+    const coord = fix ? `${formatFixShort(fix)} ` : '';
+    const hint = result === 'success' ? '' : ` · ${result}`;
+    await setStatus(`${coord}${metrics.formatG2Status(sample)}${hint}`);
   }
   return sample;
 }
@@ -132,25 +140,36 @@ async function loadPreviewFrame(): Promise<FrameSample> {
 declare global {
   interface Window {
     __g2Metrics?: FrameMetrics;
+    __g2Gps?: GpsSession;
   }
 }
 window.__g2Metrics = metrics;
+window.__g2Gps = gpsSession;
 
 let unsubscribe = () => {};
 
 if (pageReady) {
   try {
-    await loadPreviewFrame();
+    await loadPreviewFrame('init');
   } catch (error) {
     console.error(error);
     await setStatus('preview.png がありません。public/preview.png を配置してください。');
   }
+
+  gpsSession.start(
+    (fix, reason) => {
+      console.info('[gps-push]', reason, fix);
+      loadPreviewFrame('gps', fix).catch(err => console.error(err));
+    },
+    () => phonePanel.refresh()
+  );
 }
 
 let cleanedUp = false;
 function cleanup() {
   if (cleanedUp) return;
   cleanedUp = true;
+  gpsSession.stop();
   unsubscribe();
 }
 
@@ -165,7 +184,7 @@ unsubscribe = bridge.onEvenHubEvent(event => {
   const textType = eventTypeOf(event.textEvent);
 
   if (sysType === OsEventTypeList.CLICK_EVENT || textType === OsEventTypeList.CLICK_EVENT) {
-    loadPreviewFrame().catch(err => console.error(err));
+    loadPreviewFrame('tap', gpsSession.getLatestFix()).catch(err => console.error(err));
     return;
   }
 

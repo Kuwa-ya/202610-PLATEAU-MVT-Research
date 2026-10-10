@@ -20,10 +20,16 @@ hub-app で計測。実機では合計・SDK・平均とも **おおよそ 300�
 
 計測 UI: スマホパネル / G2 ステータス / `window.__g2Metrics.getSamples()`。
 
-## これから（検証 4 以降）
+## 検証 4 — GPS 連動
 
-- WebView 内での Three.js 描画 → 自動キャプチャ送信
-- GPS・方位・現在地属性（用途地域・建ぺい率・容積率）
+hub-app で `navigator.geolocation` を監視。**10 m 以上**移動かつ **500 ms** 以上空いたときに画像を再送（初回 fix は基準点のみ）。スマホパネルに座標・再送回数・`window.__g2Gps` を表示。画像はまだ同じ `preview.png`（次段で位置に応じた描画へ差し替え）。
+
+実機: **`npm run dev`（HTTP）** で起動。端末 GPS は HTTP では使えない → スマホ画面の **手動 15m 移動ボタン**で検証 4 の再送を試す。**シミュレータ**では localhost 経由で本物 GPS が使える。
+
+## これから（検証 5 以降）
+
+- WebView 内での Three.js 描画 → 位置に応じた自動キャプチャ
+- 方位・用途地域・建ぺい率・容積率
 - 同梱データ: `web/data/`（`DATA_BASE` = `/data/mvt`）
 
 公式: [Even Hub ドキュメント](https://hub.evenrealities.com/docs/build/display)
