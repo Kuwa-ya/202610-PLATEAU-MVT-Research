@@ -29,6 +29,27 @@ npm run pack
 
 生成された `.ehpk` を Even Hub 開発者ポータルから配布できます。
 
+## 検証 3（送信性能）
+
+初回表示とタップ再送のたびに計測します。
+
+| 項目 | 内容 |
+| --- | --- |
+| サイズ | PNG バイト数 |
+| fetch | `preview.png` 読み込み ms |
+| SDK | `updateImageRawData` ms |
+| 合計 | 1 フレームあたり end-to-end ms |
+
+スマホ WebView のパネル、G2 下部ステータス、`[g2-metrics]` ログ、開発者コンソールの `window.__g2Metrics` を参照してください。
+
+### 実測（2026-10-10・実機）
+
+| 指標 | おおよその値 |
+| --- | --- |
+| 合計 / SDK / 平均 | **300〜400 ms** |
+
+fetch はほぼ無視できるため、以降の最適化は **PNG サイズ縮小**より **送る回数の抑制**（GPS 間引き・方位のみでは再送しない）が効く。詳細は [`even-g2-3d-summary.md`](../../../../docs/even-g2-3d-summary.md) のベースライン表。
+
 ## 次の拡張
 
 - WebView 内で Three.js を動かし、キャプチャ → `updateImageRawData` をイベント駆動で呼ぶ

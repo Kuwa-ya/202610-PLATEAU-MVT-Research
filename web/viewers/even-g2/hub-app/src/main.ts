@@ -9,12 +9,17 @@ import {
 } from '@evenrealities/even_hub_sdk';
 import { eventTypeOf, isDoubleClick } from './hub-events.js';
 import { loadImageBytes } from './image/bytes.js';
+import { FrameMetrics, type FrameSample } from './metrics/frame-metrics.js';
+import { mountPhonePanel } from './phone-panel.js';
 
 const PREVIEW_URL = `${import.meta.env.BASE_URL}preview.png`;
 
 /** G2 画面は 576×288。画像コンテナは幅・高さそれぞれ半分（288×144）まで。 */
 const IMG_W = 288;
 const IMG_H = 144;
+
+const metrics = new FrameMetrics();
+const phonePanel = mountPhonePanel(metrics);
 
 const bridge = await waitForEvenAppBridge();
 
@@ -79,10 +84,13 @@ async function setStatus(text: string) {
 }
 
 let rendering: Promise<void> = Promise.resolve();
-async function pushFrame(bytes: Uint8Array) {
-  if (!pageReady) return;
+
+async function pushFrame(bytes: Uint8Array): Promise<{ sdkMs: number; result: string }> {
+  if (!pageReady) return { sdkMs: 0, result: 'pageNotReady' };
+  const sdkStart = performance.now();
+  let result = 'skipped';
   rendering = rendering.then(async () => {
-    const result = await bridge.updateImageRawData(
+    result = await bridge.updateImageRawData(
       new ImageRawDataUpdate({
         containerID: 3,
         containerName: 'plateauFrame',
@@ -90,29 +98,52 @@ async function pushFrame(bytes: Uint8Array) {
       })
     );
     if (result !== 'success') {
-      await setStatus(`描画: ${result}`);
       console.error('updateImageRawData:', result);
     }
   });
   await rendering;
+  return { sdkMs: performance.now() - sdkStart, result };
 }
 
-async function loadPreviewFrame() {
+async function loadPreviewFrame(): Promise<FrameSample> {
+  const totalStart = performance.now();
+  const fetchStart = performance.now();
   const bytes = await loadImageBytes(PREVIEW_URL);
-  await pushFrame(bytes);
+  const fetchMs = performance.now() - fetchStart;
+  const { sdkMs, result } = await pushFrame(bytes);
+  const sample: FrameSample = {
+    at: new Date().toISOString(),
+    bytes: bytes.byteLength,
+    fetchMs,
+    sdkMs,
+    totalMs: performance.now() - totalStart,
+    sdkResult: result
+  };
+  metrics.record(sample);
+  console.info('[g2-metrics]', sample);
+  phonePanel.refresh();
+  if (pageReady) {
+    const hint = result === 'success' ? ' · タップ再送' : ` · ${result}`;
+    await setStatus(`${metrics.formatG2Status(sample)}${hint}`);
+  }
+  return sample;
 }
+
+declare global {
+  interface Window {
+    __g2Metrics?: FrameMetrics;
+  }
+}
+window.__g2Metrics = metrics;
 
 let unsubscribe = () => {};
 
 if (pageReady) {
   try {
     await loadPreviewFrame();
-    await setStatus('タップで再読込 · ダブルタップで終了');
   } catch (error) {
     console.error(error);
-    await setStatus(
-      'preview.png がありません。3D Viewer の PNG を public/preview.png に置いてください。'
-    );
+    await setStatus('preview.png がありません。public/preview.png を配置してください。');
   }
 }
 
@@ -144,19 +175,3 @@ unsubscribe = bridge.onEvenHubEvent(event => {
 });
 
 window.addEventListener('beforeunload', cleanup);
-
-const app = document.querySelector('#app');
-if (app) {
-  const setupHint = pageReady
-    ? ''
-    : `<p style="color:#b45309">CreateStartUpPageContainer が失敗しました（コード ${created}）。画像は最大 288×144 px です。</p>`;
-  app.innerHTML = `
-    ${setupHint}
-    <p style="font-family:system-ui,sans-serif;padding:16px;line-height:1.5">
-      G2 側に <code>public/preview.png</code> を表示します（検証 2）。
-      3D Viewer の「G2 向けプレビュー保存」で得た PNG を
-      <code>hub-app/public/preview.png</code> にコピーしてから
-      <code>npm run dev</code> を実行してください。
-    </p>
-  `;
-}

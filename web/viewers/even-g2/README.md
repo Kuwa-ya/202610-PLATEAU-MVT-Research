@@ -14,7 +14,13 @@
 2. `cd hub-app && npm install && npm run dev`（開発サーバー・シミュレータ・実機 QR を一括起動）
 3. ルートからは `npm run dev:even-g2` でも可
 
-## これから（検証 3 以降）
+## 検証 3 — 送信性能（実測済み）
+
+hub-app で計測。実機では合計・SDK・平均とも **おおよそ 300〜400 ms**（静的 PNG・タップ再送）。ボトルネックは `updateImageRawData` 経路。検証 3 の完了条件は満たしている。
+
+計測 UI: スマホパネル / G2 ステータス / `window.__g2Metrics.getSamples()`。
+
+## これから（検証 4 以降）
 
 - WebView 内での Three.js 描画 → 自動キャプチャ送信
 - GPS・方位・現在地属性（用途地域・建ぺい率・容積率）
