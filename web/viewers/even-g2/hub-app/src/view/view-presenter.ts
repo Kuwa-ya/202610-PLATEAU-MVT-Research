@@ -168,7 +168,8 @@ export class ViewPresenter {
     this.inFlight = true;
     const totalStart = performance.now();
     try {
-      const { fetched, geoFetchMs } = await this.cache.ensure(latitude, longitude);
+      const bldgResult = await this.cache.ensure(latitude, longitude);
+      const { fetched, geoFetchMs } = bldgResult;
       const fetchMs = fetched ? geoFetchMs : 0;
       const snap = this.cache.snapshot();
       if (!snap) return null;

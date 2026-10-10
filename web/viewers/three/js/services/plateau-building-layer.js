@@ -66,7 +66,7 @@ export function createPlateauBuildingLayer(THREE, scene, ui, loadScheduler) {
     loader: buildingLoader,
     minLod: BUILDING_MIN_LOD,
     codesAround: buildingMeshCodesAround,
-    isVisible: () => ui.buildingVisibility?.value !== 'hide',
+    isVisible: () => ui.toggleBuilding?.getAttribute('aria-pressed') === 'true',
     hiddenMessage: '建物表示はオフです。',
     lodMessage: lod => `LOD ${BUILDING_MIN_LOD}以上で建物を表示します（現在LOD ${lod}）。`,
     loadingMessage: (lod, count) => `LOD ${lod}・建物 ${count}ファイルを読み込み中…`,

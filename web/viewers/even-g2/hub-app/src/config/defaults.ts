@@ -30,6 +30,9 @@ export const VIEW_REFRESH_MS = 500;
 /** G2 建物フレーム: `webgl`（Three.js）| `canvas2d`（従来の Canvas 2D） */
 export const VIEW_RENDER_BACKEND: 'webgl' | 'canvas2d' = 'webgl';
 
+/** B.1 地面メッシュ — Web Mercator タイルの基準ズーム */
+export const GROUND_TILE_ZOOM = 17;
+
 /** 再描画をスキップする最小移動（m） */
 export const VIEW_MIN_MOVE_M = 0.5;
 

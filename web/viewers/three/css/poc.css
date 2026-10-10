@@ -104,6 +104,27 @@
 }
 .mvt-layer-name code { font-size: 10px; color: var(--viewer-muted); font-weight: 500; }
 
-.address-search-settings { order: -1; }
-.address-search-field { display: grid; gap: 8px; font-size: 12px; }
-.address-search-field input { width: 100%; }
+.viewer-readout-section { margin-top: 4px; }
+.viewer-readout-section .metadata { margin-top: 0; }
+
+.viewer-light .mvt-layer-card,
+.viewer-light .layer-card {
+  margin-top: 9px;
+}
+
+.layer-subheading {
+  margin: 12px 0 4px !important;
+  font-weight: 700;
+  color: var(--viewer-ink) !important;
+}
+.layer-inline-select {
+  display: block;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--viewer-muted);
+}
+.layer-inline-select select {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+}

@@ -115,3 +115,74 @@ button.layer-switch[aria-pressed="true"]::after {
   background: #fff;
   color: var(--viewer-ink);
 }
+
+/* 2D / 3D 共通パネル見出し・住所検索 */
+.viewer-section-title {
+  margin: 0 0 11px;
+  color: var(--viewer-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.viewer-panel-section {
+  margin: 0 0 18px;
+  padding: 0 0 18px;
+  border: none;
+  border-bottom: 1px solid var(--viewer-line);
+}
+.viewer-panel-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.viewer-light fieldset.viewer-panel-section {
+  min-width: 0;
+  padding: 0 0 16px;
+}
+.viewer-light fieldset.viewer-panel-section legend {
+  padding: 0;
+  margin: 0 0 11px;
+  color: var(--viewer-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.viewer-address-form {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+.viewer-address-form input[type="search"],
+.viewer-address-form input[type="text"] {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--viewer-line);
+  background: var(--viewer-panel-2);
+  color: var(--viewer-ink);
+  box-sizing: border-box;
+}
+
+.viewer-address-button {
+  padding: 9px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--viewer-line);
+  background: var(--viewer-panel-2);
+  color: var(--viewer-ink);
+  cursor: pointer;
+  font-weight: 600;
+  width: 100%;
+}
+.viewer-address-button:hover:not(:disabled) {
+  border-color: var(--viewer-accent);
+  color: var(--viewer-accent);
+}
+.viewer-address-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

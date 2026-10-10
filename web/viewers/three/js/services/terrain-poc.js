@@ -203,7 +203,7 @@ export function createTerrainPoc(THREE, options) {
 
   function refreshBuildingVisibility() {
     const focus = terrain.getFocusLatLon();
-    if (ui.buildingVisibility?.value === 'hide') {
+    if (ui.toggleBuilding?.getAttribute('aria-pressed') !== 'true') {
       buildingLayer.clear('建物表示はオフです。');
       return;
     }

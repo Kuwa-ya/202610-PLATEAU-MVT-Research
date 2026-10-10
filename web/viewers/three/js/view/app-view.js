@@ -11,7 +11,9 @@ import { createAddressSearchController } from '/kuwaya-geo/js/view/ui.js';
 import {
   bindViewUi,
   formatCoord,
+  isBuildingVisible,
   isMvtLayerVisible,
+  isTerrainVisible,
   setMvtLayerToggle,
   setLoading,
   setStatus,
@@ -69,12 +71,15 @@ export class AppView {
       searchAddress();
     });
 
-    elements.terrainVisibility?.addEventListener('change', () => {
-      const show = elements.terrainVisibility.value !== 'hide';
-      this.scene.setTerrainVisible(show);
+    elements.toggleTerrain?.addEventListener('click', () => {
+      const next = !isTerrainVisible(elements);
+      elements.toggleTerrain.setAttribute('aria-pressed', String(next));
+      this.scene.setTerrainVisible(next);
     });
 
-    elements.buildingVisibility?.addEventListener('change', () => {
+    elements.toggleBuilding?.addEventListener('click', () => {
+      const next = !isBuildingVisible(elements);
+      elements.toggleBuilding.setAttribute('aria-pressed', String(next));
       this.scene.refreshBuildingVisibility();
     });
 

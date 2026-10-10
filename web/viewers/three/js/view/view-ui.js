@@ -15,8 +15,8 @@ export function bindViewUi(document) {
     hint: document.querySelector('#mvt-hint'),
     loading: document.querySelector('#loading'),
     loadingMessage: document.querySelector('#loading-message'),
-    terrainVisibility: document.querySelector('#terrain-visibility'),
-    buildingVisibility: document.querySelector('#building-visibility'),
+    toggleTerrain: document.querySelector('#toggle-terrain'),
+    toggleBuilding: document.querySelector('#toggle-building'),
     buildingStatus: document.querySelector('#building-status'),
     textureType: document.querySelector('#texture-type'),
     jprcZone: document.querySelector('#jprc-zone'),
@@ -62,6 +62,18 @@ const TOGGLE_BY_KIND = {
   road: 'toggleMvtRoad',
   useDistrict: 'toggleMvtUseDistrict'
 };
+
+export function isLayerSwitchOn(button) {
+  return button?.getAttribute('aria-pressed') === 'true';
+}
+
+export function isTerrainVisible(elements) {
+  return isLayerSwitchOn(elements.toggleTerrain);
+}
+
+export function isBuildingVisible(elements) {
+  return isLayerSwitchOn(elements.toggleBuilding);
+}
 
 export function isMvtLayerVisible(elements, kind) {
   const key = TOGGLE_BY_KIND[kind];

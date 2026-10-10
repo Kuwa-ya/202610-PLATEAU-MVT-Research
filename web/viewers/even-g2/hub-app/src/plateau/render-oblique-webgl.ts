@@ -73,8 +73,15 @@ function disposeObject3D(root: THREE.Object3D) {
     if (child instanceof THREE.Mesh) {
       child.geometry.dispose();
       const mat = child.material;
-      if (Array.isArray(mat)) mat.forEach(m => m.dispose());
-      else mat.dispose();
+      if (Array.isArray(mat)) {
+        mat.forEach(m => {
+          m.map?.dispose();
+          m.dispose();
+        });
+      } else {
+        mat.map?.dispose();
+        mat.dispose();
+      }
     }
     if (child instanceof THREE.Line) {
       child.geometry.dispose();
@@ -172,8 +179,8 @@ export function renderBuildingsObliqueWebGL(
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x1a1f24);
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.55);
-  const sun = new THREE.DirectionalLight(0xffffff, 0.85);
+  const ambient = new THREE.AmbientLight(0xffffff, 0.62);
+  const sun = new THREE.DirectionalLight(0xffffff, 0.78);
   sun.position.set(-40, 120, -60);
   scene.add(ambient, sun);
 
@@ -182,6 +189,7 @@ export function renderBuildingsObliqueWebGL(
   scene.add(world);
 
   const pivotLat = userLat;
+
   for (const building of buildings) {
     world.add(buildingMesh(building, pivotLat, userLon, userLat));
   }

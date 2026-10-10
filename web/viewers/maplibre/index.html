@@ -86,36 +86,11 @@
 
     .section-title {
       margin: 0 0 11px;
-      color: var(--muted);
-      font-size: 0.78rem;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
     }
 
     .chip:focus-visible, .layer-switch:focus-visible { outline: 3px solid var(--viewer-accent-soft); outline-offset: 2px; }
 
     .hint { margin: 8px 0 0; color: var(--muted); font-size: 0.76rem; line-height: 1.45; }
-
-    .address-search-form { display: grid; gap: 8px; margin-top: 4px; }
-    .address-search-form input {
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 8px;
-      border: 1px solid var(--line);
-      background: var(--panel-2);
-      color: var(--ink);
-    }
-    .address-go-button {
-      padding: 9px 12px;
-      border-radius: 9px;
-      border: 1px solid var(--line);
-      background: var(--panel-2);
-      cursor: pointer;
-      font-weight: 600;
-    }
-    .address-go-button:hover { border-color: var(--accent); color: var(--accent); }
-    .address-go-button:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
     .chip {
@@ -262,32 +237,34 @@
       </header>
 
       <div class="scroll">
-        <section class="section">
-          <h2 class="section-title">背景地図</h2>
-          <p class="hint">初期表示は京都駅。PLATEAU Ortho は配信範囲が限られるため、全域では地理院タイルを選べます。</p>
-          <label class="range-row" style="display:block;margin-top:8px">
-            <span style="display:block;margin-bottom:6px;font-size:0.82rem;color:var(--muted)">ラスタ底図</span>
-            <select id="basemap-select" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink)">
+        <section class="section viewer-panel-section">
+          <h2 class="section-title viewer-section-title">住所検索</h2>
+          <div class="viewer-address-form">
+            <label class="hint" style="margin:0">都道府県名から入力</label>
+            <input id="address-search-input" type="search" enterkeyhint="search" placeholder="例：京都府京都市下京区駅前町" autocomplete="street-address" />
+            <button id="address-search-submit" class="viewer-address-button" type="button">この住所へ移動</button>
+            <p id="address-search-status" class="hint" aria-live="polite">地図中心へ移動します（2D: flyTo / 3D: カメラ lerp）。</p>
+          </div>
+        </section>
+
+        <section class="section viewer-panel-section">
+          <h2 class="section-title viewer-section-title">レイヤー</h2>
+          <p class="hint">初期表示は京都駅。底図・MVT・検証用オーバーレイをここで切り替えます。</p>
+
+          <div class="layer-card">
+            <div class="layer-head">
+              <div class="layer-name">ラスタ底図</div>
+            </div>
+            <p class="hint" style="margin-top:8px">PLATEAU Ortho は配信範囲が限られるため、全域では地理院タイルを選べます。</p>
+            <select id="basemap-select" style="width:100%;margin-top:8px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink)">
               <option value="gsi-standard">地理院 標準地図</option>
               <option value="gsi-seamlessphoto">地理院 航空写真</option>
               <option value="plateau-ortho-2023" selected>PLATEAU Ortho 2023</option>
             </select>
-          </label>
-        </section>
-
-        <section class="section">
-          <h2 class="section-title">住所検索</h2>
-          <div class="address-search-form">
-            <label class="hint" style="margin:0">都道府県名から入力</label>
-            <input id="address-search-input" type="search" enterkeyhint="search" placeholder="例：京都府京都市下京区駅前町" autocomplete="street-address" />
-            <button id="address-search-submit" class="address-go-button" type="button">この住所へ移動</button>
-            <p id="address-search-status" class="hint" aria-live="polite">MapLibre の flyTo で地図中心を移動します。</p>
           </div>
-        </section>
 
-        <section class="section">
-          <h2 class="section-title">レイヤー</h2>
-            <p class="hint">MVT 索引は東京都・埼玉県・京都府。土地利用の道路用地は橙色（<code>luse_class</code> 等）。z16 で索引から自治体を自動選択。</p>
+          <p class="hint" style="margin:14px 0 8px;font-weight:700;color:var(--ink)">PLATEAU MVT</p>
+          <p class="hint">索引: 東京都・埼玉県・京都府。2D は z16 以上、3D は約 900 m 以内。</p>
           <div class="layer-card">
             <div class="layer-head">
               <div class="layer-name"><span class="swatch landuse"></span>土地利用 <code>luse</code></div>
@@ -310,6 +287,8 @@
             <p class="hint">索引 <code>use-district-2025</code>。クリックで <code>urf_function</code>・建ぺい率・容積率を表示。</p>
           </div>
 
+          <p class="hint" style="margin:14px 0 8px;font-weight:700;color:var(--ink)">オーバーレイ（検証）</p>
+          <p class="hint">2D のみ。索引・タイル境界のデバッグ用。</p>
           <div class="layer-card">
             <div class="layer-head">
               <div class="layer-name"><span class="swatch" style="background:#f43f5e"></span>市区町村境界（東京都）</div>
@@ -341,8 +320,8 @@
           </div>
         </section>
 
-        <section class="section">
-          <h2 class="section-title">読み込み状況</h2>
+        <section class="section viewer-panel-section">
+          <h2 class="section-title viewer-section-title">読み込み状況</h2>
           <div class="stats">
             <div class="stat"><span class="stat-label">ズーム</span><strong id="stat-zoom" class="stat-value">—</strong></div>
             <div class="stat"><span class="stat-label">MVT要求</span><strong id="stat-requests" class="stat-value">0</strong></div>
@@ -351,8 +330,8 @@
           <div id="zoom-note" class="zoom-note">ズーム16以上でMVTを表示します。</div>
         </section>
 
-        <section class="section">
-          <h2 class="section-title">選択地物</h2>
+        <section class="section viewer-panel-section">
+          <h2 class="section-title viewer-section-title">選択地物</h2>
           <div id="inspector" class="inspector-empty">地図上の土地利用・用途地域・道路をクリックすると属性を表示します。</div>
         </section>
       </div>

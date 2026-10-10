@@ -35,6 +35,7 @@ import { applyGeocodeResult, originRefFromTerrain } from './address-navigation.j
 import { MVT_MAX_CAMERA_DISTANCE } from './mvt-config.js';
 import { createMvtController } from './mvt-controller.js';
 import { createTerrainPoc } from './terrain-poc.js';
+import { isTerrainVisible } from '../view/view-ui.js';
 
 export async function createSceneAdapter(viewModel, { canvas, ui, readEnabledDatasets }) {
   const THREE = await import('/vendor/three/three.module.min.js');
@@ -246,7 +247,7 @@ export async function createSceneAdapter(viewModel, { canvas, ui, readEnabledDat
       window.addEventListener('resize', resize);
       resize();
       requestAnimationFrame(animate);
-      terrainPoc.setVisible(ui.terrainVisibility?.value !== 'hide');
+      terrainPoc.setVisible(isTerrainVisible(ui));
       for (const layer of MVT_VIEWER_LAYERS) {
         mvt.setDatasetOpacity(layer.datasetId, layer.defaultOpacity);
       }
